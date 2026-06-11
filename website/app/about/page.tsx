@@ -2,19 +2,20 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'About',
-  description: 'Learn about Michael Hart Consulting Group LLC. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.',
+  description: `Learn about ${site.name}. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.`,
   openGraph: {
-    title: 'About | Michael Hart Consulting Group',
-    description: 'Learn about Michael Hart Consulting Group LLC. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.',
+    title: `About | ${site.name}`,
+    description: `Learn about ${site.name}. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'About | Michael Hart Consulting Group',
-    description: 'Learn about Michael Hart Consulting Group LLC. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.',
+    title: `About | ${site.name}`,
+    description: `Learn about ${site.name}. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.`,
   },
 };
 
@@ -27,7 +28,7 @@ export default function About() {
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-16">
         <div className="max-w-3xl">
           <h1 className="text-5xl font-semibold tracking-[-1px] leading-tight">
-            About Michael Hart Consulting Group LLC
+            About {site.name}
           </h1>
           <p className="mt-4 text-lg text-[#94a3b8]">
             We help businesses and legal teams navigate complex financial challenges with clarity, precision, and strategic insight.

@@ -5,16 +5,16 @@ import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'Privacy Policy for Michael Hart Consulting Group LLC. Learn how we collect, use, protect, and share your personal information when you use our website or contact us.',
+  description: `Privacy Policy for ${site.name}. Learn how we collect, use, protect, and share your personal information when you use our website or contact us.`,
   openGraph: {
-    title: 'Privacy Policy | Michael Hart Consulting Group',
-    description: 'Privacy Policy for Michael Hart Consulting Group LLC. Learn how we collect, use, protect, and share your personal information when you use our website or contact us.',
+    title: `Privacy Policy | ${site.name}`,
+    description: `Privacy Policy for ${site.name}. Learn how we collect, use, protect, and share your personal information when you use our website or contact us.`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Privacy Policy | Michael Hart Consulting Group',
-    description: 'Privacy Policy for Michael Hart Consulting Group LLC. Learn how we collect, use, protect, and share your personal information when you use our website or contact us.',
+    title: `Privacy Policy | ${site.name}`,
+    description: `Privacy Policy for ${site.name}. Learn how we collect, use, protect, and share your personal information when you use our website or contact us.`,
   },
 };
 

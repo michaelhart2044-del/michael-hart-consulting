@@ -5,16 +5,16 @@ import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
-  description: 'Terms of Service for Michael Hart Consulting Group LLC. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.',
+  description: `Terms of Service for ${site.name}. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.`,
   openGraph: {
-    title: 'Terms of Service | Michael Hart Consulting Group',
-    description: 'Terms of Service for Michael Hart Consulting Group LLC. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.',
+    title: `Terms of Service | ${site.name}`,
+    description: `Terms of Service for ${site.name}. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Terms of Service | Michael Hart Consulting Group',
-    description: 'Terms of Service for Michael Hart Consulting Group LLC. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.',
+    title: `Terms of Service | ${site.name}`,
+    description: `Terms of Service for ${site.name}. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.`,
   },
 };
 
