@@ -58,12 +58,12 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
   };
 
   const linkClass = (href: string) =>
-    `hover:text-[#c5a46e] transition-colors ${isActive(href) ? 'text-[#c5a46e] font-medium' : ''}`;
+    `hover:text-accent transition-colors ${isActive(href) ? 'text-accent font-medium' : ''}`;
 
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0f2c]/95 backdrop-blur border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b border-white/10">
       <div className="max-w-5xl mx-auto px-6 flex items-center justify-between h-20">
         {/* Logo + Company Name */}
         <Link href="/" className="flex items-center gap-3 group">
@@ -74,7 +74,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
             height={80}
             className="h-20 w-20 rounded-full object-contain"
           />
-          <span className="font-semibold text-lg tracking-[-0.3px] group-hover:text-[#c5a46e] transition-colors">
+          <span className="font-semibold text-lg tracking-[-0.3px] group-hover:text-accent transition-colors">
             {site.name}
           </span>
         </Link>
@@ -95,7 +95,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
         {/* Desktop CTA Button */}
         <Link
           href={resolvedCtaHref}
-          className="hidden md:block px-6 py-2.5 bg-[#c5a46e] hover:bg-[#d4b57e] text-black text-sm font-medium rounded-full transition-all"
+          className="hidden md:block px-6 py-2.5 bg-accent hover:bg-accent-hover text-black text-sm font-medium rounded-full transition-all"
         >
           Book a Consultation
         </Link>
@@ -130,13 +130,13 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-[#0a0f2c] border-t border-white/10 py-4">
+        <div className="md:hidden bg-background border-t border-white/10 py-4">
           <div className="max-w-5xl mx-auto px-6 flex flex-col gap-4 text-sm">
             {mobileItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`py-2 hover:text-[#c5a46e] transition-colors ${isActive(item.href) ? 'text-[#c5a46e] font-medium' : ''}`}
+                className={`py-2 hover:text-accent transition-colors ${isActive(item.href) ? 'text-accent font-medium' : ''}`}
                 onClick={closeMenu}
               >
                 {item.label}
@@ -144,7 +144,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
             ))}
             <Link
               href={resolvedCtaHref}
-              className="mt-4 px-6 py-3 bg-[#c5a46e] hover:bg-[#d4b57e] text-black font-medium rounded-full text-center transition-all"
+              className="mt-4 px-6 py-3 bg-accent hover:bg-accent-hover text-black font-medium rounded-full text-center transition-all"
               onClick={closeMenu}
             >
               Book a Consultation

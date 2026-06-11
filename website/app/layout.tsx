@@ -81,7 +81,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0a0f2c] text-[#f1f5f9]">
+      <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
 
         {/* Microsoft Clarity */}

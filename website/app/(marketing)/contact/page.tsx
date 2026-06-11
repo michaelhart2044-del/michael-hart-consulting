@@ -24,7 +24,7 @@ export default function Contact() {
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-16">
         <div className="max-w-2xl">
           <h1 className="text-5xl font-semibold tracking-tight">Get in Touch</h1>
-          <p className="mt-4 text-lg text-[#94a3b8]">
+          <p className="mt-4 text-lg text-muted">
             Whether you have a specific question or want to explore how we can support your business, we’d love to hear from you.
           </p>
         </div>
@@ -42,24 +42,24 @@ export default function Contact() {
 
           {/* Contact Information */}
           <div className="md:col-span-2">
-            <div className="border border-white/10 rounded-2xl p-8 bg-[#0f172a] h-full">
+            <div className="border border-white/10 rounded-2xl p-8 bg-section h-full">
               <h2 className="text-2xl font-semibold mb-8">Contact Information</h2>
               
-              <div className="space-y-8 text-[#94a3b8]">
+              <div className="space-y-8 text-muted">
                 <div>
-                  <div className="text-sm text-[#c5a46e] font-medium tracking-widest mb-2">PHONE</div>
-                  <a href={site.phoneHref} className="text-xl hover:text-[#c5a46e] transition-colors">{site.phone}</a>
+                  <div className="text-sm text-accent font-medium tracking-widest mb-2">PHONE</div>
+                  <a href={site.phoneHref} className="text-xl hover:text-accent transition-colors">{site.phone}</a>
                 </div>
 
                 <div>
-                  <div className="text-sm text-[#c5a46e] font-medium tracking-widest mb-2">EMAIL</div>
-                  <a href={`mailto:${site.email}`} className="text-xl hover:text-[#c5a46e] transition-colors">
+                  <div className="text-sm text-accent font-medium tracking-widest mb-2">EMAIL</div>
+                  <a href={`mailto:${site.email}`} className="text-xl hover:text-accent transition-colors">
                     {site.email}
                   </a>
                 </div>
               </div>
 
-              <div className="mt-10 pt-8 border-t border-white/10 text-sm text-[#64748b] leading-relaxed">
+              <div className="mt-10 pt-8 border-t border-white/10 text-sm text-subtle leading-relaxed">
                 We typically respond within 24 hours on business days.
               </div>
             </div>

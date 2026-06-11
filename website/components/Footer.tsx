@@ -5,13 +5,13 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#0a0f2c] border-t border-white/10 py-12">
+    <footer className="bg-background border-t border-white/10 py-12">
       <div className="max-w-5xl mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between gap-y-10">
           {/* Left side */}
           <div>
             <div className="font-semibold text-lg">{site.name}</div>
-            <p className="mt-2 text-sm text-[#64748b] max-w-xs">
+            <p className="mt-2 text-sm text-subtle max-w-xs">
               {site.tagline}
             </p>
           </div>
@@ -19,13 +19,13 @@ export default function Footer() {
           {/* Right side */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-12 gap-y-8 text-sm">
             <div>
-              <div className="font-medium text-[#c5a46e] mb-3">Company</div>
-              <div className="space-y-2 text-[#94a3b8]">
-                <Link href="/about" className="hover:text-[#c5a46e] transition-colors">
+              <div className="font-medium text-accent mb-3">Company</div>
+              <div className="space-y-2 text-muted">
+                <Link href="/about" className="hover:text-accent transition-colors">
                   About
                 </Link>
                 <div>
-                  <Link href="/services" className="hover:text-[#c5a46e] transition-colors">
+                  <Link href="/services" className="hover:text-accent transition-colors">
                     Services
                   </Link>
                 </div>
@@ -33,13 +33,13 @@ export default function Footer() {
             </div>
 
             <div>
-              <div className="font-medium text-[#c5a46e] mb-3">Legal</div>
-              <div className="space-y-2 text-[#94a3b8]">
-                <Link href="/privacy-policy" className="hover:text-[#c5a46e] transition-colors">
+              <div className="font-medium text-accent mb-3">Legal</div>
+              <div className="space-y-2 text-muted">
+                <Link href="/privacy-policy" className="hover:text-accent transition-colors">
                   Privacy Policy
                 </Link>
                 <div>
-                  <Link href="/terms-of-service" className="hover:text-[#c5a46e] transition-colors">
+                  <Link href="/terms-of-service" className="hover:text-accent transition-colors">
                     Terms of Service
                   </Link>
                 </div>
@@ -47,12 +47,12 @@ export default function Footer() {
             </div>
 
             <div>
-              <div className="font-medium text-[#c5a46e] mb-3">Contact</div>
-              <div className="space-y-2 text-[#94a3b8]">
+              <div className="font-medium text-accent mb-3">Contact</div>
+              <div className="space-y-2 text-muted">
                 <div>{site.phone}</div>
                 <a
                   href={site.email ? `mailto:${site.email}` : undefined}
-                  className="hover:text-[#c5a46e] transition-colors"
+                  className="hover:text-accent transition-colors"
                 >
                   {site.email}
                 </a>
@@ -60,14 +60,14 @@ export default function Footer() {
             </div>
 
             <div>
-              <div className="font-medium text-[#c5a46e] mb-3">Social</div>
-              <div className="flex gap-4 text-[#94a3b8]">
+              <div className="font-medium text-accent mb-3">Social</div>
+              <div className="flex gap-4 text-muted">
                 {site.social?.linkedin && (
                   <a
                     href={site.social.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-[#c5a46e] transition-colors"
+                    className="hover:text-accent transition-colors"
                     aria-label="LinkedIn"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -80,7 +80,7 @@ export default function Footer() {
                     href={site.social.x}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-[#c5a46e] transition-colors"
+                    className="hover:text-accent transition-colors"
                     aria-label="X (Twitter)"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -93,14 +93,14 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/10 text-xs text-[#64748b] flex flex-col md:flex-row justify-between gap-y-2">
+        <div className="mt-12 pt-8 border-t border-white/10 text-xs text-subtle flex flex-col md:flex-row justify-between gap-y-2">
           <div>© {year} {site.name}. All rights reserved.</div>
           <div className="space-x-1">
-            <Link href="/privacy-policy" className="hover:text-[#c5a46e] transition-colors">
+            <Link href="/privacy-policy" className="hover:text-accent transition-colors">
               Privacy Policy
             </Link>
             <span>•</span>
-            <Link href="/terms-of-service" className="hover:text-[#c5a46e] transition-colors">
+            <Link href="/terms-of-service" className="hover:text-accent transition-colors">
               Terms of Service
             </Link>
           </div>

@@ -22,11 +22,11 @@ export default function PrivacyPolicy() {
       {/* Header */}
       <div className="max-w-4xl mx-auto px-6 pt-32 pb-12">
         <h1 className="text-5xl font-semibold tracking-tight">Privacy Policy</h1>
-        <p className="mt-4 text-[#94a3b8]">Last updated: June 2026</p>
+        <p className="mt-4 text-muted">Last updated: June 2026</p>
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 pb-20 text-[#94a3b8] leading-relaxed space-y-10">
+      <div className="max-w-4xl mx-auto px-6 pb-20 text-muted leading-relaxed space-y-10">
         
         <div>
           <h2 className="text-2xl font-semibold text-white mb-4">1. Information We Collect</h2>
@@ -67,9 +67,9 @@ export default function PrivacyPolicy() {
           <h2 className="text-2xl font-semibold text-white mb-4">8. Contact Us</h2>
           <p>If you have any questions about this Privacy Policy, please contact us at:</p>
           
-          <div className="mt-2 text-[#f1f5f9]">
+          <div className="mt-2 text-foreground">
             {site.name}<br />
-            Email: <a href={`mailto:${site.email}`} className="text-[#c5a46e] hover:underline">{site.email}</a><br />
+            Email: <a href={`mailto:${site.email}`} className="text-accent hover:underline">{site.email}</a><br />
             Phone: {site.phone}
           </div>
         </div>

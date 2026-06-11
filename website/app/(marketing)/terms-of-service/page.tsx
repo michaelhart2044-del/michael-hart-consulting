@@ -22,11 +22,11 @@ export default function TermsOfService() {
       {/* Header */}
       <div className="max-w-4xl mx-auto px-6 pt-32 pb-12">
         <h1 className="text-5xl font-semibold tracking-tight">Terms of Service</h1>
-        <p className="mt-4 text-[#94a3b8]">Last updated: June 2026</p>
+        <p className="mt-4 text-muted">Last updated: June 2026</p>
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 pb-20 text-[#94a3b8] leading-relaxed space-y-10">
+      <div className="max-w-4xl mx-auto px-6 pb-20 text-muted leading-relaxed space-y-10">
         
         <div>
           <h2 className="text-2xl font-semibold text-white mb-4">1. Acceptance of Terms</h2>
@@ -68,7 +68,7 @@ export default function TermsOfService() {
           <p>If you have any questions about these Terms of Service, please contact us at:</p>
           <p className="mt-2">
             {site.name}<br />
-            Email: <a href={`mailto:${site.email}`} className="text-[#c5a46e] hover:underline">{site.email}</a><br />
+            Email: <a href={`mailto:${site.email}`} className="text-accent hover:underline">{site.email}</a><br />
             Phone: {site.phone}
           </p>
         </div>

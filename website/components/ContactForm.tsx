@@ -32,7 +32,7 @@ export default function ContactForm() {
         className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center"
       >
         <p className="text-green-400 text-lg font-medium">Thank you! Your message has been sent.</p>
-        <p className="text-[#94a3b8] mt-2">We've sent a confirmation to your email. We'll get back to you within 24 hours on business days. Please check your inbox (and spam folder).</p>
+        <p className="text-muted mt-2">We've sent a confirmation to your email. We'll get back to you within 24 hours on business days. Please check your inbox (and spam folder).</p>
       </div>
     );
   }
@@ -40,7 +40,7 @@ export default function ContactForm() {
   return (
     <form action={handleSubmit} className="space-y-5">
       <div>
-        <label htmlFor="name" className="block text-sm text-[#94a3b8] mb-2">
+        <label htmlFor="name" className="block text-sm text-muted mb-2">
           Full Name
         </label>
         <input
@@ -50,13 +50,13 @@ export default function ContactForm() {
           required
           aria-required="true"
           aria-describedby={error ? 'form-error' : undefined}
-          className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-[#64748b] focus:outline-none focus:border-[#c5a46e]"
+          className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-subtle focus:outline-none focus:border-accent"
           placeholder="John Doe"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm text-[#94a3b8] mb-2">
+        <label htmlFor="email" className="block text-sm text-muted mb-2">
           Email Address
         </label>
         <input
@@ -66,13 +66,13 @@ export default function ContactForm() {
           required
           aria-required="true"
           aria-describedby={error ? 'form-error' : undefined}
-          className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-[#64748b] focus:outline-none focus:border-[#c5a46e]"
+          className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-subtle focus:outline-none focus:border-accent"
           placeholder="you@company.com"
         />
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm text-[#94a3b8] mb-2">
+        <label htmlFor="message" className="block text-sm text-muted mb-2">
           Message
         </label>
         <textarea
@@ -82,7 +82,7 @@ export default function ContactForm() {
           aria-required="true"
           aria-describedby={error ? 'form-error' : undefined}
           rows={6}
-          className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-[#64748b] focus:outline-none focus:border-[#c5a46e]"
+          className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-subtle focus:outline-none focus:border-accent"
           placeholder="Tell us about your situation or how we can help..."
         ></textarea>
       </div>
@@ -109,7 +109,7 @@ export default function ContactForm() {
         type="submit"
         disabled={isSubmitting}
         aria-busy={isSubmitting}
-        className="w-full md:w-auto px-10 py-4 bg-[#c5a46e] hover:bg-[#d4b57e] text-black font-medium rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full md:w-auto px-10 py-4 bg-accent hover:bg-accent-hover text-black font-medium rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting ? 'Sending...' : 'Send Message'}
       </button>

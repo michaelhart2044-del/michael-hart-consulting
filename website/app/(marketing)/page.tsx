@@ -72,7 +72,7 @@ export default function Home() {
             <div className="h-[3px] w-[min(94%,680px)] bg-accent"></div>
           </div>
 
-          <p className="mt-8 text-[15.5px] md:text-lg text-[#94a3b8] leading-relaxed max-w-2xl">
+          <p className="mt-8 text-[15.5px] md:text-lg text-muted leading-relaxed max-w-2xl">
             Combining deep forensic expertise with strategic advisory and intelligent automation to deliver clear, actionable results.
           </p>
 
@@ -88,11 +88,11 @@ export default function Home() {
       </div>
 
       {/* Why Work With Us */}
-      <section id="why" className="border-t border-white/10 bg-[#0f172a] py-16 md:py-20">
+      <section id="why" className="border-t border-white/10 bg-section py-16 md:py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Why Work With Us</h2>
-            <p className="mt-4 text-base md:text-lg text-[#94a3b8]">
+            <p className="mt-4 text-base md:text-lg text-muted">
               We combine deep financial expertise with modern technology to help businesses and legal teams navigate complex challenges with clarity and confidence.
             </p>
           </div>
@@ -150,11 +150,11 @@ export default function Home() {
       </section>
 
       {/* Our Services */}
-      <section id="services" className="border-t border-white/10 bg-[#0a0f2c] py-16 md:py-20">
+      <section id="services" className="border-t border-white/10 bg-background py-16 md:py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Our Services</h2>
-            <p className="mt-4 text-base md:text-lg text-[#94a3b8]">
+            <p className="mt-4 text-base md:text-lg text-muted">
               We provide specialized advisory across complex financial, strategic, and operational challenges.
             </p>
           </div>
@@ -189,7 +189,7 @@ export default function Home() {
         <div className="max-w-3xl mx-auto px-6">
           <div className="bg-card border border-white/10 rounded-2xl p-10 md:p-12 text-center hover:border-accent/30 transition-all duration-300">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Ready to Get Started?</h2>
-            <p className="mt-4 text-base md:text-lg text-[#94a3b8] max-w-xl mx-auto">
+            <p className="mt-4 text-base md:text-lg text-muted max-w-xl mx-auto">
               Whether you're facing a complex challenge or planning your next strategic move, we’re here to help you move forward with clarity.
             </p>
 
@@ -202,8 +202,8 @@ export default function Home() {
               </Link>
             </div>
 
-            <p className="mt-8 text-sm text-[#64748b]">
-              Or call us directly at <span className="text-[#94a3b8] font-medium">(747) 370-9393</span>
+            <p className="mt-8 text-sm text-subtle">
+              Or call us directly at <span className="text-muted font-medium">(747) 370-9393</span>
             </p>
           </div>
         </div>
