@@ -2,6 +2,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { services } from '@/lib/services';
 
 export const metadata: Metadata = {
   title: 'Home',
@@ -19,6 +20,47 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
+  const serviceIcons = [
+    (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" />
+        <path d="M8 6v12" /><path d="M16 6v12" />
+      </svg>
+    ),
+    (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M9 9h6M9 15h6" />
+      </svg>
+    ),
+    (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+    (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M3 3v18h18" />
+        <path d="M18 17l-5-5-4 4-3-3" />
+      </svg>
+    ),
+    (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M8 8h8M8 12h8M8 16h4" />
+        <circle cx="18" cy="18" r="2" />
+      </svg>
+    ),
+    (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <rect x="3" y="4" width="18" height="12" rx="2" />
+        <path d="M8 20h8M12 16v4" />
+      </svg>
+    )
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0f2c] text-[#f1f5f9]">
       <Navbar />
@@ -122,89 +164,20 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                slug: 'forensic-accounting-litigation-support',
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-                    <path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" />
-                    <path d="M8 6v12" /><path d="M16 6v12" />
-                  </svg>
-                ),
-                title: "Forensic Accounting & Litigation Support",
-                desc: "Expert analysis and support for disputes, investigations, and legal proceedings."
-              },
-              {
-                slug: 'business-setup-structuring',
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-                    <rect x="4" y="4" width="16" height="16" rx="2" />
-                    <path d="M9 9h6M9 15h6" />
-                  </svg>
-                ),
-                title: "Business Setup & Structuring",
-                desc: "Strategic guidance on company formation, ownership structures, and operational frameworks."
-              },
-              {
-                slug: 'mergers-acquisitions-advisory',
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                ),
-                title: "Mergers & Acquisitions Advisory",
-                desc: "End-to-end support for buying, selling, and integrating businesses with financial and strategic precision."
-              },
-              {
-                slug: 'financial-forecasting-strategy',
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-                    <path d="M3 3v18h18" />
-                    <path d="M18 17l-5-5-4 4-3-3" />
-                  </svg>
-                ),
-                title: "Financial Forecasting & Strategy",
-                desc: "Data-driven forecasting, scenario planning, and long-term financial strategy development."
-              },
-              {
-                slug: 'ai-automation-solutions',
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-                    <rect x="4" y="4" width="16" height="16" rx="2" />
-                    <path d="M8 8h8M8 12h8M8 16h4" />
-                    <circle cx="18" cy="18" r="2" />
-                  </svg>
-                ),
-                title: "AI & Automation Solutions",
-                desc: "Implementing intelligent systems that improve decision-making, efficiency, and financial processes."
-              },
-              {
-                slug: 'website-design-development',
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-                    <rect x="3" y="4" width="18" height="12" rx="2" />
-                    <path d="M8 20h8M12 16v4" />
-                  </svg>
-                ),
-                title: "Website Design & Development",
-                desc: "Modern, professional websites and web applications tailored to your brand and business goals."
-              }
-            ].map((service, i) => (
+            {services.map((service, i) => (
               <Link 
-                key={i} 
+                key={service.slug} 
                 href={`/services/${service.slug}`}
                 className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col no-underline"
               >
                 <div className="mb-4 text-accent group-hover:text-accent-hover group-hover:scale-110 transition-all duration-300">
-                  {service.icon}
+                  {serviceIcons[i]}
                 </div>
                 <h3 className="text-xl font-semibold mb-3 group-hover:text-accent transition-colors">
                   {service.title}
                 </h3>
                 <p className="text-muted flex-grow">
-                  {service.desc}
+                  {service.shortDesc}
                 </p>
                 <div className="mt-auto pt-3 text-sm text-accent group-hover:underline">Learn more →</div>
               </Link>
