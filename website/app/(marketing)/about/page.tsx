@@ -24,8 +24,8 @@ export default function About() {
       {/* Page Header */}
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-16">
         <div className="max-w-3xl">
-          <h1 className="text-5xl font-semibold tracking-[-1px] leading-tight">
-            About {site.name}
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-[-1px] leading-tight">
+            About <span className="whitespace-nowrap">{site.name}</span>
           </h1>
           <p className="mt-4 text-lg text-muted">
             We help businesses and legal teams navigate complex financial challenges with clarity, precision, and strategic insight.
@@ -64,7 +64,7 @@ export default function About() {
         <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
           <h2 className="text-3xl font-semibold mb-6">Who We Are</h2>
           <p className="text-lg text-muted leading-relaxed">
-            Michael Hart Consulting Group LLC was founded with a clear mission: to deliver high-quality, practical advisory services that help organizations solve complex problems and make confident decisions.
+            <span className="whitespace-nowrap">Michael Hart Consulting Group LLC</span> was founded with a clear mission: to deliver high-quality, practical advisory services that help organizations solve complex problems and make confident decisions.
           </p>
           <p className="mt-6 text-lg text-muted leading-relaxed">
             With deep expertise in forensic accounting, mergers and acquisitions, financial strategy, and AI-driven solutions, we bring both traditional financial discipline and modern technology to every engagement.
@@ -196,7 +196,7 @@ export default function About() {
             <div className="mt-8">
               <Link
                 href="/contact"
-                className="inline-block px-10 py-4 bg-accent hover:bg-accent-hover text-black font-medium text-lg rounded-full transition-all active:scale-[0.985]"
+                className="inline-block px-10 py-4 bg-[#a88c5a] hover:bg-[#b89a6e] text-black font-medium text-lg rounded-full transition-all active:scale-[0.985]"
               >
                 Book a Consultation
               </Link>

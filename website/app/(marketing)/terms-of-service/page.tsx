@@ -35,7 +35,7 @@ export default function TermsOfService() {
 
         <div>
           <h2 className="text-2xl font-semibold text-white mb-4">2. Services</h2>
-          <p>Michael Hart Consulting Group LLC provides consulting services in forensic accounting, mergers & acquisitions, financial strategy, and AI-driven business solutions. All services are subject to separate engagement agreements.</p>
+          <p><span className="whitespace-nowrap">Michael Hart Consulting Group LLC</span> provides consulting services in forensic accounting, mergers & acquisitions, financial strategy, and AI-driven business solutions. All services are subject to separate engagement agreements.</p>
         </div>
 
         <div>
@@ -45,12 +45,12 @@ export default function TermsOfService() {
 
         <div>
           <h2 className="text-2xl font-semibold text-white mb-4">4. Limitation of Liability</h2>
-          <p>To the fullest extent permitted by law, Michael Hart Consulting Group LLC shall not be liable for any indirect, incidental, special, or consequential damages arising out of or in connection with the use of this website.</p>
+          <p>To the fullest extent permitted by law, <span className="whitespace-nowrap">Michael Hart Consulting Group LLC</span> shall not be liable for any indirect, incidental, special, or consequential damages arising out of or in connection with the use of this website.</p>
         </div>
 
         <div>
           <h2 className="text-2xl font-semibold text-white mb-4">5. Intellectual Property</h2>
-          <p>All content on this website, including text, graphics, and logos, is the property of Michael Hart Consulting Group LLC and is protected by applicable intellectual property laws.</p>
+          <p>All content on this website, including text, graphics, and logos, is the property of <span className="whitespace-nowrap">Michael Hart Consulting Group LLC</span> and is protected by applicable intellectual property laws.</p>
         </div>
 
         <div>
@@ -67,7 +67,7 @@ export default function TermsOfService() {
           <h2 className="text-2xl font-semibold text-white mb-4">8. Contact Information</h2>
           <p>If you have any questions about these Terms of Service, please contact us at:</p>
           <p className="mt-2">
-            {site.name}<br />
+            <span className="whitespace-nowrap">{site.name}</span><br />
             Email: <a href={`mailto:${site.email}`} className="text-accent hover:underline">{site.email}</a><br />
             Phone: {site.phone}
           </p>

@@ -77,7 +77,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
             height={80}
             className="h-20 w-20 rounded-full object-contain"
           />
-          <span className="font-semibold text-lg tracking-[-0.3px] group-hover:text-accent transition-colors">
+          <span className="font-semibold text-base md:text-lg tracking-[-0.3px] group-hover:text-accent transition-colors whitespace-nowrap">
             {site.name}
           </span>
         </Link>
@@ -98,7 +98,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
         {/* Desktop CTA Button */}
         <Link
           href={resolvedCtaHref}
-          className="hidden md:block px-6 py-2.5 bg-accent hover:bg-accent-hover text-black text-sm font-medium rounded-full transition-all"
+          className="hidden md:block px-6 py-2.5 bg-[#a88c5a] hover:bg-[#b89a6e] text-black text-sm font-medium rounded-full transition-all"
         >
           Book a Consultation
         </Link>
@@ -147,7 +147,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
             ))}
             <Link
               href={resolvedCtaHref}
-              className="mt-4 px-6 py-3 bg-accent hover:bg-accent-hover text-black font-medium rounded-full text-center transition-all"
+              className="mt-4 px-6 py-3 bg-[#a88c5a] hover:bg-[#b89a6e] text-black font-medium rounded-full text-center transition-all"
               onClick={closeMenu}
             >
               Book a Consultation

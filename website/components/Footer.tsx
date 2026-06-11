@@ -10,14 +10,14 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between gap-y-10">
           {/* Left side */}
           <div>
-            <div className="font-semibold text-lg">{site.name}</div>
+            <div className="font-semibold text-base whitespace-nowrap">{site.name}</div>
             <p className="mt-2 text-sm text-subtle max-w-xs">
               {site.tagline}
             </p>
           </div>
 
           {/* Right side */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-12 gap-y-8 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-16 gap-y-8 text-sm">
             <div>
               <div className="font-medium text-accent mb-3">Company</div>
               <div className="space-y-2 text-muted">
@@ -48,16 +48,16 @@ export default function Footer() {
 
             <div>
               <div className="font-medium text-accent mb-3">Contact</div>
-              <div className="space-y-2 text-muted">
+              <div className="text-muted text-sm space-y-1">
                 <a
                   href={site.phoneHref}
-                  className="hover:text-accent transition-colors"
+                  className="hover:text-accent transition-colors block"
                 >
                   {site.phone}
                 </a>
                 <a
                   href={site.email ? `mailto:${site.email}` : undefined}
-                  className="hover:text-accent transition-colors"
+                  className="hover:text-accent transition-colors block"
                 >
                   {site.email}
                 </a>
@@ -99,7 +99,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-white/10 text-xs text-subtle flex flex-col md:flex-row justify-between gap-y-2">
-          <div>© {year} {site.name}. All rights reserved.</div>
+          <div>© {year} <span className="whitespace-nowrap">{site.name}</span>. All rights reserved.</div>
           <div className="space-x-1">
             <Link href="/privacy-policy" className="hover:text-accent transition-colors">
               Privacy Policy
