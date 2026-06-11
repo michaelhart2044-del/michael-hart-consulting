@@ -44,7 +44,7 @@ export default function PrivacyPolicy() {
 
         <div>
           <h2 className="text-2xl font-semibold text-white mb-4">3. Cookies and Analytics</h2>
-          <p>We use cookies and similar tracking technologies (such as Microsoft Clarity and Vercel Analytics) to analyze website traffic and understand how visitors interact with our site. This helps us improve user experience.</p>
+          <p>We use cookies and similar tracking technologies (such as Google Analytics 4 and Microsoft Clarity) to analyze website traffic and understand how visitors interact with our site. This helps us improve user experience.</p>
         </div>
 
         <div>
