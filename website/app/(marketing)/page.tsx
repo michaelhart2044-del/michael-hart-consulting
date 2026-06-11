@@ -111,11 +111,11 @@ export default function Home() {
       <div className="max-w-5xl mx-auto px-6 pt-28 pb-16 md:pt-32 md:pb-20">
         <div className="max-w-3xl">
           <h1 className="text-[2rem] leading-[1.05] md:text-4xl lg:text-5xl font-semibold tracking-[-1.25px]">
-            Strategic Financial Advisory<br className="hidden md:block" />in Revenue Accounting &amp; Process Optimization
+            Expert Financial Advisory:<br className="hidden md:block" /> Operations, Controls &amp; Automation
           </h1>
 
           <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed max-w-2xl">
-            Results-driven expertise transforming financial operations through revenue accounting, month-end close, reconciliations, and intelligent automation across organizations.
+            Results-driven expertise transforming financial operations through reporting, close processes, controls, automation, and strategic leadership.
           </p>
 
           <div className="mt-10 md:mt-12">
