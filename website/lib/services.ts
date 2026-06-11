@@ -1,0 +1,175 @@
+import type { ReactNode } from 'react';
+
+// Core services data - source of truth for detail pages, home links, schema, etc.
+export interface Service {
+  slug: string;
+  title: string;
+  shortDesc: string;
+  longIntro: string;
+  deliverables: string[];
+  whoFor: string[];
+  approach: string[];
+  // For schema / meta
+  description: string; // meta desc
+}
+
+export const services: Service[] = [
+  {
+    slug: 'forensic-accounting-litigation-support',
+    title: 'Forensic Accounting & Litigation Support',
+    shortDesc: 'Expert analysis and support for disputes, investigations, and legal proceedings.',
+    longIntro: 'We provide independent, defensible forensic accounting services to law firms, corporations, and government agencies involved in complex disputes, fraud investigations, and litigation. Our work is designed to withstand scrutiny in court or arbitration.',
+    deliverables: [
+      'Damage calculations and lost profits analysis',
+      'Fraud investigation and asset tracing',
+      'Financial statement analysis and reconstruction',
+      'Expert reports and testimony support',
+      'Discovery assistance and data analytics',
+    ],
+    whoFor: [
+      'Litigation counsel and law firms',
+      'Corporate legal and compliance teams',
+      'Insurance carriers and claims professionals',
+      'Government agencies and regulators',
+    ],
+    approach: [
+      'Independent, objective analysis grounded in facts and GAAP/GAAS principles.',
+      'Clear, concise deliverables that translate complex financial data into actionable insights.',
+      'Collaboration with counsel from early case assessment through trial.',
+    ],
+    description: 'Expert forensic accounting and litigation support for disputes, fraud investigations, and legal proceedings. Independent analysis and expert testimony.',
+  },
+  {
+    slug: 'business-setup-structuring',
+    title: 'Business Setup & Structuring',
+    shortDesc: 'Strategic guidance on company formation, ownership structures, and operational frameworks.',
+    longIntro: 'We help entrepreneurs, executives, and investors design and implement efficient, tax-advantaged, and governance-strong business structures. Whether launching a new venture or reorganizing an existing enterprise, we align structure with strategic and operational goals.',
+    deliverables: [
+      'Entity selection and formation (LLC, Corp, LP, etc.)',
+      'Ownership and equity structuring',
+      'Operating agreements, bylaws, and governance documents',
+      'Tax planning and multi-state considerations',
+      'Succession and exit planning frameworks',
+    ],
+    whoFor: [
+      'Founders and early-stage companies',
+      'Family businesses and closely held enterprises',
+      'Private equity and investment groups',
+      'Professionals forming practices or partnerships',
+    ],
+    approach: [
+      'Holistic view that balances tax efficiency, liability protection, governance, and future flexibility.',
+      'Clear documentation and implementation support.',
+      'Ongoing advisory as the business evolves.',
+    ],
+    description: 'Strategic guidance on company formation, ownership structures, governance, and tax-efficient business frameworks for founders and enterprises.',
+  },
+  {
+    slug: 'mergers-acquisitions-advisory',
+    title: 'Mergers & Acquisitions Advisory',
+    shortDesc: 'End-to-end support for buying, selling, and integrating businesses with financial and strategic precision.',
+    longIntro: 'We advise buyers and sellers through the full M&A lifecycle — from target identification and due diligence through negotiation, structuring, and post-close integration. Our forensic and financial expertise helps clients avoid surprises and maximize value.',
+    deliverables: [
+      'Buy-side and sell-side due diligence',
+      'Quality of earnings and working capital analysis',
+      'Valuation support and deal modeling',
+      'Integration planning and synergy tracking',
+      'Post-close dispute resolution and earn-out support',
+    ],
+    whoFor: [
+      'Private equity firms and strategic acquirers',
+      'Business owners preparing for sale',
+      'Family offices and corporate development teams',
+      'Management teams pursuing acquisitions',
+    ],
+    approach: [
+      'Deep financial scrutiny combined with commercial judgment.',
+      'Transparent communication and realistic expectations.',
+      'Focus on value creation before, during, and after the transaction.',
+    ],
+    description: 'Comprehensive M&A advisory including due diligence, valuation, structuring, and integration for buyers and sellers seeking precision and value.',
+  },
+  {
+    slug: 'financial-forecasting-strategy',
+    title: 'Financial Forecasting & Strategy',
+    shortDesc: 'Data-driven forecasting, scenario planning, and long-term financial strategy development.',
+    longIntro: 'We build robust financial models and strategic frameworks that help leadership teams make confident decisions about growth, capital allocation, and risk. Our forecasts are practical, stress-tested, and tied directly to operational drivers.',
+    deliverables: [
+      'Three-statement financial models and forecasts',
+      'Scenario and sensitivity analysis',
+      'Budgeting and long-range planning processes',
+      'Capital structure and liquidity planning',
+      'Board and investor reporting packages',
+    ],
+    whoFor: [
+      'CEOs, CFOs, and finance teams',
+      'Boards and investors requiring clear visibility',
+      'Companies preparing for fundraising or exit',
+      'Organizations navigating uncertainty or rapid change',
+    ],
+    approach: [
+      'Driver-based modeling rather than simple extrapolations.',
+      'Clear assumptions, risks, and mitigation paths.',
+      'Models designed for ongoing use and iteration, not one-time reports.',
+    ],
+    description: 'Data-driven financial forecasting, scenario planning, budgeting, and strategic finance support to guide confident business decisions.',
+  },
+  {
+    slug: 'ai-automation-solutions',
+    title: 'AI & Automation Solutions',
+    shortDesc: 'Implementing intelligent systems that improve decision-making, efficiency, and financial processes.',
+    longIntro: 'We help organizations identify high-impact opportunities to apply AI, machine learning, and intelligent automation to finance, operations, and advisory workflows. Our focus is practical implementation with measurable ROI, strong governance, and human oversight.',
+    deliverables: [
+      'Opportunity assessment and use-case prioritization',
+      'Custom AI/automation pilots and production deployments',
+      'Data strategy, cleaning, and pipeline development',
+      'Governance, risk, and compliance frameworks for AI',
+      'Training and change management for teams',
+    ],
+    whoFor: [
+      'Finance and accounting teams seeking efficiency',
+      'Professional services firms modernizing delivery',
+      'Mid-market companies ready to scale operations',
+      'Leaders wanting to augment (not replace) expertise with technology',
+    ],
+    approach: [
+      'Start with the problem, not the technology.',
+      'Build solutions that are explainable, auditable, and maintainable.',
+      'Combine deep domain knowledge with modern tooling.',
+    ],
+    description: 'Practical AI and intelligent automation implementations that enhance financial processes, decision-making, and operational efficiency with strong governance.',
+  },
+  {
+    slug: 'website-design-development',
+    title: 'Website Design & Development',
+    shortDesc: 'Modern, professional websites and web applications tailored to your brand and business goals.',
+    longIntro: 'We design and build high-performing, conversion-focused websites and web applications for professional services firms and sophisticated businesses. Our work emphasizes clarity, trust, performance, and seamless integration with marketing and operations.',
+    deliverables: [
+      'Custom design systems and brand-aligned experiences',
+      'High-performance Next.js / modern web applications',
+      'SEO foundations, analytics, and conversion tracking',
+      'Content strategy and copy that converts',
+      'Ongoing maintenance, optimization, and feature development',
+    ],
+    whoFor: [
+      'Consulting firms and professional services practices',
+      'Private equity portfolio companies',
+      'Boutique advisory and expert firms',
+      'Organizations that want their digital presence to match their expertise',
+    ],
+    approach: [
+      'Premium aesthetic with obsessive attention to performance and usability.',
+      'Strategic content and clear calls-to-action that drive inquiries.',
+      'Built for longevity, easy updates, and measurable results.',
+    ],
+    description: 'Premium, high-performance website design and development for consulting firms and professional services businesses that need to build trust and generate opportunities online.',
+  },
+];
+
+export function getServiceBySlug(slug: string): Service | undefined {
+  return services.find((s) => s.slug === slug);
+}
+
+export function getAllServiceSlugs(): string[] {
+  return services.map((s) => s.slug);
+}

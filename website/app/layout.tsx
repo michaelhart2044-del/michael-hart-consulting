@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+import CookieConsent from "@/components/CookieConsent";
+import { services } from "@/lib/services";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +30,32 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Business / Professional Services structured data (LocalBusiness + services)
+  const businessJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': ['Organization', 'ProfessionalService'],
+    name: 'Michael Hart Consulting Group LLC',
+    legalName: 'Michael Hart Consulting Group LLC',
+    url: 'https://michaelhartconsulting.com',
+    telephone: '(747) 370-9393',
+    email: 'michael@michaelhartconsulting.com',
+    description: 'Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions.',
+    areaServed: 'United States',
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Consulting Services',
+      itemListElement: services.map((service, index) => ({
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: service.title,
+          description: service.shortDesc,
+        },
+        position: index + 1,
+      })),
+    },
+  };
+
   return (
     <html
       lang="en"
@@ -60,6 +88,15 @@ export default function RootLayout({
             gtag('config', 'G-4F2H29FYS7');
           `}
         </Script>
+
+        {/* Business Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(businessJsonLd) }}
+        />
+
+        {/* Lightweight Cookie Consent Banner */}
+        <CookieConsent />
       </body>
     </html>
   );

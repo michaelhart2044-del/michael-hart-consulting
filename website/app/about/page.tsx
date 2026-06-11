@@ -1,57 +1,27 @@
-'use client';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import Link from 'next/link';
+import type { Metadata } from 'next';
 
-import { useState } from 'react';
+export const metadata: Metadata = {
+  title: 'About',
+  description: 'Learn about Michael Hart Consulting Group LLC. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.',
+  openGraph: {
+    title: 'About | Michael Hart Consulting Group',
+    description: 'Learn about Michael Hart Consulting Group LLC. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About | Michael Hart Consulting Group',
+    description: 'Learn about Michael Hart Consulting Group LLC. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.',
+  },
+};
 
 export default function About() {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <div className="min-h-screen bg-[#0a0f2c] text-[#f1f5f9]">
-      
-      {/* Navbar with Logo */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0f2c]/95 backdrop-blur border-b border-white/10">
-        <div className="max-w-5xl mx-auto px-6 flex items-center justify-between h-20">
-          <a href="/" className="flex items-center gap-3 group">
-            <img src="/mh-logo.png" alt="MH Logo" className="h-20 w-20 rounded-full object-contain" />
-            <span className="font-semibold text-lg tracking-[-0.3px] group-hover:text-[#c5a46e] transition-colors">
-              Michael Hart Consulting Group LLC
-            </span>
-          </a>
-
-          <div className="hidden md:flex items-center gap-8 text-sm">
-            <a href="/" className="hover:text-[#c5a46e] transition-colors">Home</a>
-            <a href="/about" className="hover:text-[#c5a46e] transition-colors">About</a>
-            <a href="/#why" className="hover:text-[#c5a46e] transition-colors">Why Us</a>
-            <a href="/#services" className="hover:text-[#c5a46e] transition-colors">Services</a>
-            <a href="/contact" className="hover:text-[#c5a46e] transition-colors">Contact</a>
-          </div>
-
-          <a href="/contact" className="hidden md:block px-6 py-2.5 bg-[#c5a46e] hover:bg-[#d4b57e] text-black text-sm font-medium rounded-full transition-all">
-            Book a Consultation
-          </a>
-
-          <div onClick={() => setIsOpen(!isOpen)} className="md:hidden p-5 -mr-5 text-white active:bg-white/10 rounded-xl transition-colors touch-manipulation cursor-pointer select-none" role="button">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isOpen ? "M6 18L18 6M6 6h12v12" : "M4 6h16M4 12h16M4 18h16"} />
-            </svg>
-          </div>
-        </div>
-
-        {isOpen && (
-          <div className="md:hidden bg-[#0a0f2c] border-t border-white/10 py-4">
-            <div className="max-w-5xl mx-auto px-6 flex flex-col gap-4 text-sm">
-              <a href="/" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>Home</a>
-              <a href="/about" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>About</a>
-              <a href="/#why" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>Why Us</a>
-              <a href="/#services" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>Services</a>
-              <a href="/contact" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>Contact</a>
-              <a href="/contact" className="mt-4 px-6 py-3 bg-[#c5a46e] hover:bg-[#d4b57e] text-black font-medium rounded-full text-center transition-all" onClick={() => setIsOpen(false)}>
-                Book a Consultation
-              </a>
-            </div>
-          </div>
-        )}
-      </nav>
+      <Navbar />
 
       {/* Page Header */}
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-16">
@@ -65,9 +35,29 @@ export default function About() {
         </div>
       </div>
 
+      {/* Founder */}
+      <div className="max-w-5xl mx-auto px-6 pb-12">
+        <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+            <div className="w-20 h-20 rounded-full border border-accent/30 bg-[#0a0f2c] flex-shrink-0 flex items-center justify-center">
+              <span className="text-accent text-3xl font-semibold tracking-[-1.5px]">MH</span>
+            </div>
+            <div className="flex-1">
+              <div>
+                <div className="font-semibold text-2xl">Michael Hart</div>
+                <div className="text-accent text-sm tracking-[2px] mt-0.5">FOUNDER &amp; PRINCIPAL</div>
+              </div>
+              <p className="mt-4 text-[#94a3b8] leading-relaxed">
+                Michael Hart founded the firm with a clear mission: to bring the rigor of forensic accounting and the clarity of strategic advisory to organizations facing their most complex challenges. With decades of hands-on experience advising boards, legal teams, and executives, he combines traditional financial discipline with modern analytics and AI to deliver practical, defensible results.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Who We Are */}
       <div className="max-w-5xl mx-auto px-6 pb-12">
-        <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-[#0f172a]">
+        <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
           <h2 className="text-3xl font-semibold mb-6">Who We Are</h2>
           <p className="text-lg text-[#94a3b8] leading-relaxed">
             Michael Hart Consulting Group LLC was founded with a clear mission: to deliver high-quality, practical advisory services that help organizations solve complex problems and make confident decisions.
@@ -80,21 +70,36 @@ export default function About() {
 
       {/* Experience & Expertise */}
       <div className="max-w-5xl mx-auto px-6 pb-12">
-        <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-[#0f172a]">
-          <h2 className="text-3xl font-semibold mb-6">Experience & Expertise</h2>
+        <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
+          <h2 className="text-3xl font-semibold mb-6">Experience &amp; Expertise</h2>
           <p className="text-lg text-[#94a3b8] leading-relaxed">
-            Our work spans a wide range of complex matters, including litigation support, financial investigations, business restructuring, M&A due diligence, and strategic financial planning. 
+            Our work spans a wide range of complex matters, including litigation support, financial investigations, business restructuring, M&amp;A due diligence, and strategic financial planning. 
             We have advised business owners, executives, legal teams, and investors across multiple industries.
           </p>
           <p className="mt-6 text-lg text-[#94a3b8] leading-relaxed">
             We combine decades of hands-on experience with modern tools — including data analytics and AI — to deliver faster, clearer, and more actionable results.
           </p>
+
+          {/* Industries Served - trust signal */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="text-xs tracking-[2px] text-accent mb-3">INDUSTRIES SERVED</div>
+            <div className="flex flex-wrap gap-2">
+              {['Legal & Litigation', 'Private Equity & Finance', 'Manufacturing', 'Technology & SaaS', 'Healthcare', 'Real Estate', 'Professional Services'].map((industry) => (
+                <span
+                  key={industry}
+                  className="inline-block px-3 py-1 text-xs border border-white/10 rounded-full text-muted hover:border-accent/40 hover:text-accent transition-colors"
+                >
+                  {industry}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Our Approach */}
-      <div className="max-w-5xl mx-auto px-6 pb-20">
-        <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-[#0f172a]">
+      <div className="max-w-5xl mx-auto px-6 pb-12">
+        <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
           <h2 className="text-3xl font-semibold mb-6">Our Approach</h2>
           <p className="text-lg text-[#94a3b8] leading-relaxed">
             We believe that great advisory work is built on three pillars: deep expertise, clear communication, and practical results. 
@@ -106,6 +111,27 @@ export default function About() {
         </div>
       </div>
 
+      {/* Clear CTA */}
+      <div className="max-w-5xl mx-auto px-6 pb-20">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-card border border-white/10 rounded-2xl p-10 md:p-12 text-center hover:border-accent/30 transition-all duration-300">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Ready to discuss your challenges?</h2>
+            <p className="mt-4 text-base md:text-lg text-[#94a3b8] max-w-xl mx-auto">
+              Whether you're preparing for litigation, evaluating a transaction, or modernizing financial processes, we’re here to help.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/contact"
+                className="inline-block px-10 py-4 bg-accent hover:bg-accent-hover text-black font-medium text-lg rounded-full transition-all active:scale-[0.985]"
+              >
+                Book a Consultation
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
     </div>
   );
 }

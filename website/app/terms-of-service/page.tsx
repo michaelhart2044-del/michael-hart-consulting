@@ -1,54 +1,26 @@
-'use client';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import type { Metadata } from 'next';
 
-import { useState } from 'react';
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description: 'Terms of Service for Michael Hart Consulting Group LLC. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.',
+  openGraph: {
+    title: 'Terms of Service | Michael Hart Consulting Group',
+    description: 'Terms of Service for Michael Hart Consulting Group LLC. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terms of Service | Michael Hart Consulting Group',
+    description: 'Terms of Service for Michael Hart Consulting Group LLC. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.',
+  },
+};
 
 export default function TermsOfService() {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <div className="min-h-screen bg-[#0a0f2c] text-[#f1f5f9]">
-      
-      {/* Navbar with Logo */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0f2c]/95 backdrop-blur border-b border-white/10">
-        <div className="max-w-5xl mx-auto px-6 flex items-center justify-between h-20">
-          <a href="/" className="flex items-center gap-3 group">
-            <img src="/mh-logo.png" alt="MH Logo" className="h-20 w-20 rounded-full object-contain" />
-            <span className="font-semibold text-lg tracking-[-0.3px] group-hover:text-[#c5a46e] transition-colors">
-              Michael Hart Consulting Group LLC
-            </span>
-          </a>
-
-          <div className="hidden md:flex items-center gap-8 text-sm">
-            <a href="/about" className="hover:text-[#c5a46e] transition-colors">About</a>
-            <a href="/" className="hover:text-[#c5a46e] transition-colors">Home</a>
-            <a href="/#why" className="hover:text-[#c5a46e] transition-colors">Why Us</a>
-            <a href="/#services" className="hover:text-[#c5a46e] transition-colors">Services</a>
-            <a href="/contact" className="hover:text-[#c5a46e] transition-colors">Contact</a>
-          </div>
-
-          <a href="/contact" className="hidden md:block px-6 py-2.5 bg-[#c5a46e] hover:bg-[#d4b57e] text-black text-sm font-medium rounded-full transition-all">
-            Book a Consultation
-          </a>
-
-          <div onClick={() => setIsOpen(!isOpen)} className="md:hidden p-5 -mr-5 text-white active:bg-white/10 rounded-xl transition-colors touch-manipulation cursor-pointer select-none" role="button">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isOpen ? "M6 18L18 6M6 6h12v12" : "M4 6h16M4 12h16M4 18h16"} />
-            </svg>
-          </div>
-        </div>
-
-        {isOpen && (
-          <div className="md:hidden bg-[#0a0f2c] border-t border-white/10 py-4">
-            <div className="max-w-5xl mx-auto px-6 flex flex-col gap-4 text-sm">
-              <a href="/about" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>About</a>
-              <a href="/" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>Home</a>
-              <a href="/#why" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>Why Us</a>
-              <a href="/#services" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>Services</a>
-              <a href="/contact" className="py-2 hover:text-[#c5a46e] transition-colors" onClick={() => setIsOpen(false)}>Contact</a>
-            </div>
-          </div>
-        )}
-      </nav>
+      <Navbar />
 
       {/* Header */}
       <div className="max-w-4xl mx-auto px-6 pt-32 pb-12">
@@ -105,6 +77,8 @@ export default function TermsOfService() {
         </div>
 
       </div>
+
+      <Footer />
     </div>
   );
 }
