@@ -2,6 +2,8 @@ import { MetadataRoute } from 'next';
 import { getAllServiceSlugs } from '@/lib/services';
 import { site } from '@/lib/site';
 
+// Fixed to dynamically use getAllServiceSlugs() from lib/services.ts (instead of hardcoding slugs)
+// to resolve the live sitemap.xml 500 error. Also uses site.url for consistency.
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = site.url;
 
