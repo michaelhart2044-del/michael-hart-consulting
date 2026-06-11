@@ -77,7 +77,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
             height={80}
             className="h-20 w-20 rounded-full object-contain"
           />
-          <span className="font-semibold text-base md:text-lg tracking-[-0.3px] group-hover:text-accent transition-colors whitespace-nowrap">
+          <span className="font-semibold text-accent text-base md:text-lg tracking-[-0.3px] group-hover:text-accent-hover transition-colors whitespace-nowrap">
             {site.name}
           </span>
         </Link>

@@ -48,12 +48,12 @@ export default function Contact() {
               <div className="space-y-8 text-muted">
                 <div>
                   <div className="text-sm text-accent font-medium tracking-widest mb-2">PHONE</div>
-                  <a href={site.phoneHref} className="text-xl hover:text-accent transition-colors">{site.phone}</a>
+                  <a href={site.phoneHref} className="text-lg hover:text-accent transition-colors">{site.phone}</a>
                 </div>
 
                 <div>
                   <div className="text-sm text-accent font-medium tracking-widest mb-2">EMAIL</div>
-                  <a href={`mailto:${site.email}`} className="text-xl hover:text-accent transition-colors">
+                  <a href={`mailto:${site.email}`} className="text-lg hover:text-accent transition-colors">
                     {site.email}
                   </a>
                 </div>
