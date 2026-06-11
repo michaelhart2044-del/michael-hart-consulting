@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { site } from '@/lib/site';
 
 interface NavbarProps {
   /** Optional override for the CTA button href (e.g. "#form" on the contact page) */
@@ -71,7 +72,7 @@ export default function Navbar({ ctaHref = '/contact', activeSection }: NavbarPr
             className="h-20 w-20 rounded-full object-contain"
           />
           <span className="font-semibold text-lg tracking-[-0.3px] group-hover:text-[#c5a46e] transition-colors">
-            Michael Hart Consulting Group LLC
+            {site.name}
           </span>
         </Link>
 

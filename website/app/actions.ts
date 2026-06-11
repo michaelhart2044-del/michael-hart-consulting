@@ -1,6 +1,7 @@
 'use server';
 
 import { Resend } from 'resend';
+import { site } from '@/lib/site';
 
 // Escape user input to prevent HTML injection when interpolating into the email body.
 // Always sanitize untrusted data (name, email, message) coming from the contact form.
@@ -31,9 +32,10 @@ export async function sendContactEmail(formData: FormData) {
       // Production sender using the site's own domain.
       // The domain (michaelhartconsulting.com) must be verified in the Resend dashboard.
       // "onboarding@resend.dev" is only a sandbox address for development/testing.
-      from: 'Contact Form <michael@michaelhartconsulting.com>',
-      to: 'michael@michaelhartconsulting.com',
+      from: `Contact Form <${site.email}>`,
+      to: site.email,
       subject: `New message from ${rawName.trim().slice(0, 80) || 'website visitor'}`,
+      replyTo: rawEmail.trim() || undefined,
       html: `
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Email:</strong> ${email}</p>

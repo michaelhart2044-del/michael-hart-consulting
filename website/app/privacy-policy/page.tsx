@@ -1,6 +1,7 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import type { Metadata } from 'next';
+import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -71,9 +72,9 @@ export default function PrivacyPolicy() {
           <p>If you have any questions about this Privacy Policy, please contact us at:</p>
           
           <div className="mt-2 text-[#f1f5f9]">
-            Michael Hart Consulting Group LLC<br />
-            Email: <a href="mailto:michael@michaelhartconsulting.com" className="text-[#c5a46e] hover:underline">michael@michaelhartconsulting.com</a><br />
-            Phone: (747) 370-9393
+            {site.name}<br />
+            Email: <a href={`mailto:${site.email}`} className="text-[#c5a46e] hover:underline">{site.email}</a><br />
+            Phone: {site.phone}
           </div>
         </div>
 

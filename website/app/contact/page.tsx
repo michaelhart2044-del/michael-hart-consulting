@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ContactForm from '@/components/ContactForm';
+import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -51,13 +52,13 @@ export default function Contact() {
               <div className="space-y-8 text-[#94a3b8]">
                 <div>
                   <div className="text-sm text-[#c5a46e] font-medium tracking-widest mb-2">PHONE</div>
-                  <a href="tel:7473709393" className="text-xl hover:text-[#c5a46e] transition-colors">(747) 370-9393</a>
+                  <a href={site.phoneHref} className="text-xl hover:text-[#c5a46e] transition-colors">{site.phone}</a>
                 </div>
 
                 <div>
                   <div className="text-sm text-[#c5a46e] font-medium tracking-widest mb-2">EMAIL</div>
-                  <a href="mailto:michael@michaelhartconsulting.com" className="text-xl hover:text-[#c5a46e] transition-colors">
-                    michael@michaelhartconsulting.com
+                  <a href={`mailto:${site.email}`} className="text-xl hover:text-[#c5a46e] transition-colors">
+                    {site.email}
                   </a>
                 </div>
               </div>

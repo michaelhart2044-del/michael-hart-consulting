@@ -1,6 +1,7 @@
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import type { Metadata } from 'next';
+import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -70,9 +71,9 @@ export default function TermsOfService() {
           <h2 className="text-2xl font-semibold text-white mb-4">8. Contact Information</h2>
           <p>If you have any questions about these Terms of Service, please contact us at:</p>
           <p className="mt-2">
-            Michael Hart Consulting Group LLC<br />
-            Email: <a href="mailto:michael@michaelhartconsulting.com" className="text-[#c5a46e] hover:underline">michael@michaelhartconsulting.com</a><br />
-            Phone: (747) 370-9393
+            {site.name}<br />
+            Email: <a href={`mailto:${site.email}`} className="text-[#c5a46e] hover:underline">{site.email}</a><br />
+            Phone: {site.phone}
           </p>
         </div>
 

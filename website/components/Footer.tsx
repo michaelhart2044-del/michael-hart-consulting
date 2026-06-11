@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { site } from '@/lib/site';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -9,9 +10,9 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between gap-y-10">
           {/* Left side */}
           <div>
-            <div className="font-semibold text-lg">Michael Hart Consulting Group LLC</div>
+            <div className="font-semibold text-lg">{site.name}</div>
             <p className="mt-2 text-sm text-[#64748b] max-w-xs">
-              Strategic advisory for complex financial and business challenges.
+              {site.tagline}
             </p>
           </div>
 
@@ -48,12 +49,12 @@ export default function Footer() {
             <div>
               <div className="font-medium text-[#c5a46e] mb-3">Contact</div>
               <div className="space-y-2 text-[#94a3b8]">
-                <div>(747) 370-9393</div>
+                <div>{site.phone}</div>
                 <a
-                  href="mailto:michael@michaelhartconsulting.com"
+                  href={site.email ? `mailto:${site.email}` : undefined}
                   className="hover:text-[#c5a46e] transition-colors"
                 >
-                  michael@michaelhartconsulting.com
+                  {site.email}
                 </a>
               </div>
             </div>
@@ -61,7 +62,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-white/10 text-xs text-[#64748b] flex flex-col md:flex-row justify-between gap-y-2">
-          <div>© {year} Michael Hart Consulting Group LLC. All rights reserved.</div>
+          <div>© {year} {site.name}. All rights reserved.</div>
           <div className="space-x-1">
             <Link href="/privacy-policy" className="hover:text-[#c5a46e] transition-colors">
               Privacy Policy

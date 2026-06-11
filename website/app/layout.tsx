@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 import CookieConsent from "@/components/CookieConsent";
 import { services } from "@/lib/services";
+import { site } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,10 +20,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Michael Hart Consulting Group | Forensic Accounting, M&A & AI Advisory",
-    template: "%s | Michael Hart Consulting Group",
+    default: `${site.name} | Forensic Accounting, M&A & AI Advisory`,
+    template: "%s | " + site.name,
   },
-  description: "Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions. Helping businesses and legal teams make confident decisions.",
+  description: site.description,
 };
 
 export default function RootLayout({
@@ -34,12 +35,12 @@ export default function RootLayout({
   const businessJsonLd = {
     '@context': 'https://schema.org',
     '@type': ['Organization', 'ProfessionalService'],
-    name: 'Michael Hart Consulting Group LLC',
-    legalName: 'Michael Hart Consulting Group LLC',
-    url: 'https://michaelhartconsulting.com',
-    telephone: '(747) 370-9393',
-    email: 'michael@michaelhartconsulting.com',
-    description: 'Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions.',
+    name: site.name,
+    legalName: site.legalName,
+    url: site.url,
+    telephone: site.phone,
+    email: site.email,
+    description: site.description,
     areaServed: 'United States',
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
