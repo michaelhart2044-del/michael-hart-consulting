@@ -27,7 +27,7 @@ export default function CookieConsent() {
     <div className="fixed bottom-0 left-0 right-0 z-[60] border-t border-white/10 bg-background/95 backdrop-blur">
       <div className="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row items-start md:items-center gap-4 text-sm">
         <div className="text-muted flex-1">
-          We use essential cookies and analytics tools (such as Microsoft Clarity and Google Analytics) to improve your experience and understand site usage.{' '}
+          We use essential cookies and analytics tools (such as Google Analytics 4 (GA4) and Microsoft Clarity) to improve your experience and understand site usage.{' '}
           <Link href="/privacy-policy" className="text-accent hover:underline">
             Learn more in our Privacy Policy
           </Link>.
