@@ -39,11 +39,11 @@ export default function About() {
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
             <div className="flex-shrink-0">
               <Image 
-                src="/headshot.jpg" 
-                alt="Michael Hart, Founder & Principal of Michael Hart Consulting Group LLC" 
+                src="/mh-logo.png" 
+                alt="Michael Hart Consulting Group LLC logo" 
                 width={128} 
                 height={128} 
-                className="rounded-full object-cover border border-accent/30 w-28 h-28 md:w-32 md:h-32" 
+                className="rounded-full object-contain border border-accent/30 bg-background p-2 w-28 h-28 md:w-32 md:h-32" 
               />
             </div>
             <div className="flex-1">
