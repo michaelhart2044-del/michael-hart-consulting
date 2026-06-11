@@ -7,14 +7,16 @@ export const site = {
   phoneHref: "tel:7473709393",
   tagline: "Strategic advisory for complex financial and business challenges.",
   description:
-    "Expert advisory in revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.",
-  // Social links (update these with real profiles)
+    "Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions. Helping businesses and legal teams make confident decisions.",
+
+  // Calendly scheduling link (used on /contact page)
+  calendlyUrl: "https://calendly.com/michael-michaelhartconsulting/30min",
+
+  // Social links (placeholders for now)
   social: {
-    linkedin: "https://www.linkedin.com/in/yourprofile",
-    x: "https://x.com/yourhandle",
+    // linkedin: "https://www.linkedin.com/in/yourprofile",
+    // twitter: "https://x.com/yourhandle",
   },
-  // Calendly scheduling link for consultations (replace with your actual Calendly URL)
-  calendlyUrl: "https://calendly.com/yourusername/30min",
 } as const;
 
 export type Site = typeof site;
