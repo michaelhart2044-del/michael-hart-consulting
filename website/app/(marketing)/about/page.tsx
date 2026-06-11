@@ -54,15 +54,6 @@ export default function About() {
               <p className="mt-4 text-muted leading-relaxed">
                 Michael Hart founded the firm with a clear mission: to bring the rigor of forensic accounting and the clarity of strategic advisory to organizations facing their most complex challenges. With decades of hands-on experience advising boards, legal teams, and executives, he combines traditional financial discipline with modern analytics and AI to deliver practical, defensible results.
               </p>
-              <div className="mt-4">
-                <a 
-                  href="/resume.pdf" 
-                  download="Michael_Hart_Resume.pdf"
-                  className="inline-flex items-center px-4 py-2 text-sm border border-accent/40 text-accent hover:bg-accent hover:text-black rounded-full transition-all"
-                >
-                  Download Full Resume (PDF)
-                </a>
-              </div>
             </div>
           </div>
         </div>
@@ -157,7 +148,7 @@ export default function About() {
             </div>
           </div>
           <p className="mt-6 text-sm text-muted">
-            Full details and additional qualifications available in the downloadable resume.
+            These qualifications reflect decades of specialized work in forensic accounting, complex litigation, and high-value advisory.
           </p>
         </div>
       </div>
