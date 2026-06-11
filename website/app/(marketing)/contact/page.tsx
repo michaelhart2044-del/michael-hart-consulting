@@ -6,16 +6,16 @@ import CalendlyWidget from '@/components/CalendlyWidget';
 
 export const metadata: Metadata = {
   title: 'Contact',
-  description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
+  description: `Get in touch with ${site.name}. ${site.description} Book a consultation or send us a message.`,
   openGraph: {
-    title: 'Contact | Michael Hart Consulting Group',
-    description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
+    title: `Contact | ${site.name}`,
+    description: `Get in touch with ${site.name}. ${site.description} Book a consultation or send us a message.`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Contact | Michael Hart Consulting Group',
-    description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
+    title: `Contact | ${site.name}`,
+    description: `Get in touch with ${site.name}. ${site.description} Book a consultation or send us a message.`,
   },
 };
 

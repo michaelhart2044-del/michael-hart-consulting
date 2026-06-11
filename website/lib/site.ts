@@ -7,7 +7,7 @@ export const site = {
   phoneHref: "tel:7473709393",
   tagline: "Strategic advisory for complex financial and business challenges.",
   description:
-    "Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions. Helping businesses and legal teams make confident decisions.",
+    "Expert financial advisory in operations, controls, automation, revenue accounting, financial close, and transformation. Helping organizations achieve efficiency, compliance, and strategic growth.",
 
   // Calendly scheduling link (used on /contact page)
   calendlyUrl: "https://calendly.com/michael-michaelhartconsulting/30min",

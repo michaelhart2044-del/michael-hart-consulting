@@ -5,16 +5,16 @@ import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'About',
-  description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI & automation solutions.`,
+  description: `Learn about ${site.name}. ${site.description}`,
   openGraph: {
     title: `About | ${site.name}`,
-    description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI & automation solutions.`,
+    description: `Learn about ${site.name}. ${site.description}`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: `About | ${site.name}`,
-    description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI & automation solutions.`,
+    description: `Learn about ${site.name}. ${site.description}`,
   },
 };
 

@@ -1,19 +1,20 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { services } from '@/lib/services';
+import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Services',
-  description: 'Specialized advisory services including forensic accounting & litigation support, M&A advisory, revenue accounting & compliance, month-end close & reporting, SOX controls & audit support, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI & automation solutions.',
+  description: `Specialized advisory services from ${site.name}. ${site.description}`,
   openGraph: {
-    title: 'Services | Michael Hart Consulting Group',
-    description: 'Specialized advisory services including forensic accounting & litigation support, M&A advisory, revenue accounting & compliance, month-end close & reporting, SOX controls & audit support, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI & automation solutions.',
+    title: `Services | ${site.name}`,
+    description: `Specialized advisory services from ${site.name}. ${site.description}`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Services | Michael Hart Consulting Group',
-    description: 'Specialized advisory services including forensic accounting & litigation support, M&A advisory, revenue accounting & compliance, month-end close & reporting, SOX controls & audit support, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI & automation solutions.',
+    title: `Services | ${site.name}`,
+    description: `Specialized advisory services from ${site.name}. ${site.description}`,
   },
 };
 

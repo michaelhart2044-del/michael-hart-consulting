@@ -1,19 +1,20 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { services } from '@/lib/services';
+import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Home',
-  description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
+  description: site.description,
   openGraph: {
-    title: 'Michael Hart Consulting Group | Forensic Accounting, M&A & AI Advisory',
-    description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
+    title: `${site.name} | Strategic Financial Advisory`,
+    description: site.description,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Michael Hart Consulting Group | Forensic Accounting, M&A & AI Advisory',
-    description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
+    title: `${site.name} | Strategic Financial Advisory`,
+    description: site.description,
   },
 };
 
