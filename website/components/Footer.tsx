@@ -49,7 +49,12 @@ export default function Footer() {
             <div>
               <div className="font-medium text-accent mb-3">Contact</div>
               <div className="space-y-2 text-muted">
-                <div>{site.phone}</div>
+                <a
+                  href={site.phoneHref}
+                  className="hover:text-accent transition-colors"
+                >
+                  {site.phone}
+                </a>
                 <a
                   href={site.email ? `mailto:${site.email}` : undefined}
                   className="hover:text-accent transition-colors"

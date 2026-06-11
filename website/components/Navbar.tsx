@@ -50,6 +50,9 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
     if (href === '/about' && pathname === '/about') return true;
     if (href === '/contact' && pathname === '/contact') return true;
 
+    // Services pages (including subpages like /services/[slug])
+    if (href === '/services' && pathname.startsWith('/services')) return true;
+
     // Anchor links on homepage
     if (href === '/#why' && isHome && activeSection === 'why') return true;
     if (href === '/#services' && isHome && activeSection === 'services') return true;
