@@ -8,10 +8,10 @@ export const site = {
   tagline: "Strategic advisory for complex financial and business challenges.",
   description:
     "Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions. Helping businesses and legal teams make confident decisions.",
-  // Social links (placeholders for now; will be populated in Phase 2)
+  // Social links (update these with real profiles)
   social: {
-    // linkedin: "https://www.linkedin.com/in/yourprofile",
-    // twitter: "https://x.com/yourhandle",
+    linkedin: "https://www.linkedin.com/in/yourprofile",
+    x: "https://x.com/yourhandle",
   },
 } as const;
 
