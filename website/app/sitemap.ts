@@ -1,8 +1,9 @@
 import { MetadataRoute } from 'next';
 import { getAllServiceSlugs } from '@/lib/services';
+import { site } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://michaelhartconsulting.com';
+  const baseUrl = site.url;
 
   const staticPages = [
     { url: baseUrl, changeFrequency: 'monthly' as const, priority: 1 },
