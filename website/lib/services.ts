@@ -269,6 +269,56 @@ export const services: Service[] = [
     ],
     description: 'Practical automation and transformation services that modernize finance operations using SQL, Power Query, Power BI, ERP tools, and workflow automation.',
   },
+  {
+    slug: 'ai-assisted-software-development',
+    title: 'AI-Assisted Software Development',
+    shortDesc: 'Building custom tools, scripts, and applications with AI to automate and optimize financial processes.',
+    longIntro: 'Drawing from hands-on experience developing software solutions with the help of AI, we create tailored applications, integrations, and automation scripts that connect with ERP, CRM, and other systems to eliminate manual work and improve accuracy and speed.',
+    deliverables: [
+      'Custom script and tool development using AI-assisted coding',
+      'Integrations between financial systems and productivity tools',
+      'Automated data pipelines and reporting applications',
+      'Prototyping and rapid iteration of internal tools',
+      'Training and knowledge transfer on AI-assisted development',
+    ],
+    whoFor: [
+      'Finance and accounting teams wanting to build proprietary tools',
+      'Organizations modernizing legacy systems without large dev teams',
+      'Leaders seeking to accelerate digital transformation in finance ops',
+      'Companies looking to leverage AI for custom automation solutions',
+    ],
+    approach: [
+      'Combine domain expertise with AI tools for rapid, high-quality development.',
+      'Focus on practical, maintainable, and auditable solutions.',
+      'Emphasize integration with existing systems and team enablement.',
+    ],
+    description: 'AI-assisted custom software development for finance teams, including tools, scripts, integrations, and automation tailored to operational needs.',
+  },
+  {
+    slug: 'finance-function-transformation',
+    title: 'Finance Function Transformation & Leadership',
+    shortDesc: 'Modernizing finance teams and operations through automation, controls, and strategic leadership.',
+    longIntro: 'With experience building and leading accounting teams from the ground up, implementing robust controls, and driving large-scale process improvements, we advise on transforming finance functions to be more efficient, compliant, and strategically valuable.',
+    deliverables: [
+      'Finance team assessments, structure, and capability development',
+      'Automation and controls implementation roadmaps',
+      'Process redesign for close, reporting, and compliance functions',
+      'Leadership development, training, and mentoring programs',
+      'Change management and sustainable adoption support',
+    ],
+    whoFor: [
+      'Growing or PE-backed companies professionalizing finance operations',
+      'Organizations post-acquisition or in rapid growth phases',
+      'CFOs and finance leaders looking to upskill teams and modernize processes',
+      'Companies seeking to reduce costs while increasing control and output',
+    ],
+    approach: [
+      'Grounded in real-world, hands-on implementation experience.',
+      'Balance technical improvements with people, culture, and leadership.',
+      'Deliver measurable, sustainable transformations with clear ROI.',
+    ],
+    description: 'Comprehensive finance function transformation services combining process automation, internal controls, and leadership development for high-performing teams.',
+  },
 ];
 
 export function getServiceBySlug(slug: string): Service | undefined {

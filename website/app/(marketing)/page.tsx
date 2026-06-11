@@ -4,16 +4,16 @@ import { services } from '@/lib/services';
 
 export const metadata: Metadata = {
   title: 'Home',
-  description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
+  description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
   openGraph: {
     title: 'Michael Hart Consulting Group | Forensic Accounting, M&A & AI Advisory',
-    description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
+    description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Michael Hart Consulting Group | Forensic Accounting, M&A & AI Advisory',
-    description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
+    description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
   },
 };
 
@@ -85,6 +85,22 @@ export default function Home() {
     (
       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
         <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-1.34 3-3m-3 3v-3" />
+      </svg>
+    ),
+    // 11. AI-Assisted Software Development
+    (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    ),
+    // 12. Finance Function Transformation & Leadership
+    (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     )
   ];
@@ -181,7 +197,7 @@ export default function Home() {
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Our Services</h2>
             <p className="mt-4 text-base md:text-lg text-muted">
-              We provide specialized advisory in revenue accounting, financial close, controls, process automation, forecasting, and AI solutions across complex organizations.
+              We provide specialized advisory in revenue accounting, financial close, controls, process automation, AI-assisted software development, finance function transformation, forecasting, and AI solutions across complex organizations.
             </p>
           </div>
 
