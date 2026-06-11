@@ -37,13 +37,13 @@ export default function About() {
       <div className="max-w-5xl mx-auto px-6 pb-12">
         <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-            <div className="flex-shrink-0 w-28 h-28 md:w-32 md:h-32 rounded-full border border-accent/30 overflow-hidden bg-background">
+            <div className="flex-shrink-0 w-28 h-28 md:w-32 md:h-32 rounded-full border border-accent/30 overflow-hidden">
               <Image 
                 src="/mh-logo.png" 
                 alt="Michael Hart Consulting Group LLC logo" 
                 width={128} 
                 height={128} 
-                className="w-full h-full object-contain p-1" 
+                className="w-full h-full object-cover" 
               />
             </div>
             <div className="flex-1">
