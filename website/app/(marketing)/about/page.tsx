@@ -57,8 +57,7 @@ export default function About() {
               <div className="mt-4">
                 <a 
                   href="/resume.pdf" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                  download="Michael_Hart_Resume.pdf"
                   className="inline-flex items-center px-4 py-2 text-sm border border-accent/40 text-accent hover:bg-accent hover:text-black rounded-full transition-all"
                 >
                   Download Full Resume (PDF)
