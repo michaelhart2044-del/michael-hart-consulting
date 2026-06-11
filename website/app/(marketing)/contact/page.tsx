@@ -1,19 +1,20 @@
 import type { Metadata } from 'next';
 import ContactForm from '@/components/ContactForm';
 import { site } from '@/lib/site';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Contact',
-  description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
+  description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
   openGraph: {
     title: 'Contact | Michael Hart Consulting Group',
-    description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
+    description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Contact | Michael Hart Consulting Group',
-    description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
+    description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
   },
 };
 
@@ -67,6 +68,23 @@ export default function Contact() {
 
         </div>
       </div>
+
+      {/* Calendly Booking Section */}
+      <div id="book" className="max-w-5xl mx-auto px-6 pb-20">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl font-semibold mb-4">Book a Consultation Directly</h2>
+          <p className="text-muted mb-8">
+            Choose a time that works for you. We’ll send a calendar invite and confirmation.
+          </p>
+        </div>
+        <div className="calendly-inline-widget border border-white/10 rounded-2xl overflow-hidden bg-section" data-url={site.calendlyUrl} style={{ minWidth: '320px', height: '700px' }}></div>
+      </div>
+
+      <Script
+        type="text/javascript"
+        src="https://assets.calendly.com/assets/external/widget.js"
+        strategy="lazyOnload"
+      />
 
     </>
   );

@@ -120,7 +120,7 @@ export default function Home() {
 
           <div className="mt-10 md:mt-12">
             <Link 
-              href="/contact" 
+              href="/contact#book" 
               className="inline-block w-full md:w-auto text-center px-8 py-4 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-base md:text-lg rounded-full transition-all active:scale-[0.985]"
             >
               Book a Consultation
@@ -237,7 +237,7 @@ export default function Home() {
 
             <div className="mt-10">
               <Link 
-                href="/contact" 
+                href="/contact#book" 
                 className="inline-block px-10 py-4 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-lg rounded-full transition-all active:scale-[0.985]"
               >
                 Book a Consultation

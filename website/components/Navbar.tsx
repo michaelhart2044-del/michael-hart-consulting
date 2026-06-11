@@ -33,7 +33,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
   const isHome = pathname === '/';
 
   // Auto-override CTA on contact page so shared (marketing) layout works without per-page props
-  const resolvedCtaHref = ctaHref ?? (pathname === '/contact' ? '#form' : '/contact');
+  const resolvedCtaHref = ctaHref ?? (pathname === '/contact' ? '#form' : '/contact#book');
 
   // Desktop: omit Home link when on the homepage (logo serves as home)
   const desktopItems = isHome

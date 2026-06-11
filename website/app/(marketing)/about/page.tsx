@@ -5,16 +5,16 @@ import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'About',
-  description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI & automation solutions.`,
+  description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI & automation solutions.`,
   openGraph: {
     title: `About | ${site.name}`,
-    description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI & automation solutions.`,
+    description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI & automation solutions.`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: `About | ${site.name}`,
-    description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI & automation solutions.`,
+    description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI & automation solutions.`,
   },
 };
 
@@ -195,7 +195,7 @@ export default function About() {
             </p>
             <div className="mt-8">
               <Link
-                href="/contact"
+                href="/contact#book"
                 className="inline-block px-10 py-4 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-lg rounded-full transition-all active:scale-[0.985]"
               >
                 Book a Consultation
