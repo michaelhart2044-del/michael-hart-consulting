@@ -143,7 +143,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           </p>
           <Link
             href="/contact"
-            className="inline-block px-10 py-4 bg-[#a88c5a] hover:bg-[#b89a6e] text-black font-medium text-lg rounded-full transition-all active:scale-[0.985]"
+            className="inline-block px-10 py-4 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-lg rounded-full transition-all active:scale-[0.985]"
           >
             Book a Consultation
           </Link>
