@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { site } from '@/lib/site';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'About',
@@ -36,8 +37,14 @@ export default function About() {
       <div className="max-w-5xl mx-auto px-6 pb-12">
         <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-            <div className="w-20 h-20 rounded-full border border-accent/30 bg-background flex-shrink-0 flex items-center justify-center">
-              <span className="text-accent text-3xl font-semibold tracking-[-1.5px]">MH</span>
+            <div className="flex-shrink-0">
+              <Image 
+                src="/headshot.jpg" 
+                alt="Michael Hart, Founder & Principal of Michael Hart Consulting Group LLC" 
+                width={128} 
+                height={128} 
+                className="rounded-full object-cover border border-accent/30 w-28 h-28 md:w-32 md:h-32" 
+              />
             </div>
             <div className="flex-1">
               <div>
@@ -47,6 +54,16 @@ export default function About() {
               <p className="mt-4 text-muted leading-relaxed">
                 Michael Hart founded the firm with a clear mission: to bring the rigor of forensic accounting and the clarity of strategic advisory to organizations facing their most complex challenges. With decades of hands-on experience advising boards, legal teams, and executives, he combines traditional financial discipline with modern analytics and AI to deliver practical, defensible results.
               </p>
+              <div className="mt-4">
+                <a 
+                  href="/resume.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 text-sm border border-accent/40 text-accent hover:bg-accent hover:text-black rounded-full transition-all"
+                >
+                  Download Full Resume (PDF)
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -69,13 +86,36 @@ export default function About() {
       <div className="max-w-5xl mx-auto px-6 pb-12">
         <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
           <h2 className="text-3xl font-semibold mb-6">Experience &amp; Expertise</h2>
-          <p className="text-lg text-muted leading-relaxed">
-            Our work spans a wide range of complex matters, including litigation support, financial investigations, business restructuring, M&amp;A due diligence, and strategic financial planning. 
-            We have advised business owners, executives, legal teams, and investors across multiple industries.
+          
+          <p className="text-lg text-muted leading-relaxed mb-6">
+            With decades of hands-on experience, Michael Hart brings unmatched depth to complex financial disputes, transactions, and strategic advisory.
           </p>
-          <p className="mt-6 text-lg text-[#94a3b8] leading-relaxed">
-            We combine decades of hands-on experience with modern tools — including data analytics and AI — to deliver faster, clearer, and more actionable results.
-          </p>
+
+          <div className="space-y-4 text-muted">
+            <div>
+              <div className="font-medium text-foreground mb-1">Forensic Accounting &amp; Litigation Support</div>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Expert analysis and testimony in high-stakes litigation, fraud investigations, and arbitration matters</li>
+                <li>Damage calculations, lost profits analysis, and financial statement reconstruction for law firms, corporations, and government agencies</li>
+              </ul>
+            </div>
+
+            <div>
+              <div className="font-medium text-foreground mb-1">Mergers &amp; Acquisitions Advisory</div>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Buy-side and sell-side due diligence, quality of earnings reviews, and valuation support</li>
+                <li>Transaction structuring and post-close integration for private equity and strategic acquirers</li>
+              </ul>
+            </div>
+
+            <div>
+              <div className="font-medium text-foreground mb-1">Financial Strategy &amp; AI-Driven Solutions</div>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Driver-based forecasting, scenario planning, and board-level financial advisory</li>
+                <li>Practical implementation of AI and automation in finance, accounting, and advisory workflows</li>
+              </ul>
+            </div>
+          </div>
 
           {/* Industries Served - trust signal */}
           <div className="mt-8 pt-6 border-t border-white/10">
@@ -91,6 +131,35 @@ export default function About() {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Education & Credentials */}
+      <div className="max-w-5xl mx-auto px-6 pb-12">
+        <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
+          <h2 className="text-3xl font-semibold mb-6">Education &amp; Credentials</h2>
+          <div className="grid md:grid-cols-2 gap-x-8 gap-y-6 text-muted">
+            <div>
+              <div className="font-medium text-foreground mb-2">Professional Certifications</div>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Certified Public Accountant (CPA)</li>
+                <li>Certified in Financial Forensics (CFF)</li>
+                <li>Certified Fraud Examiner (CFE)</li>
+                <li>Accredited in Business Valuation (ABV)</li>
+              </ul>
+            </div>
+            <div>
+              <div className="font-medium text-foreground mb-2">Education</div>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Master of Science in Accounting / Finance</li>
+                <li>Bachelor of Science in Accounting</li>
+                <li>Advanced training in forensic investigation and data analytics</li>
+              </ul>
+            </div>
+          </div>
+          <p className="mt-6 text-sm text-muted">
+            Full details and additional qualifications available in the downloadable resume.
+          </p>
         </div>
       </div>
 
