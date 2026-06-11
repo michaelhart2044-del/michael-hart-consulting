@@ -64,16 +64,12 @@ export default function Home() {
       {/* Hero */}
       <div className="max-w-5xl mx-auto px-6 pt-28 pb-16 md:pt-32 md:pb-20">
         <div className="max-w-3xl">
-          <h1 className="text-[2.45rem] leading-[1.1] md:text-5xl lg:text-6xl font-semibold tracking-[-1.5px]">
-            Expert Advisory in Forensic Accounting,<br className="hidden md:block" />M&A, and AI-Powered Business Solutions
+          <h1 className="text-[2rem] leading-[1.05] md:text-4xl lg:text-5xl font-semibold tracking-[-1.25px]">
+            Strategic Financial Advisory<br className="hidden md:block" />in Revenue Accounting &amp; Process Optimization
           </h1>
 
-          <div className="mt-6 flex justify-center">
-            <div className="h-[3px] w-[min(94%,680px)] bg-accent"></div>
-          </div>
-
-          <p className="mt-8 text-[15.5px] md:text-lg text-muted leading-relaxed max-w-2xl">
-            Combining deep forensic expertise with strategic advisory and intelligent automation to deliver clear, actionable results.
+          <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed max-w-2xl">
+            Results-driven expertise transforming financial operations through revenue accounting, month-end close, reconciliations, and intelligent automation across organizations.
           </p>
 
           <div className="mt-10 md:mt-12">
