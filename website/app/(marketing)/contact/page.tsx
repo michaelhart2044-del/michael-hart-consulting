@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import ContactForm from '@/components/ContactForm';
 import { site } from '@/lib/site';
 import Script from 'next/script';
+import CalendlyWidget from '@/components/CalendlyWidget';
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -77,7 +78,7 @@ export default function Contact() {
             Choose a time that works for you. We’ll send a calendar invite and confirmation.
           </p>
         </div>
-        <div className="calendly-inline-widget border border-white/10 rounded-2xl overflow-hidden bg-section" data-url={site.calendlyUrl} style={{ minWidth: '320px', height: '700px' }}></div>
+        <CalendlyWidget />
       </div>
 
       <Script
