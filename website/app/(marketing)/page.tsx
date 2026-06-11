@@ -89,7 +89,7 @@ export default function Home() {
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Why Work With Us</h2>
             <p className="mt-4 text-base md:text-lg text-muted">
-              We combine deep financial expertise with modern technology to help businesses and legal teams navigate complex challenges with clarity and confidence.
+              We bring extensive hands-on experience in financial reporting, revenue accounting, month-end close, reconciliations, audit support, and process optimization to help organizations achieve efficiency, accuracy, and compliance with Generally Accepted Accounting Principles (GAAP) as the standard.
             </p>
           </div>
 
@@ -102,8 +102,8 @@ export default function Home() {
                     <path d="m9 12 2 2 4-4" />
                   </svg>
                 ),
-                title: "Proven in Complex Matters",
-                desc: "Deep experience in revenue accounting, financial close, SOX controls, process automation, and high-stakes financial advisory."
+                title: "Proven in Complex Financial Operations",
+                desc: "Extensive experience across public, private, and PE-backed organizations in financial reporting, month-end close, revenue accounting, reconciliations, SOX controls, and audit support — all grounded in Generally Accepted Accounting Principles (GAAP) as the standard."
               },
               {
                 icon: (
@@ -111,8 +111,8 @@ export default function Home() {
                     <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
                   </svg>
                 ),
-                title: "Expertise + Technology",
-                desc: "We blend traditional financial expertise with AI and automation to deliver faster, clearer, and more actionable insights."
+                title: "Expertise in Automation & Controls",
+                desc: "Transforming manual, time-intensive processes into automated, scalable workflows using SQL, Power Query, Power BI, and modern ERP tools. Leading Six Sigma Black Belt projects to strengthen controls and elevate efficiency."
               },
               {
                 icon: (
@@ -123,7 +123,7 @@ export default function Home() {
                   </svg>
                 ),
                 title: "Clear and Actionable Outcomes",
-                desc: "We don’t just analyze — we help you make confident decisions with practical recommendations and measurable results."
+                desc: "We don’t just analyze — we partner cross-functionally with revenue, FP&A, and operations to deliver practical recommendations, measurable efficiency gains, and team leadership that drive confident decisions."
               }
             ].map((item, i) => (
               <div 
