@@ -52,7 +52,7 @@ export default function About() {
                 <div className="text-accent text-sm tracking-[2px] mt-0.5">FOUNDER &amp; PRINCIPAL</div>
               </div>
               <p className="mt-4 text-muted leading-relaxed">
-                Michael Hart founded the firm with a clear mission: to bring the rigor of forensic accounting and the clarity of strategic advisory to organizations facing their most complex challenges. With decades of hands-on experience advising boards, legal teams, and executives, he combines traditional financial discipline with modern analytics and AI to deliver practical, defensible results.
+                Michael Hart is a results-driven accounting professional with extensive experience in financial reporting, revenue accounting, reconciliations, audit support, and process optimization across public, private, and PE-backed organizations. He is known for transforming manual processes into automated, scalable workflows and leading teams to strengthen controls and elevate financial operations.
               </p>
             </div>
           </div>
@@ -78,31 +78,34 @@ export default function About() {
           <h2 className="text-3xl font-semibold mb-6">Experience &amp; Expertise</h2>
           
           <p className="text-lg text-muted leading-relaxed mb-6">
-            With decades of hands-on experience, Michael Hart brings unmatched depth to complex financial disputes, transactions, and strategic advisory.
+            With extensive experience across public, private, and PE-backed organizations, Michael Hart specializes in financial reporting, revenue accounting, reconciliations, audit support, and process optimization.
           </p>
 
           <div className="space-y-4 text-muted">
             <div>
-              <div className="font-medium text-foreground mb-1">Forensic Accounting &amp; Litigation Support</div>
+              <div className="font-medium text-foreground mb-1">Revenue Accounting &amp; Month-End Close</div>
               <ul className="list-disc pl-5 space-y-1 text-sm">
-                <li>Expert analysis and testimony in high-stakes litigation, fraud investigations, and arbitration matters</li>
-                <li>Damage calculations, lost profits analysis, and financial statement reconstruction for law firms, corporations, and government agencies</li>
+                <li>Manage revenue accounting activities including journal entries, fee-for-service postings, and monthly revenue analysis</li>
+                <li>Prepare and review monthly reconciliations, investigate discrepancies, and support month-end close processes</li>
+                <li>Partner cross-functionally to validate revenue streams and deliver ad-hoc reporting on trends and variances</li>
               </ul>
             </div>
 
             <div>
-              <div className="font-medium text-foreground mb-1">Mergers &amp; Acquisitions Advisory</div>
+              <div className="font-medium text-foreground mb-1">Process Improvement &amp; Automation</div>
               <ul className="list-disc pl-5 space-y-1 text-sm">
-                <li>Buy-side and sell-side due diligence, quality of earnings reviews, and valuation support</li>
-                <li>Transaction structuring and post-close integration for private equity and strategic acquirers</li>
+                <li>Design automated workflows using SQL, Power Query, and ERP tools to transform manual processes</li>
+                <li>Reduced reconciliation time significantly through SQL-powered automation and Power Query data refreshes</li>
+                <li>Lead Six Sigma Black Belt projects focused on automating cash reconciliation for enhanced accuracy and efficiency</li>
               </ul>
             </div>
 
             <div>
-              <div className="font-medium text-foreground mb-1">Financial Strategy &amp; AI-Driven Solutions</div>
+              <div className="font-medium text-foreground mb-1">Controls, Audit Support &amp; Team Leadership</div>
               <ul className="list-disc pl-5 space-y-1 text-sm">
-                <li>Driver-based forecasting, scenario planning, and board-level financial advisory</li>
-                <li>Practical implementation of AI and automation in finance, accounting, and advisory workflows</li>
+                <li>Collaborate with auditors to resolve inquiries and strengthen SOX controls and internal processes</li>
+                <li>Reconcile fixed assets, GL activity, leasing classifications (FAS 13), and perform ASC 606 revenue reporting</li>
+                <li>Led and developed accounting teams, implementing policies, controls, and procedures across multi-location operations</li>
               </ul>
             </div>
           </div>
@@ -130,26 +133,41 @@ export default function About() {
           <h2 className="text-3xl font-semibold mb-6">Education &amp; Credentials</h2>
           <div className="grid md:grid-cols-2 gap-x-8 gap-y-6 text-muted">
             <div>
-              <div className="font-medium text-foreground mb-2">Professional Certifications</div>
+              <div className="font-medium text-foreground mb-2">Education</div>
               <ul className="list-disc pl-5 space-y-1 text-sm">
-                <li>Certified Public Accountant (CPA)</li>
-                <li>Certified in Financial Forensics (CFF)</li>
-                <li>Certified Fraud Examiner (CFE)</li>
-                <li>Accredited in Business Valuation (ABV)</li>
+                <li>Bachelor of Science in Accountancy &amp; Business Administration (Finance &amp; Real Estate), California State University, Northridge</li>
               </ul>
             </div>
             <div>
-              <div className="font-medium text-foreground mb-2">Education</div>
+              <div className="font-medium text-foreground mb-2">Professional Development</div>
               <ul className="list-disc pl-5 space-y-1 text-sm">
-                <li>Master of Science in Accounting / Finance</li>
-                <li>Bachelor of Science in Accounting</li>
-                <li>Advanced training in forensic investigation and data analytics</li>
+                <li>Six Sigma Black Belt certification (in progress)</li>
+                <li>Advanced training in process optimization, automation, and ERP systems</li>
               </ul>
             </div>
           </div>
-          <p className="mt-6 text-sm text-muted">
-            These qualifications reflect decades of specialized work in forensic accounting, complex litigation, and high-value advisory.
-          </p>
+
+          <div className="mt-6 pt-6 border-t border-white/10 grid md:grid-cols-2 gap-x-8 gap-y-6 text-muted">
+            <div>
+              <div className="font-medium text-foreground mb-2">Core Competencies</div>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Month-End &amp; Year-End Close</li>
+                <li>Financial Reporting &amp; Analysis</li>
+                <li>Revenue Accounting (ASC 606)</li>
+                <li>SOX Controls &amp; Audit Support</li>
+                <li>Process Improvement &amp; Automation</li>
+                <li>Team Leadership &amp; Staff Development</li>
+              </ul>
+            </div>
+            <div>
+              <div className="font-medium text-foreground mb-2">Technical Skills</div>
+              <div className="text-sm space-y-2">
+                <div><strong>ERP &amp; Finance:</strong> SL-Dynamics, PeopleSoft, SAP, Oracle EBS, Hyperion, Blackline, Planful</div>
+                <div><strong>Tools:</strong> Power BI, Power Query, SQL, Salesforce, Microsoft Office (Advanced Excel)</div>
+                <div><strong>Other:</strong> Fixed asset systems, process automation workflows</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
