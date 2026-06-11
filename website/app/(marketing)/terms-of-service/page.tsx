@@ -35,7 +35,7 @@ export default function TermsOfService() {
 
         <div>
           <h2 className="text-2xl font-semibold text-white mb-4">2. Services</h2>
-          <p><span className="whitespace-nowrap">Michael Hart Consulting Group LLC</span> provides consulting services in forensic accounting, mergers & acquisitions, financial strategy, and AI-driven business solutions. All services are subject to separate engagement agreements.</p>
+          <p><span className="whitespace-nowrap">Michael Hart Consulting Group LLC</span> provides consulting services in revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI-driven business solutions. All services are subject to separate engagement agreements.</p>
         </div>
 
         <div>

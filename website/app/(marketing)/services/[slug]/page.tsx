@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getServiceBySlug, getAllServiceSlugs, services } from '@/lib/services';
+import { site } from '@/lib/site';
 
 interface ServicePageProps {
   params: Promise<{ slug: string }>;
@@ -51,10 +52,10 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
     description: service.description,
     provider: {
       '@type': 'Organization',
-      name: 'Michael Hart Consulting Group LLC',
-      telephone: '(747) 370-9393',
-      email: 'michael@michaelhartconsulting.com',
-      url: 'https://michaelhartconsulting.com',
+      name: site.name,
+      telephone: site.phone,
+      email: site.email,
+      url: site.url,
     },
     areaServed: 'United States',
     hasOfferCatalog: {
@@ -148,7 +149,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
             Book a Consultation
           </Link>
           <p className="mt-4 text-sm text-subtle">
-            Or call us directly at <a href="tel:7473709393" className="hover:text-accent">(747) 370-9393</a>
+            Or call us directly at <a href={site.phoneHref} className="hover:text-accent">{site.phone}</a>
           </p>
         </div>
       </div>

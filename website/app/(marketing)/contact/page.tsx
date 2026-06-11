@@ -4,16 +4,16 @@ import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Contact',
-  description: 'Get in touch with Michael Hart Consulting Group. Reach out for forensic accounting, M&A advisory, financial strategy, or AI-powered business solutions. Book a consultation or send us a message.',
+  description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
   openGraph: {
     title: 'Contact | Michael Hart Consulting Group',
-    description: 'Get in touch with Michael Hart Consulting Group. Reach out for forensic accounting, M&A advisory, financial strategy, or AI-powered business solutions. Book a consultation or send us a message.',
+    description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Contact | Michael Hart Consulting Group',
-    description: 'Get in touch with Michael Hart Consulting Group. Reach out for forensic accounting, M&A advisory, financial strategy, or AI-powered business solutions. Book a consultation or send us a message.',
+    description: 'Get in touch with Michael Hart Consulting Group. Reach out for revenue accounting, financial close, SOX controls, process automation, financial forecasting, or AI solutions. Book a consultation or send us a message.',
   },
 };
 

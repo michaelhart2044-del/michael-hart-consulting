@@ -5,16 +5,16 @@ import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'About',
-  description: `Learn about ${site.name}. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.`,
+  description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI & automation solutions.`,
   openGraph: {
     title: `About | ${site.name}`,
-    description: `Learn about ${site.name}. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.`,
+    description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI & automation solutions.`,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: `About | ${site.name}`,
-    description: `Learn about ${site.name}. Our team provides expert forensic accounting, litigation support, mergers & acquisitions advisory, financial forecasting, and AI & automation solutions.`,
+    description: `Learn about ${site.name}. Our team provides expert revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI & automation solutions.`,
   },
 };
 
@@ -67,7 +67,7 @@ export default function About() {
             <span className="whitespace-nowrap">Michael Hart Consulting Group LLC</span> was founded with a clear mission: to deliver high-quality, practical advisory services that help organizations solve complex problems and make confident decisions.
           </p>
           <p className="mt-6 text-lg text-muted leading-relaxed">
-            With deep expertise in forensic accounting, mergers and acquisitions, financial strategy, and AI-driven solutions, we bring both traditional financial discipline and modern technology to every engagement.
+            With deep expertise in revenue accounting, month-end close, SOX controls, process automation, financial strategy, and AI-driven solutions, we bring traditional financial discipline and modern tools to every engagement.
           </p>
         </div>
       </div>

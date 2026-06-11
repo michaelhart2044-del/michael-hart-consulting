@@ -4,16 +4,16 @@ import { services } from '@/lib/services';
 
 export const metadata: Metadata = {
   title: 'Home',
-  description: 'Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions. Helping businesses and legal teams make confident decisions.',
+  description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
   openGraph: {
     title: 'Michael Hart Consulting Group | Forensic Accounting, M&A & AI Advisory',
-    description: 'Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions. Helping businesses and legal teams make confident decisions.',
+    description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Michael Hart Consulting Group | Forensic Accounting, M&A & AI Advisory',
-    description: 'Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions. Helping businesses and legal teams make confident decisions.',
+    description: 'Expert advisory in revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.',
   },
 };
 
@@ -103,7 +103,7 @@ export default function Home() {
                   </svg>
                 ),
                 title: "Proven in Complex Matters",
-                desc: "Deep experience in forensic accounting, litigation support, mergers & acquisitions, and high-stakes financial advisory."
+                desc: "Deep experience in revenue accounting, financial close, SOX controls, process automation, and high-stakes financial advisory."
               },
               {
                 icon: (
@@ -151,7 +151,7 @@ export default function Home() {
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Our Services</h2>
             <p className="mt-4 text-base md:text-lg text-muted">
-              We provide specialized advisory across complex financial, strategic, and operational challenges.
+              We provide specialized advisory in revenue accounting, financial close, controls, process automation, forecasting, and AI solutions across complex organizations.
             </p>
           </div>
 

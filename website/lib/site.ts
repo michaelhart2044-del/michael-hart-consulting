@@ -7,7 +7,7 @@ export const site = {
   phoneHref: "tel:7473709393",
   tagline: "Strategic advisory for complex financial and business challenges.",
   description:
-    "Expert advisory in forensic accounting, mergers & acquisitions, financial strategy, and AI-powered business solutions. Helping businesses and legal teams make confident decisions.",
+    "Expert advisory in revenue accounting, financial close, SOX controls, process automation, financial forecasting, and AI solutions. Helping organizations optimize operations and deliver clear results.",
   // Social links (update these with real profiles)
   social: {
     linkedin: "https://www.linkedin.com/in/yourprofile",
