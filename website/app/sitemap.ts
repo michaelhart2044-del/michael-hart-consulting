@@ -1,81 +1,32 @@
 import { MetadataRoute } from 'next';
+import { getAllServiceSlugs } from '@/lib/services';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://michaelhartconsulting.com';
 
+  const staticPages = [
+    { url: baseUrl, changeFrequency: 'monthly' as const, priority: 1 },
+    { url: `${baseUrl}/about`, changeFrequency: 'monthly' as const, priority: 0.8 },
+    { url: `${baseUrl}/contact`, changeFrequency: 'monthly' as const, priority: 0.8 },
+    { url: `${baseUrl}/privacy-policy`, changeFrequency: 'yearly' as const, priority: 0.3 },
+    { url: `${baseUrl}/terms-of-service`, changeFrequency: 'yearly' as const, priority: 0.3 },
+    { url: `${baseUrl}/services`, changeFrequency: 'monthly' as const, priority: 0.7 },
+  ];
+
+  const serviceSlugs = getAllServiceSlugs();
+
+  const servicePages = serviceSlugs.map((slug) => ({
+    url: `${baseUrl}/services/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
   return [
-    {
-      url: baseUrl,
+    ...staticPages.map((page) => ({
+      ...page,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/privacy-policy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/terms-of-service`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/services`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    // Individual service detail pages
-    {
-      url: `${baseUrl}/services/forensic-accounting-litigation-support`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/services/business-setup-structuring`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/services/mergers-acquisitions-advisory`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/services/financial-forecasting-strategy`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/services/ai-automation-solutions`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/services/website-design-development`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
+    })),
+    ...servicePages,
   ];
 }
