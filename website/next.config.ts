@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Production configuration only.
+  // (Removed allowedDevOrigins — it was a local dev-only setting.)
 };
 
 export default nextConfig;
