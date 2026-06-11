@@ -160,6 +160,8 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* DRY: services data imported from lib/services.ts (source of truth).
+                No hardcoded titles/descriptions here. Icons kept local for presentation only. */}
             {services.map((service, i) => (
               <Link 
                 key={service.slug} 

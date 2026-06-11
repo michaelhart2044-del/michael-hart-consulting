@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { sendContactEmail } from '../app/actions';
+import { sendContactEmail } from '@/app/actions';
 
 export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
