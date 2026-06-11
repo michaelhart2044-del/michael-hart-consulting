@@ -26,11 +26,14 @@ const allNavItems: NavItem[] = [
   { label: 'Contact', href: '/contact' },
 ];
 
-export default function Navbar({ ctaHref = '/contact', activeSection }: NavbarProps) {
+export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
   const isHome = pathname === '/';
+
+  // Auto-override CTA on contact page so shared (marketing) layout works without per-page props
+  const resolvedCtaHref = ctaHref ?? (pathname === '/contact' ? '#form' : '/contact');
 
   // Desktop: omit Home link when on the homepage (logo serves as home)
   const desktopItems = isHome
@@ -91,7 +94,7 @@ export default function Navbar({ ctaHref = '/contact', activeSection }: NavbarPr
 
         {/* Desktop CTA Button */}
         <Link
-          href={ctaHref}
+          href={resolvedCtaHref}
           className="hidden md:block px-6 py-2.5 bg-[#c5a46e] hover:bg-[#d4b57e] text-black text-sm font-medium rounded-full transition-all"
         >
           Book a Consultation
@@ -140,7 +143,7 @@ export default function Navbar({ ctaHref = '/contact', activeSection }: NavbarPr
               </Link>
             ))}
             <Link
-              href={ctaHref}
+              href={resolvedCtaHref}
               className="mt-4 px-6 py-3 bg-[#c5a46e] hover:bg-[#d4b57e] text-black font-medium rounded-full text-center transition-all"
               onClick={closeMenu}
             >
