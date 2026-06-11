@@ -32,7 +32,7 @@ export default function ContactForm() {
         className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center"
       >
         <p className="text-green-400 text-lg font-medium">Thank you! Your message has been sent.</p>
-        <p className="text-[#94a3b8] mt-2">We'll get back to you within 24 hours on business days.</p>
+        <p className="text-[#94a3b8] mt-2">We've sent a confirmation to your email. We'll get back to you within 24 hours on business days. Please check your inbox (and spam folder).</p>
       </div>
     );
   }
@@ -92,6 +92,18 @@ export default function ContactForm() {
           {error}
         </p>
       )}
+
+      {/* Honeypot field for spam protection - hidden from users */}
+      <div style={{ display: 'none' }} aria-hidden="true">
+        <label htmlFor="company_website">Company Website</label>
+        <input
+          id="company_website"
+          type="text"
+          name="company_website"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
 
       <button
         type="submit"

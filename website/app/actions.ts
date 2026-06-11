@@ -15,9 +15,38 @@ function escapeHtml(unsafe: string): string {
 }
 
 export async function sendContactEmail(formData: FormData) {
+  // Honeypot check for spam bots (field should be empty for humans)
+  const honeypot = formData.get('company_website') as string;
+  if (honeypot && honeypot.trim() !== '') {
+    // Pretend success for bots
+    return { success: true };
+  }
+
   const rawName = (formData.get('name') as string) || '';
   const rawEmail = (formData.get('email') as string) || '';
   const rawMessage = (formData.get('message') as string) || '';
+
+  // Basic server-side validation
+  if (!rawName.trim() || rawName.trim().length < 2) {
+    return { success: false, error: 'Please provide your full name.' };
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!rawEmail.trim() || !emailRegex.test(rawEmail.trim())) {
+    return { success: false, error: 'Please provide a valid email address.' };
+  }
+
+  if (!rawMessage.trim() || rawMessage.trim().length < 10) {
+    return { success: false, error: 'Please provide a more detailed message (at least 10 characters).' };
+  }
+
+  // Optional basic spam pattern filter
+  const combined = (rawName + ' ' + rawEmail + ' ' + rawMessage).toLowerCase();
+  const spamPatterns = /viagra|casino|lottery|free money|click here|buy now|earn cash/i;
+  if (spamPatterns.test(combined)) {
+    // Silent success for obvious spam
+    return { success: true };
+  }
 
   // Sanitize all user-provided values before using them anywhere in the email
   const name = escapeHtml(rawName.trim());
@@ -28,6 +57,7 @@ export async function sendContactEmail(formData: FormData) {
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
+    // Send notification to owner
     await resend.emails.send({
       // Production sender using the site's own domain.
       // The domain (michaelhartconsulting.com) must be verified in the Resend dashboard.
@@ -35,12 +65,26 @@ export async function sendContactEmail(formData: FormData) {
       from: `Contact Form <${site.email}>`,
       to: site.email,
       subject: `New message from ${rawName.trim().slice(0, 80) || 'website visitor'}`,
-      replyTo: rawEmail.trim() || undefined,
+      replyTo: email,
       html: `
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Message:</strong></p>
         <p>${message}</p>
+      `,
+    });
+
+    // Send professional auto-reply to the submitter
+    await resend.emails.send({
+      from: `${site.name} <${site.email}>`,
+      to: email,
+      subject: `Thank you for contacting ${site.name}`,
+      html: `
+        <p>Dear ${name},</p>
+        <p>Thank you for reaching out to ${site.name}. We have received your message and will get back to you within 24 business hours.</p>
+        <p>In the meantime, you can reach us directly at ${site.phone}.</p>
+        <p>Best regards,<br />${site.name}</p>
+        <p><small>Please check your spam folder if you don't see our confirmation email.</small></p>
       `,
     });
 
