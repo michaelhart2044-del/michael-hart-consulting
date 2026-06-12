@@ -31,7 +31,7 @@ export default function ServicesIndex() {
   return (
     <>
       {/* Header */}
-      <div className="max-w-5xl mx-auto px-6 pt-32 pb-16">
+      <div className="max-w-5xl mx-auto px-6 pt-24 pb-12">
         <div className="max-w-3xl">
           <h1 className="text-5xl font-semibold tracking-tight">Our Services</h1>
           <p className="mt-4 text-lg text-muted">
@@ -58,8 +58,9 @@ export default function ServicesIndex() {
               <Link 
                 key={service.slug} 
                 href={`/services/${service.slug}`}
-                className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col no-underline"
+                className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col no-underline relative"
               >
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-accent/60 rounded-t-2xl" />
                 <div className="mb-4 text-accent group-hover:text-accent-hover group-hover:scale-110 transition-all duration-300">
                   {service.icon}
                 </div>

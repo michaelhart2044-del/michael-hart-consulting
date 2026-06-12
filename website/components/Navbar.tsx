@@ -105,9 +105,9 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
           <Image
             src="/mh-logo.png"
             alt="MH Logo"
-            width={64}
-            height={64}
-            className="h-16 w-16 rounded-full object-contain"
+            width={48}
+            height={48}
+            className="h-12 w-12 object-contain"
           />
           <span className="font-semibold text-accent text-base md:text-lg tracking-[-0.3px] group-hover:text-accent-hover transition-colors whitespace-nowrap">
             <span className="md:hidden">MH Consulting</span>

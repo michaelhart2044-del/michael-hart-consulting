@@ -31,11 +31,12 @@ export default function Home() {
   return (
     <>
       {/* Hero */}
-      <div className="max-w-5xl mx-auto px-6 pt-28 pb-16 md:pt-32 md:pb-20">
+      <div className="max-w-5xl mx-auto px-6 pt-20 pb-12 md:pt-24 md:pb-16">
         <div className="max-w-3xl">
           <h1 className="text-[2rem] leading-[1.05] md:text-4xl lg:text-5xl font-semibold tracking-[-1.25px]">
             Expert Financial Advisory:<br className="hidden md:block" /> Operations, Controls &amp; Automation
           </h1>
+          <div className="mt-3 h-0.5 w-12 bg-accent/60" />
 
           <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed max-w-2xl">
             Results-driven expertise transforming financial operations through reporting, close processes, controls, automation, and strategic leadership.
@@ -53,7 +54,7 @@ export default function Home() {
       </div>
 
       {/* Why Work With Us */}
-      <section id="why" className="border-t border-white/10 bg-section py-16 md:py-20">
+      <section id="why" className="border-t border-white/10 bg-section py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Why Work With Us</h2>
@@ -115,7 +116,7 @@ export default function Home() {
       </section>
 
       {/* Client Results & Social Proof */}
-      <section className="border-t border-white/10 bg-background py-16 md:py-20">
+      <section className="border-t border-white/10 bg-background py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Results That Speak for Themselves</h2>
@@ -149,8 +150,9 @@ export default function Home() {
             ].map((item, i) => (
               <div 
                 key={i} 
-                className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col"
+                className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col relative"
               >
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-accent/40 rounded-t-2xl" />
                 <div className="text-4xl text-accent mb-4">“</div>
                 <p className="text-muted flex-grow leading-relaxed">
                   {item.quote}
@@ -165,7 +167,7 @@ export default function Home() {
       </section>
 
       {/* Our Services */}
-      <section id="services" className="border-t border-white/10 bg-background py-16 md:py-20">
+      <section id="services" className="border-t border-white/10 bg-background py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Our Services</h2>
@@ -210,7 +212,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section for SEO and user clarity */}
-      <section id="faq" className="border-t border-white/10 bg-background py-16 md:py-20">
+      <section id="faq" className="border-t border-white/10 bg-background py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Frequently Asked Questions</h2>
@@ -325,7 +327,7 @@ export default function Home() {
       />
 
       {/* Final CTA */}
-      <section id="contact" className="border-t border-white/10 bg-section py-16 md:py-20">
+      <section id="contact" className="border-t border-white/10 bg-section py-12 md:py-16">
         <div className="max-w-3xl mx-auto px-6">
           <div className="bg-card border border-white/10 rounded-2xl p-10 md:p-12 text-center hover:border-accent/30 transition-all duration-300">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Ready to Get Started?</h2>
