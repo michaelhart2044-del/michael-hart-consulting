@@ -170,31 +170,41 @@ export default function Home() {
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Our Services</h2>
             <p className="mt-4 text-base md:text-lg text-muted">
-              Expert financial advisory in operations, controls, automation, revenue accounting, financial close, and transformation. We provide specialized advisory in revenue accounting, financial close, controls, process automation, AI-assisted software development, finance function transformation, forecasting, and AI solutions across complex organizations.
+              Our flagship services focus on operations, controls, and automation — the core of our expertise. We specialize in month-end close and financial reporting, process automation and finance transformation, SOX controls and audit support, and finance function transformation and leadership. For our complete range of services, see the full list.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* DRY: services data (including icons) imported from lib/services.tsx (source of truth).
                 No hardcoded titles, descriptions or icons here. Icons now live with their service data to eliminate brittle index coupling. */}
-            {services.map((service) => (
-              <Link 
-                key={service.slug} 
-                href={`/services/${service.slug}`}
-                className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col no-underline"
-              >
-                <div className="mb-4 text-accent group-hover:text-accent-hover group-hover:scale-110 transition-all duration-300">
-                  {service.icon}
-                </div>
-                <h3 className="text-xl font-semibold mb-3 group-hover:text-accent transition-colors">
-                  {service.title}
-                </h3>
-                <p className="text-muted flex-grow">
-                  {service.shortDesc}
-                </p>
-                <div className="mt-auto pt-3 text-sm text-accent group-hover:underline">Learn more →</div>
-              </Link>
-            ))}
+            {services
+              .filter((service) =>
+                ["month-end-close-reporting", "process-automation-finance-transformation", "sox-controls-audit-support", "finance-function-transformation"].includes(service.slug)
+              )
+              .map((service) => (
+                <Link 
+                  key={service.slug} 
+                  href={`/services/${service.slug}`}
+                  className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col no-underline"
+                >
+                  <div className="mb-4 text-accent group-hover:text-accent-hover group-hover:scale-110 transition-all duration-300">
+                    {service.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3 group-hover:text-accent transition-colors">
+                    {service.title}
+                  </h3>
+                  <p className="text-muted flex-grow">
+                    {service.shortDesc}
+                  </p>
+                  <div className="mt-auto pt-3 text-sm text-accent group-hover:underline">Learn more →</div>
+                </Link>
+              ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <Link href="/services" className="inline-block text-accent hover:underline font-medium">
+              View all services →
+            </Link>
           </div>
         </div>
       </section>
