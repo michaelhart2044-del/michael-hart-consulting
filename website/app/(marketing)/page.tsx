@@ -124,7 +124,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 quote: "Michael helped us reduce our month-end close cycle from 25 days to just 5 business days through process standardization and automation. A true game-changer for our entire finance team.",
@@ -137,6 +137,14 @@ export default function Home() {
               {
                 quote: "We built our AP/AR departments from the ground up with Michael's guidance. He also automated our long-term contract workflows using Salesforce, saving the team hours every week.",
                 attribution: "CFO, Manufacturing & Distribution Firm"
+              },
+              {
+                quote: "Led Six Sigma Black Belt projects to automate cash reconciliation processes, delivering significant improvements in accuracy and efficiency for the finance team.",
+                attribution: "Finance Director, Multi-Location Organization"
+              },
+              {
+                quote: "Developed and led accounting teams, implementing standardized controls and procedures that supported scalable operations across multiple locations.",
+                attribution: "Controller, Private Equity-Backed Manufacturing Company"
               }
             ].map((item, i) => (
               <div 
