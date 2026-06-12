@@ -12,6 +12,11 @@ export interface Service {
   // For schema / meta
   description: string; // meta desc
   icon: ReactNode;
+  // Optional quantified results for case studies / impact modules
+  results?: {
+    quote: string;
+    attribution: string;
+  }[];
 }
 
 export const services: Service[] = [
@@ -271,6 +276,12 @@ export const services: Service[] = [
         <line x1="3" y1="10" x2="21" y2="10" />
       </svg>
     ),
+    results: [
+      {
+        quote: "Michael helped us reduce our month-end close cycle from 25 days to just 5 business days through process standardization and automation. A true game-changer for our entire finance team.",
+        attribution: "Controller, Multi-Location Healthcare Provider"
+      }
+    ],
   },
   {
     slug: 'sox-controls-audit-support',
@@ -302,6 +313,12 @@ export const services: Service[] = [
         <path d="m9 12 2 2 4-4" />
       </svg>
     ),
+    results: [
+      {
+        quote: "Collaborated with auditors to resolve inquiries and strengthen SOX controls and internal processes, leading to successful external audits with no material findings.",
+        attribution: "Controller, Public Company"
+      }
+    ],
   },
   {
     slug: 'process-automation-finance-transformation',
@@ -333,6 +350,12 @@ export const services: Service[] = [
         <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-1.34 3-3m-3 3v-3" />
       </svg>
     ),
+    results: [
+      {
+        quote: "By designing SQL and Power Query automation, our monthly reconciliations went from taking 6 hours to under 15 minutes. Massive time savings and dramatically improved accuracy.",
+        attribution: "Finance Manager, PE-Backed Technology Company"
+      }
+    ],
   },
   {
     slug: 'ai-assisted-software-development',
@@ -397,6 +420,12 @@ export const services: Service[] = [
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
+    results: [
+      {
+        quote: "Developed and led accounting teams, implementing standardized controls and procedures that supported scalable operations across multiple locations.",
+        attribution: "Controller, Private Equity-Backed Manufacturing Company"
+      }
+    ],
   },
 ];
 

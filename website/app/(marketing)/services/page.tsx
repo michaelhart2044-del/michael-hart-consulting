@@ -108,6 +108,42 @@ export default function ServicesIndex() {
             ))}
         </div>
 
+        {/* Proven Results */}
+        <div className="max-w-5xl mx-auto px-6 pb-12">
+          <div className="max-w-2xl mb-8">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Proven Results</h2>
+            <p className="mt-2 text-base md:text-lg text-muted">
+              Real, measurable impact from our engagements with finance teams.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services
+              .filter((s) => s.results && s.results.length > 0)
+              .slice(0, 3)
+              .flatMap((s) =>
+                s.results!.map((r, idx) => ({
+                  ...r,
+                  key: `${s.slug}-${idx}`,
+                }))
+              )
+              .map((item) => (
+                <div
+                  key={item.key}
+                  className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col"
+                >
+                  <div className="text-4xl text-accent mb-4">“</div>
+                  <p className="text-muted flex-grow leading-relaxed">
+                    {item.quote}
+                  </p>
+                  <div className="mt-4 pt-4 border-t border-white/10 text-sm text-subtle">
+                    {item.attribution}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+
         {/* Bottom CTA */}
         <div className="mt-16 text-center">
           <p className="text-muted mb-4">

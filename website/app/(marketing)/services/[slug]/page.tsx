@@ -146,6 +146,26 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           </ul>
         </div>
 
+        {/* Proven Results (if available for this service) */}
+        {service.results && service.results.length > 0 && (
+          <div className="bg-card border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-semibold mb-6">Proven Results</h2>
+            <div className="space-y-6">
+              {service.results.map((result, index) => (
+                <div key={index} className="border-l-4 border-accent pl-6">
+                  <div className="text-4xl text-accent mb-2">“</div>
+                  <p className="text-muted leading-relaxed mb-3">
+                    {result.quote}
+                  </p>
+                  <div className="text-sm text-subtle">
+                    {result.attribution}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* CTA */}
         <div className="max-w-3xl mx-auto text-center pt-8 border-t border-white/10">
           <p className="text-muted mb-6">
