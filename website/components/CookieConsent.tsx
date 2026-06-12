@@ -29,6 +29,8 @@ export default function CookieConsent() {
     window.dispatchEvent(new CustomEvent('mh-cookie-consent'));
   };
 
+  // Task #11 redo: GA4 + Clarity properly gated behind explicit consent (re-deploy for visibility)
+
   if (!show) return null;
 
   return (
