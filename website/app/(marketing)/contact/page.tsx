@@ -3,7 +3,6 @@ import ContactForm from '@/components/ContactForm';
 import { site } from '@/lib/site';
 import Script from 'next/script';
 import CalendlyWidget from '@/components/CalendlyWidget';
-import ResultCard from '@/components/ResultCard';
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -89,33 +88,6 @@ export default function Contact() {
             </div>
           </div>
 
-        </div>
-      </div>
-
-      {/* Recent Client Results - proof right before booking CTA */}
-      <div className="max-w-5xl mx-auto px-6 pb-12">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Recent client results</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            {
-              quote: "Michael helped us reduce our month-end close cycle from 25 days to just 5 business days through process standardization and automation. A true game-changer for our entire finance team.",
-              attribution: "Controller, Multi-Location Healthcare Provider"
-            },
-            {
-              quote: "By designing SQL and Power Query automation, our monthly reconciliations went from taking 6 hours to under 15 minutes. Massive time savings and dramatically improved accuracy.",
-              attribution: "Finance Manager, PE-Backed Technology Company"
-            },
-            {
-              quote: "Developed and led accounting teams, implementing standardized controls and procedures that supported scalable operations across multiple locations.",
-              attribution: "Controller, Private Equity-Backed Manufacturing Company"
-            }
-          ].map((item, i) => (
-            <ResultCard 
-              key={i} 
-              quote={item.quote} 
-              attribution={item.attribution} 
-            />
-          ))}
         </div>
       </div>
 
