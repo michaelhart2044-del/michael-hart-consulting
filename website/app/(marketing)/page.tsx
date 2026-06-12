@@ -175,7 +175,7 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* DRY: services data (including icons) imported from lib/services.ts (source of truth).
+            {/* DRY: services data (including icons) imported from lib/services.tsx (source of truth).
                 No hardcoded titles, descriptions or icons here. Icons now live with their service data to eliminate brittle index coupling. */}
             {services.map((service) => (
               <Link 
