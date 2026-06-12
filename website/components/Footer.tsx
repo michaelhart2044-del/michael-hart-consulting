@@ -21,11 +21,11 @@ export default function Footer() {
             <div>
               <div className="font-medium text-accent mb-3">Company</div>
               <div className="space-y-2 text-muted">
-                <Link href="/about" className="hover:text-accent transition-colors">
+                <Link href="/about" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded">
                   About
                 </Link>
                 <div>
-                  <Link href="/services" className="hover:text-accent transition-colors">
+                  <Link href="/services" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded">
                     Services
                   </Link>
                 </div>
@@ -35,11 +35,11 @@ export default function Footer() {
             <div>
               <div className="font-medium text-accent mb-3">Legal</div>
               <div className="space-y-2 text-muted">
-                <Link href="/privacy-policy" className="hover:text-accent transition-colors">
+                <Link href="/privacy-policy" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded">
                   Privacy Policy
                 </Link>
                 <div>
-                  <Link href="/terms-of-service" className="hover:text-accent transition-colors">
+                  <Link href="/terms-of-service" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded">
                     Terms of Service
                   </Link>
                 </div>
@@ -51,13 +51,13 @@ export default function Footer() {
               <div className="text-muted text-sm space-y-1">
                 <a
                   href={site.phoneHref}
-                  className="hover:text-accent transition-colors block"
+                  className="hover:text-accent transition-colors block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded"
                 >
                   {site.phone}
                 </a>
                 <a
                   href={site.email ? `mailto:${site.email}` : undefined}
-                  className="hover:text-accent transition-colors block"
+                  className="hover:text-accent transition-colors block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded"
                 >
                   {site.email}
                 </a>
@@ -73,7 +73,7 @@ export default function Footer() {
                     href={site.social.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-accent transition-colors"
+                    className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded"
                     aria-label="LinkedIn"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -89,11 +89,11 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-white/10 text-xs text-subtle flex flex-col md:flex-row justify-between gap-y-2">
           <div>© {year} <span className="whitespace-nowrap">{site.name}</span>. All rights reserved.</div>
           <div className="space-x-1">
-            <Link href="/privacy-policy" className="hover:text-accent transition-colors">
+            <Link href="/privacy-policy" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded">
               Privacy Policy
             </Link>
             <span>•</span>
-            <Link href="/terms-of-service" className="hover:text-accent transition-colors">
+            <Link href="/terms-of-service" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded">
               Terms of Service
             </Link>
           </div>
