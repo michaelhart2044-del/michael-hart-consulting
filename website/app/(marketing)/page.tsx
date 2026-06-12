@@ -50,6 +50,38 @@ export default function Home() {
               Book a Consultation
             </Link>
           </div>
+
+          {/* Visual hero treatment + trust signals */}
+          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted">
+            <div className="flex items-center gap-1.5">
+              <span className="text-accent">●</span> Operations
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-accent">●</span> Controls
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-accent">●</span> Automation
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-accent">●</span> Leadership
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-muted">
+            Working with public companies, PE-backed firms, and high-growth organizations across 7 industries.
+          </div>
+        </div>
+      </div>
+
+      {/* Trust signals */}
+      <div className="border-t border-white/10 py-4">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="flex flex-wrap gap-2 text-xs">
+            {['Legal & Litigation', 'Private Equity & Finance', 'Manufacturing', 'Technology & SaaS', 'Healthcare', 'Real Estate', 'Professional Services'].map((industry) => (
+              <span key={industry} className="px-2 py-0.5 border border-white/10 rounded text-muted hover:border-accent/40 hover:text-accent transition-colors">
+                {industry}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
