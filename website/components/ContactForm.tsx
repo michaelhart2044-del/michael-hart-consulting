@@ -18,7 +18,7 @@ export default function ContactForm() {
     if (result.success) {
       setIsSuccess(true);
     } else {
-      setError('Something went wrong. Please try again or email us directly.');
+      setError(result.error || 'Something went wrong. Please try again or email us directly.');
     }
 
     setIsSubmitting(false);
