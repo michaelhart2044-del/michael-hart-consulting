@@ -47,9 +47,13 @@ export default function Contact() {
           
           {/* Contact Form */}
           <div className="md:col-span-3" id="form">
-            <div className="mb-4 p-3 bg-card/50 border border-white/10 rounded-lg text-sm">
-              <div className="font-medium text-accent mb-1 tracking-widest text-xs">RECENT OUTCOMES</div>
-              <div className="text-muted">80% faster closes (25→5 days) • 95% less time on reconciliations</div>
+            <div className="mb-6 p-4 bg-card border border-accent/20 rounded-lg text-sm">
+              <div className="text-xs tracking-widest text-accent font-medium mb-1">FEATURED CASE STUDY</div>
+              <div className="font-medium mb-1">Month-End Close Acceleration</div>
+              <div className="text-muted mb-1">Challenge: 25-day close cycle draining team at 8-facility healthcare provider.</div>
+              <div className="text-muted mb-1">Approach: Standardized processes and automated reconciliations/close workflows.</div>
+              <div className="text-muted">Results: Reduced to 5 business days, saving 160+ team hours per month.</div>
+              <div className="text-xs text-subtle mt-1">— Controller, Multi-Location Healthcare Provider</div>
             </div>
             <h2 className="text-2xl font-semibold mb-6">Send us a message</h2>
             <ContactForm />
@@ -96,7 +100,7 @@ export default function Contact() {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl font-semibold mb-4">Book a Consultation Directly</h2>
           <p className="text-muted mb-8">
-            Choose a time that works for you. Leaders who booked have achieved 80% faster close cycles and major efficiency gains. We’ll send a calendar invite and confirmation.
+            Choose a time that works for you. For example, one healthcare client reduced their close cycle from 25 days to 5 business days (80% faster). We’ll send a calendar invite and confirmation.
           </p>
         </div>
         <CalendlyWidget />

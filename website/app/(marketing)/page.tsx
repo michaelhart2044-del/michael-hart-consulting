@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { services, flagshipServiceSlugs } from '@/lib/services';
 import { site } from '@/lib/site';
 import ResultCard from '@/components/ResultCard';
+import Image from 'next/image';
 import { industries } from '@/lib/industries';
 
 export const metadata: Metadata = {
@@ -33,7 +34,7 @@ export default function Home() {
   return (
     <>
       {/* Hero */}
-      <div className="max-w-5xl mx-auto px-6 pt-20 pb-12 md:pt-24 md:pb-16">
+      <div className="max-w-5xl mx-auto px-6 pt-20 pb-12 md:pt-24 md:pb-16 flex flex-col md:flex-row gap-8 md:gap-12 items-center">
         <div className="max-w-3xl">
           <h1 className="text-[2rem] leading-[1.05] md:text-4xl lg:text-5xl font-semibold tracking-[-1.25px]">
             Expert Financial Advisory:<br className="hidden md:block" /> Operations, Controls &amp; Automation
@@ -71,6 +72,17 @@ export default function Home() {
           <div className="mt-3 text-xs text-muted">
             We partner with public companies, PE-backed firms, and high-growth organizations to help their finance teams transform reporting, close processes, controls, and automation. Our work delivers measurable efficiency gains and stronger operational discipline across a range of industries.
           </div>
+        </div>
+
+        {/* Modest hero visual treatment using logo */}
+        <div className="hidden md:flex flex-shrink-0 opacity-10">
+          <Image 
+            src="/mh-logo.png" 
+            alt="" 
+            width={180} 
+            height={180} 
+            className="w-40 h-40" 
+          />
         </div>
       </div>
 
@@ -168,23 +180,23 @@ export default function Home() {
             {[
               {
                 title: "Month-End Close Acceleration",
-                challenge: "25-day close cycle was draining the finance team and delaying reporting.",
-                approach: "Standardized processes across locations and implemented automation for reconciliations and close workflows.",
-                results: "Reduced to 5 business days — a game-changer for the entire team.",
+                challenge: "A multi-location healthcare provider with 8 facilities was stuck with a 25-day close cycle, draining the team and delaying critical board reporting.",
+                approach: "We standardized processes across locations and implemented targeted automation for reconciliations and close workflows using SQL, Power Query, and existing tools.",
+                results: "Close cycle reduced to just 5 business days, saving over 160 team-hours per month and enabling faster, more confident decisions. A true game-changer for the entire finance team.",
                 attribution: "Controller, Multi-Location Healthcare Provider"
               },
               {
                 title: "Reconciliation Automation",
-                challenge: "Monthly reconciliations taking 6 hours per person, prone to errors and bottlenecks.",
-                approach: "Designed SQL and Power Query automation for data pipelines and refreshes.",
-                results: "Cut time to under 15 minutes with dramatically improved accuracy.",
+                challenge: "A PE-backed technology company was spending 6 hours per month per person on manual reconciliations, creating bottlenecks and accuracy issues as the team scaled.",
+                approach: "We designed custom SQL and Power Query automation for monthly data pipelines and refreshes, integrating with their existing systems.",
+                results: "Reconciliation time cut to under 15 minutes with dramatically improved accuracy and zero manual errors. Massive time savings allowed the team to focus on analysis instead of data entry.",
                 attribution: "Finance Manager, PE-Backed Technology Company"
               },
               {
                 title: "Finance Function Build & Automation",
-                challenge: "AP/AR departments needed to be built from scratch; manual contract workflows consuming hours weekly.",
-                approach: "Built departments and automated long-term contract workflows using Salesforce and other tools.",
-                results: "Saved the team hours every week while establishing scalable operations.",
+                challenge: "A manufacturing and distribution firm needed to build AP/AR departments from the ground up while manual long-term contract workflows were consuming hours every week.",
+                approach: "We built the departments from scratch and automated the contract workflows using Salesforce and custom tools, while implementing standardized controls and procedures.",
+                results: "Saved the team hours every week, established scalable operations across multiple locations, and provided leadership with clear visibility for the first time.",
                 attribution: "CFO, Manufacturing & Distribution Firm"
               }
             ].map((item, i) => (
