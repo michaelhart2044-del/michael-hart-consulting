@@ -78,7 +78,8 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
             className="h-20 w-20 rounded-full object-contain"
           />
           <span className="font-semibold text-accent text-base md:text-lg tracking-[-0.3px] group-hover:text-accent-hover transition-colors whitespace-nowrap">
-            {site.name}
+            <span className="md:hidden">MH Consulting</span>
+            <span className="hidden md:inline">{site.name}</span>
           </span>
         </Link>
 
@@ -104,15 +105,16 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
         </Link>
 
         {/* Hamburger - iOS Friendly */}
-        <div
+        <button
           onClick={() => setIsOpen(!isOpen)}
           onTouchEnd={(e) => {
             e.preventDefault();
             setIsOpen(!isOpen);
           }}
           className="md:hidden p-5 -mr-5 text-white active:bg-white/10 rounded-xl transition-colors touch-manipulation cursor-pointer select-none"
-          role="button"
           aria-label="Toggle navigation menu"
+          aria-expanded={isOpen}
+          aria-controls="mobile-menu"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -128,12 +130,12 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
               d={isOpen ? 'M6 18L18 6M6 6h12v12' : 'M4 6h16M4 12h16M4 18h16'}
             />
           </svg>
-        </div>
+        </button>
       </div>
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-background border-t border-white/10 py-4">
+        <div id="mobile-menu" className="md:hidden bg-background border-t border-white/10 py-4 transition-all duration-200">
           <div className="max-w-5xl mx-auto px-6 flex flex-col gap-4 text-sm">
             {mobileItems.map((item) => (
               <Link
