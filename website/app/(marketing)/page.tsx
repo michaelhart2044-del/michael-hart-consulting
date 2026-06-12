@@ -4,7 +4,7 @@ import { services } from '@/lib/services';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'Home',
+  title: 'Expert Financial Advisory',
   description: site.description,
   openGraph: {
     title: `${site.name} | Strategic Financial Advisory`,
@@ -162,7 +162,7 @@ export default function Home() {
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Our Services</h2>
             <p className="mt-4 text-base md:text-lg text-muted">
-              We provide specialized advisory in revenue accounting, financial close, controls, process automation, AI-assisted software development, finance function transformation, forecasting, and AI solutions across complex organizations.
+              Expert financial advisory in operations, controls, automation, revenue accounting, financial close, and transformation. We provide specialized advisory in revenue accounting, financial close, controls, process automation, AI-assisted software development, finance function transformation, forecasting, and AI solutions across complex organizations.
             </p>
           </div>
 

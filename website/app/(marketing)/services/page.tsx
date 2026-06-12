@@ -35,7 +35,7 @@ export default function ServicesIndex() {
         <div className="max-w-3xl">
           <h1 className="text-5xl font-semibold tracking-tight">Our Services</h1>
           <p className="mt-4 text-lg text-muted">
-            We deliver specialized advisory across revenue accounting, month-end close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI-driven solutions. Engagements are tailored to your operations, leveraging tools like SQL, Power Query, Power BI, and ERP systems for measurable efficiency and accuracy.
+            Expert financial advisory in operations, controls, automation, revenue accounting, financial close, and transformation. We deliver specialized advisory across revenue accounting, month-end close, SOX controls, process automation, AI-assisted software development, finance function transformation, financial forecasting, and AI-driven solutions. Engagements are tailored to your operations, leveraging tools like SQL, Power Query, Power BI, and ERP systems for measurable efficiency and accuracy.
           </p>
         </div>
       </div>

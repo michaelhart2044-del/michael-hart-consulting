@@ -37,7 +37,7 @@ export default function About() {
             About <span className="whitespace-nowrap">{site.name}</span>
           </h1>
           <p className="mt-4 text-lg text-muted">
-            We help businesses and legal teams navigate complex financial challenges with clarity, precision, and strategic insight.
+            Expert financial advisory in operations, controls, automation, revenue accounting, financial close, and transformation. Helping organizations achieve efficiency, compliance, and strategic growth.
           </p>
         </div>
       </div>
@@ -76,7 +76,7 @@ export default function About() {
             <span className="whitespace-nowrap">Michael Hart Consulting Group LLC</span> was founded with a clear mission: to deliver high-quality, practical advisory services that help organizations solve complex problems and make confident decisions.
           </p>
           <p className="mt-6 text-lg text-muted leading-relaxed">
-            With deep expertise in revenue accounting, month-end close, SOX controls, process automation, financial strategy, and AI-driven solutions, we bring traditional financial discipline and modern tools to every engagement.
+            With deep expertise in operations, controls, automation, revenue accounting, financial close, and transformation, we bring traditional financial discipline and modern tools to every engagement.
           </p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function About() {
           <h2 className="text-3xl font-semibold mb-6">Experience &amp; Expertise</h2>
           
           <p className="text-lg text-muted leading-relaxed mb-6">
-            With extensive experience across public, private, and PE-backed organizations, Michael Hart specializes in financial reporting, revenue accounting, reconciliations, audit support, and process optimization.
+            With extensive experience across public, private, and PE-backed organizations, Michael Hart specializes in financial reporting, revenue accounting, reconciliations, audit support, and process optimization — all grounded in operations, controls, automation, and transformation.
           </p>
 
           <div className="space-y-4 text-muted">
