@@ -47,6 +47,10 @@ export default function Contact() {
           
           {/* Contact Form */}
           <div className="md:col-span-3" id="form">
+            <div className="mb-4 p-3 bg-card/50 border border-white/10 rounded-lg text-sm">
+              <div className="font-medium text-accent mb-1 tracking-widest text-xs">RECENT OUTCOMES</div>
+              <div className="text-muted">80% faster closes (25→5 days) • 95% less time on reconciliations</div>
+            </div>
             <h2 className="text-2xl font-semibold mb-6">Send us a message</h2>
             <ContactForm />
           </div>
@@ -126,7 +130,7 @@ export default function Contact() {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl font-semibold mb-4">Book a Consultation Directly</h2>
           <p className="text-muted mb-8">
-            Choose a time that works for you. We’ll send a calendar invite and confirmation.
+            Choose a time that works for you. Leaders who booked have achieved 80% faster close cycles and major efficiency gains. We’ll send a calendar invite and confirmation.
           </p>
         </div>
         <CalendlyWidget />

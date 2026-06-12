@@ -364,7 +364,7 @@ export default function Home() {
           <div className="bg-card border border-white/10 rounded-2xl p-10 md:p-12 text-center hover:border-accent/30 transition-all duration-300">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Ready to Get Started?</h2>
             <p className="mt-4 text-base md:text-lg text-muted max-w-xl mx-auto">
-              Whether you&apos;re facing a complex challenge or planning your next strategic move, we&apos;re here to help you move forward with clarity.
+              Whether you&apos;re facing a complex challenge or planning your next strategic move, we&apos;re here to help you move forward with clarity. Recent clients cut close cycles 80% and reconciliations by 95%.
             </p>
 
             <div className="mt-10">

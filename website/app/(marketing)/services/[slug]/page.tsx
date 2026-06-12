@@ -169,7 +169,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         {/* CTA */}
         <div className="max-w-3xl mx-auto text-center pt-8 border-t border-white/10">
           <p className="text-muted mb-6">
-            Ready to explore how this service can address your specific situation?
+            Ready to explore how this service can address your specific situation? Clients have seen 80% faster closes and 95% time savings on key processes.
           </p>
           <Link
             href="/contact#book"
