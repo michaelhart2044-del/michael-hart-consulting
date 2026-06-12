@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { services, flagshipServiceSlugs } from '@/lib/services';
 import { site } from '@/lib/site';
+import ResultCard from '@/components/ResultCard';
 
 export const metadata: Metadata = {
   title: 'Expert Financial Advisory',
@@ -215,6 +216,33 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Client Testimonials */}
+      <section className="border-t border-white/10 bg-background py-12 md:py-16">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="max-w-2xl mb-12">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Client Testimonials</h2>
+            <p className="mt-4 text-base md:text-lg text-muted">
+              Leaders share how our expertise in operations, controls, and automation has delivered results above the rest.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <ResultCard 
+              quote="Michael helped us reduce our month-end close cycle from 25 days to just 5 business days through process standardization and automation. A true game-changer for our entire finance team."
+              attribution="Controller, Multi-Location Healthcare Provider"
+            />
+            <ResultCard 
+              quote="By designing SQL and Power Query automation, our monthly reconciliations went from taking 6 hours to under 15 minutes. Massive time savings and dramatically improved accuracy."
+              attribution="Finance Manager, PE-Backed Technology Company"
+            />
+            <ResultCard 
+              quote="Developed and led accounting teams, implementing standardized controls and procedures that supported scalable operations across multiple locations."
+              attribution="Controller, Private Equity-Backed Manufacturing Company"
+            />
           </div>
         </div>
       </section>
