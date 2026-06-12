@@ -75,11 +75,24 @@ export default function Home() {
       {/* Trust signals */}
       <div className="border-t border-white/10 py-4">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="flex flex-wrap gap-2 text-xs">
-            {['Legal & Litigation', 'Private Equity & Finance', 'Manufacturing', 'Technology & SaaS', 'Healthcare', 'Real Estate', 'Professional Services'].map((industry) => (
-              <span key={industry} className="px-2 py-0.5 border border-white/10 rounded text-muted hover:border-accent/40 hover:text-accent transition-colors">
-                {industry}
-              </span>
+          <div className="text-xs tracking-[1px] text-accent mb-2">INDUSTRIES WE SERVE</div>
+          <div className="flex flex-wrap gap-2 text-sm font-medium">
+            {[
+              { name: 'Legal & Litigation', slug: 'legal-litigation' },
+              { name: 'Private Equity & Finance', slug: 'private-equity-finance' },
+              { name: 'Manufacturing', slug: 'manufacturing' },
+              { name: 'Technology & SaaS', slug: 'technology-saas' },
+              { name: 'Healthcare', slug: 'healthcare' },
+              { name: 'Real Estate', slug: 'real-estate' },
+              { name: 'Professional Services', slug: 'professional-services' },
+            ].map(({ name, slug }) => (
+              <Link
+                key={slug}
+                href={`/industries#${slug}`}
+                className="px-3 py-1 border border-white/10 rounded-full text-muted hover:border-accent/50 hover:text-accent hover:bg-accent/5 transition-all active:scale-[0.985]"
+              >
+                {name}
+              </Link>
             ))}
           </div>
         </div>
