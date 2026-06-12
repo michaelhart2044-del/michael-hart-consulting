@@ -78,7 +78,7 @@ export async function sendContactEmail(formData: FormData) {
     try {
       await resend.emails.send({
         from: `${site.name} <${site.email}>`,
-        to: email,
+        to: rawEmail,
         subject: `Thank you for contacting ${site.name}`,
         html: `
           <p>Dear ${name},</p>
