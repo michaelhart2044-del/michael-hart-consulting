@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 // Core services data - source of truth for detail pages, home links, schema, etc.
 export interface Service {
   slug: string;
@@ -9,6 +11,7 @@ export interface Service {
   approach: string[];
   // For schema / meta
   description: string; // meta desc
+  icon: ReactNode;
 }
 
 export const services: Service[] = [
@@ -36,6 +39,12 @@ export const services: Service[] = [
       'Collaboration with counsel from early case assessment through trial.',
     ],
     description: 'Expert forensic accounting and litigation support for disputes, fraud investigations, and legal proceedings. Independent analysis and expert testimony.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" />
+        <path d="M8 6v12" /><path d="M16 6v12" />
+      </svg>
+    ),
   },
   {
     slug: 'business-setup-structuring',
@@ -61,6 +70,12 @@ export const services: Service[] = [
       'Ongoing advisory as the business evolves.',
     ],
     description: 'Strategic guidance on company formation, ownership structures, governance, and tax-efficient business frameworks for founders and enterprises.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M9 9h6M9 15h6" />
+      </svg>
+    ),
   },
   {
     slug: 'mergers-acquisitions-advisory',
@@ -86,6 +101,13 @@ export const services: Service[] = [
       'Focus on value creation before, during, and after the transaction.',
     ],
     description: 'Comprehensive M&A advisory including due diligence, valuation, structuring, and integration for buyers and sellers seeking precision and value.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
   },
   {
     slug: 'financial-forecasting-strategy',
@@ -113,6 +135,12 @@ export const services: Service[] = [
       'Models designed for ongoing use and iteration, not one-time reports.',
     ],
     description: 'Data-driven financial forecasting, scenario planning, budgeting, and strategic finance support to guide confident business decisions.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M3 3v18h18" />
+        <path d="M18 17l-5-5-4 4-3-3" />
+      </svg>
+    ),
   },
   {
     slug: 'ai-automation-solutions',
@@ -140,6 +168,13 @@ export const services: Service[] = [
       'Combine deep domain knowledge with modern tooling.',
     ],
     description: 'Practical AI and intelligent automation implementations that enhance financial processes, decision-making, and operational efficiency with strong governance.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M8 8h8M8 12h8M8 16h4" />
+        <circle cx="18" cy="18" r="2" />
+      </svg>
+    ),
   },
   {
     slug: 'website-design-development',
@@ -165,6 +200,12 @@ export const services: Service[] = [
       'Built for longevity, easy updates, and measurable results.',
     ],
     description: 'Premium, high-performance website design and development for consulting firms and professional services businesses that need to build trust and generate opportunities online.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <rect x="3" y="4" width="18" height="12" rx="2" />
+        <path d="M8 20h8M12 16v4" />
+      </svg>
+    ),
   },
   {
     slug: 'revenue-accounting-compliance',
@@ -190,6 +231,13 @@ export const services: Service[] = [
       'Integration of tools like SQL and Power Query for efficient data handling.',
     ],
     description: 'Expert revenue accounting and compliance services for ASC 606, FFS postings, reconciliations, and analysis to ensure accurate and timely financial reporting.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6" />
+        <path d="M16 13H8M16 17H8" />
+      </svg>
+    ),
   },
   {
     slug: 'month-end-close-reporting',
@@ -215,6 +263,14 @@ export const services: Service[] = [
       'Use of tools like Blackline, Expensify, and ERP integrations for speed.',
     ],
     description: 'Expert support for month-end close, financial reporting, reconciliations, and controls to deliver faster, more reliable results.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
   },
   {
     slug: 'sox-controls-audit-support',
@@ -240,6 +296,12 @@ export const services: Service[] = [
       'Close partnership with auditors and internal stakeholders for efficient resolution.',
     ],
     description: 'Comprehensive SOX controls implementation, audit support, and compliance documentation for public and regulated organizations.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    ),
   },
   {
     slug: 'process-automation-finance-transformation',
@@ -266,6 +328,11 @@ export const services: Service[] = [
       'Focus on measurable time savings, error reduction, and ongoing maintainability.',
     ],
     description: 'Practical automation and transformation services that modernize finance operations using SQL, Power Query, Power BI, ERP tools, and workflow automation.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-1.34 3-3m-3 3v-3" />
+      </svg>
+    ),
   },
   {
     slug: 'ai-assisted-software-development',
@@ -291,6 +358,12 @@ export const services: Service[] = [
       'Emphasize integration with existing systems and team enablement.',
     ],
     description: 'AI-assisted custom software development for finance teams, including tools, scripts, integrations, and automation tailored to operational needs.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    ),
   },
   {
     slug: 'finance-function-transformation',
@@ -316,6 +389,14 @@ export const services: Service[] = [
       'Deliver measurable, sustainable transformations with clear ROI.',
     ],
     description: 'Comprehensive finance function transformation services combining process automation, internal controls, and leadership development for high-performing teams.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
   },
 ];
 
