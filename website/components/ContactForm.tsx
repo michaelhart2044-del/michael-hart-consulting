@@ -32,7 +32,7 @@ export default function ContactForm() {
         className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center"
       >
         <p className="text-green-400 text-lg font-medium">Thank you! Your message has been sent.</p>
-        <p className="text-muted mt-2">We've sent a confirmation to your email. We'll get back to you within 24 hours on business days. Please check your inbox (and spam folder).</p>
+        <p className="text-muted mt-2">We&apos;ve sent a confirmation to your email. We&apos;ll get back to you within 24 hours on business days. Please check your inbox (and spam folder).</p>
       </div>
     );
   }

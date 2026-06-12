@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-
 // Core services data - source of truth for detail pages, home links, schema, etc.
 export interface Service {
   slug: string;

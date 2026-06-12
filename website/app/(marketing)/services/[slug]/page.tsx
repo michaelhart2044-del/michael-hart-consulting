@@ -113,7 +113,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
 
         {/* Who It's For */}
         <div className="bg-card border border-white/10 rounded-2xl p-8">
-          <h2 className="text-2xl font-semibold mb-6">Who It's For</h2>
+          <h2 className="text-2xl font-semibold mb-6">Who It&apos;s For</h2>
           <ul className="grid md:grid-cols-2 gap-x-8 gap-y-3 text-muted">
             {service.whoFor.map((item, index) => (
               <li key={index} className="flex items-start gap-3">

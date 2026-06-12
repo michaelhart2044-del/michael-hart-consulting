@@ -14,9 +14,9 @@ export const site = {
 
   // Social links (placeholders for now)
   social: {
-    // linkedin: "https://www.linkedin.com/in/yourprofile",
-    // twitter: "https://x.com/yourhandle",
-  },
+    linkedin: undefined,
+    x: undefined,
+  } as { linkedin?: string; x?: string },
 } as const;
 
 export type Site = typeof site;

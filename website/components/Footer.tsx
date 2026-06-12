@@ -67,9 +67,9 @@ export default function Footer() {
             <div>
               <div className="font-medium text-accent mb-3">Social</div>
               <div className="flex gap-4 text-muted">
-                {(site.social as any)?.linkedin && (
+                {site.social?.linkedin && (
                   <a
-                    href={(site.social as any).linkedin}
+                    href={site.social.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-accent transition-colors"
@@ -80,9 +80,9 @@ export default function Footer() {
                     </svg>
                   </a>
                 )}
-                {(site.social as any)?.x && (
+                {site.social?.x && (
                   <a
-                    href={(site.social as any).x}
+                    href={site.social.x}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-accent transition-colors"
