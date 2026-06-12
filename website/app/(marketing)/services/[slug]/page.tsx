@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getServiceBySlug, getAllServiceSlugs, services } from '@/lib/services';
 import { site } from '@/lib/site';
+import ResultCard from '@/components/ResultCard';
 
 interface ServicePageProps {
   params: Promise<{ slug: string }>;
@@ -166,15 +167,11 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
             <h2 className="text-2xl font-semibold mb-6">Proven Results</h2>
             <div className="space-y-6">
               {service.results.map((result, index) => (
-                <div key={index} className="border-l-4 border-accent pl-6">
-                  <div className="text-4xl text-accent mb-2">“</div>
-                  <p className="text-muted leading-relaxed mb-3">
-                    {result.quote}
-                  </p>
-                  <div className="text-sm text-subtle">
-                    {result.attribution}
-                  </div>
-                </div>
+                <ResultCard 
+                  key={index} 
+                  quote={result.quote} 
+                  attribution={result.attribution} 
+                />
               ))}
             </div>
           </div>

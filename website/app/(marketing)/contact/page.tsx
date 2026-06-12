@@ -3,6 +3,7 @@ import ContactForm from '@/components/ContactForm';
 import { site } from '@/lib/site';
 import Script from 'next/script';
 import CalendlyWidget from '@/components/CalendlyWidget';
+import ResultCard from '@/components/ResultCard';
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -109,18 +110,11 @@ export default function Contact() {
               attribution: "Controller, Private Equity-Backed Manufacturing Company"
             }
           ].map((item, i) => (
-            <div 
+            <ResultCard 
               key={i} 
-              className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col"
-            >
-              <div className="text-4xl text-accent mb-4">“</div>
-              <p className="text-muted flex-grow leading-relaxed">
-                {item.quote}
-              </p>
-              <div className="mt-4 pt-4 border-t border-white/10 text-sm text-subtle">
-                {item.attribution}
-              </div>
-            </div>
+              quote={item.quote} 
+              attribution={item.attribution} 
+            />
           ))}
         </div>
       </div>
