@@ -39,7 +39,6 @@ export default function Home() {
           <h1 className="text-[2rem] leading-[1.05] md:text-4xl lg:text-5xl font-semibold tracking-[-1.25px]">
             Expert Financial Advisory:<br className="hidden md:block" /> Operations, Controls &amp; Automation
           </h1>
-          <div className="mt-3 h-0.5 w-12 bg-accent/60" />
 
           <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed max-w-2xl">
             Results-driven expertise transforming financial operations through reporting, close processes, controls, automation, and strategic leadership.
