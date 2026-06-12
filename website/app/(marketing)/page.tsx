@@ -67,7 +67,7 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-3 text-xs text-muted">
-            Working with public companies, PE-backed firms, and high-growth organizations across 7 industries.
+            We partner with public companies, PE-backed firms, and high-growth organizations to help their finance teams transform reporting, close processes, controls, and automation. Our work delivers measurable efficiency gains and stronger operational discipline across a range of industries.
           </div>
         </div>
       </div>
