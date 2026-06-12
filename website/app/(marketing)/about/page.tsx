@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { site } from '@/lib/site';
 import Image from 'next/image';
+import { industries } from '@/lib/industries';
 
 export const metadata: Metadata = {
   title: 'About',
@@ -120,12 +121,12 @@ export default function About() {
           <div className="mt-8 pt-6 border-t border-white/10">
             <div className="text-xs tracking-[2px] text-accent mb-3">INDUSTRIES SERVED</div>
             <div className="flex flex-wrap gap-2">
-              {['Legal & Litigation', 'Private Equity & Finance', 'Manufacturing', 'Technology & SaaS', 'Healthcare', 'Real Estate', 'Professional Services', 'Restaurant Industry', 'Hospitality', 'Online Retail Industry'].map((industry) => (
+              {industries.map(({ name }) => (
                 <span
-                  key={industry}
+                  key={name}
                   className="inline-block px-3 py-1 text-xs border border-white/10 rounded-full text-muted hover:border-accent/40 hover:text-accent transition-colors"
                 >
-                  {industry}
+                  {name}
                 </span>
               ))}
             </div>

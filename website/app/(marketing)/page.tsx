@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { services, flagshipServiceSlugs } from '@/lib/services';
 import { site } from '@/lib/site';
 import ResultCard from '@/components/ResultCard';
+import { industries } from '@/lib/industries';
 
 export const metadata: Metadata = {
   title: 'Expert Financial Advisory',
@@ -78,18 +79,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-xs tracking-[1px] text-accent mb-2">INDUSTRIES WE SERVE</div>
           <div className="flex flex-wrap gap-2 text-sm font-medium">
-            {[
-              { name: 'Legal & Litigation', slug: 'legal-litigation' },
-              { name: 'Private Equity & Finance', slug: 'private-equity-finance' },
-              { name: 'Manufacturing', slug: 'manufacturing' },
-              { name: 'Technology & SaaS', slug: 'technology-saas' },
-              { name: 'Healthcare', slug: 'healthcare' },
-              { name: 'Real Estate', slug: 'real-estate' },
-              { name: 'Professional Services', slug: 'professional-services' },
-              { name: 'Restaurant Industry', slug: 'restaurant-industry' },
-              { name: 'Hospitality', slug: 'hospitality' },
-              { name: 'Online Retail Industry', slug: 'online-retail-industry' },
-            ].map(({ name, slug }) => (
+            {industries.map(({ name, slug }) => (
               <Link
                 key={slug}
                 href={`/industries#${slug}`}
