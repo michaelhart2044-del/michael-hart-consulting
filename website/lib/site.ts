@@ -15,9 +15,7 @@ export const site = {
   // Social links (add your actual profile URLs to enable icons in the footer)
   social: {
     linkedin: "https://www.linkedin.com/in/michael-hart-9a5092414",
-    // x: "https://x.com/yourhandle",
-    x: undefined,
-  } as { linkedin?: string; x?: string },
+  } as { linkedin?: string },
 
   // Open Graph image for metadata
   ogImage: "/og-image.png",
