@@ -7,12 +7,21 @@ export const metadata: Metadata = {
   openGraph: {
     title: `Terms of Service | ${site.name}`,
     description: `Terms of Service for ${site.name}. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.`,
+    images: [
+      {
+        url: site.ogImage,
+        width: 1200,
+        height: 630,
+        alt: `${site.name} - ${site.tagline}`,
+      },
+    ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: `Terms of Service | ${site.name}`,
     description: `Terms of Service for ${site.name}. Review the legal terms, conditions, and agreements governing the use of our consulting services and website.`,
+    images: [site.ogImage],
   },
 };
 

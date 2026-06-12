@@ -17,6 +17,9 @@ export const site = {
     linkedin: undefined,
     x: undefined,
   } as { linkedin?: string; x?: string },
+
+  // Open Graph image for metadata
+  ogImage: "/og-image.png",
 } as const;
 
 export type Site = typeof site;

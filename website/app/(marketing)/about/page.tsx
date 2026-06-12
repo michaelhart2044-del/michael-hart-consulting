@@ -9,12 +9,21 @@ export const metadata: Metadata = {
   openGraph: {
     title: `About | ${site.name}`,
     description: `Learn about ${site.name}. ${site.description}`,
+    images: [
+      {
+        url: site.ogImage,
+        width: 1200,
+        height: 630,
+        alt: `${site.name} - ${site.tagline}`,
+      },
+    ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: `About | ${site.name}`,
     description: `Learn about ${site.name}. ${site.description}`,
+    images: [site.ogImage],
   },
 };
 

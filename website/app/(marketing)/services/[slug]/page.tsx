@@ -24,14 +24,23 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
     title: service.title,
     description: service.description,
     openGraph: {
-      title: `${service.title} | Michael Hart Consulting Group`,
+      title: `${service.title} | ${site.name}`,
       description: service.description,
+      images: [
+        {
+          url: site.ogImage,
+          width: 1200,
+          height: 630,
+          alt: `${service.title} | ${site.name}`,
+        },
+      ],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${service.title} | Michael Hart Consulting Group`,
+      title: `${service.title} | ${site.name}`,
       description: service.description,
+      images: [site.ogImage],
     },
   };
 }

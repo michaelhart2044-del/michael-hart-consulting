@@ -7,12 +7,21 @@ export const metadata: Metadata = {
   openGraph: {
     title: `Privacy Policy | ${site.name}`,
     description: `Privacy Policy for ${site.name}. Learn how we collect, use, protect, and share your personal information when you use our website or contact us.`,
+    images: [
+      {
+        url: site.ogImage,
+        width: 1200,
+        height: 630,
+        alt: `${site.name} - ${site.tagline}`,
+      },
+    ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: `Privacy Policy | ${site.name}`,
     description: `Privacy Policy for ${site.name}. Learn how we collect, use, protect, and share your personal information when you use our website or contact us.`,
+    images: [site.ogImage],
   },
 };
 

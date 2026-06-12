@@ -10,12 +10,21 @@ export const metadata: Metadata = {
   openGraph: {
     title: `Contact | ${site.name}`,
     description: `Get in touch with ${site.name}. ${site.description} Book a consultation or send us a message.`,
+    images: [
+      {
+        url: site.ogImage,
+        width: 1200,
+        height: 630,
+        alt: `${site.name} - ${site.tagline}`,
+      },
+    ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: `Contact | ${site.name}`,
     description: `Get in touch with ${site.name}. ${site.description} Book a consultation or send us a message.`,
+    images: [site.ogImage],
   },
 };
 
