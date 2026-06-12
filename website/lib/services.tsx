@@ -248,7 +248,7 @@ export const services: Service[] = [
     slug: 'month-end-close-reporting',
     title: 'Month-End Close & Financial Reporting',
     shortDesc: 'Streamlined close processes, reconciliations, variance analysis, and high-quality reporting.',
-    longIntro: 'We optimize month-end and year-end close, general ledger management, cash reconciliations, and variance analysis. We turn time-intensive manual processes into automated, auditable workflows that reduce cycle times while strengthening accuracy and controls.',
+    longIntro: 'We optimize month-end and year-end close, GL management, cash reconciliations, and variance analysis — turning manual processes into automated, auditable workflows that cut cycle times and strengthen controls.',
     deliverables: [
       'Month-end and year-end close management and acceleration',
       'General ledger review, cash reconciliation, and variance analysis',
@@ -287,7 +287,7 @@ export const services: Service[] = [
     slug: 'sox-controls-audit-support',
     title: 'SOX Controls & Audit Support',
     shortDesc: 'Implementation of SOX controls, audit readiness, and resolution of external inquiries.',
-    longIntro: 'We strengthen internal controls, support SOX compliance, and assist with external audits. We collaborate with auditors to resolve inquiries, implement stronger controls, and prepare supporting documentation for smooth reviews.',
+    longIntro: 'We strengthen internal controls, support SOX compliance, and assist with external audits. We work with auditors to resolve inquiries, implement stronger controls, and prepare documentation for clean reviews.',
     deliverables: [
       'SOX controls design, implementation, and testing',
       'Audit support and inquiry resolution (e.g., with PwC and other firms)',
@@ -324,7 +324,7 @@ export const services: Service[] = [
     slug: 'process-automation-finance-transformation',
     title: 'Process Automation & Finance Transformation',
     shortDesc: 'Automation of manual workflows using SQL, Power Query, Power BI, and ERP tools for scalable operations.',
-    longIntro: 'We help finance teams automate time-consuming processes such as reconciliations, data refreshes, and reporting. Using SQL, Power Query, Power BI, and modern ERP platforms, we reduce manual effort, improve accuracy, and enable real-time collaboration across teams.',
+    longIntro: 'We help finance teams automate time-consuming processes like reconciliations, data refreshes, and reporting. Using SQL, Power Query, Power BI, and ERP tools, we cut manual effort, boost accuracy, and enable real-time collaboration.',
     deliverables: [
       'Design and implementation of automated reconciliation and reporting processes',
       'SQL and Power Query solutions for monthly data pipelines and refreshes',
@@ -392,7 +392,7 @@ export const services: Service[] = [
     slug: 'finance-function-transformation',
     title: 'Finance Function Transformation & Leadership',
     shortDesc: 'Modernizing finance teams and operations through automation, controls, and strategic leadership.',
-    longIntro: 'With experience building and leading accounting teams from the ground up, implementing robust controls, and driving large-scale process improvements, we advise on transforming finance functions to be more efficient, compliant, and strategically valuable.',
+    longIntro: 'We advise on transforming finance functions to be more efficient, compliant, and strategically valuable — drawing on experience building teams, implementing controls, and driving large-scale process improvements from the ground up.',
     deliverables: [
       'Finance team assessments, structure, and capability development',
       'Automation and controls implementation roadmaps',

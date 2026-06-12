@@ -146,6 +146,20 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           </ul>
         </div>
 
+        {/* Typical Outcomes (scannable summary) */}
+        <div className="bg-card border border-white/10 rounded-2xl p-8">
+          <h2 className="text-2xl font-semibold mb-4">Typical Outcomes</h2>
+          <ul className="grid md:grid-cols-2 gap-x-8 gap-y-2 text-muted text-sm">
+            <li>• Faster, more reliable close cycles</li>
+            <li>• Reduced manual effort through automation</li>
+            <li>• Stronger controls and audit readiness</li>
+            <li>• Clearer visibility for leadership and boards</li>
+          </ul>
+          {service.results && service.results.length > 0 && (
+            <p className="mt-4 text-xs text-subtle">See specific results for this service below.</p>
+          )}
+        </div>
+
         {/* Proven Results (if available for this service) */}
         {service.results && service.results.length > 0 && (
           <div className="bg-card border border-white/10 rounded-2xl p-8">

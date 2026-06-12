@@ -61,7 +61,7 @@ export default function About() {
                 <div className="text-accent text-sm tracking-[2px] mt-0.5">FOUNDER &amp; PRINCIPAL</div>
               </div>
               <p className="mt-4 text-muted leading-relaxed">
-                Michael Hart is a results-driven accounting professional with extensive experience in financial reporting, revenue accounting, reconciliations, audit support, and process optimization across public, private, and PE-backed organizations. He is known for transforming manual processes into automated, scalable workflows and leading teams to strengthen controls and elevate financial operations.
+                Michael Hart is a results-driven accounting professional with deep experience across public, private, and PE-backed organizations. He specializes in transforming manual processes into automated, scalable workflows and building teams that deliver stronger controls and faster reporting.
               </p>
             </div>
           </div>
@@ -73,10 +73,7 @@ export default function About() {
         <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
           <h2 className="text-3xl font-semibold mb-6">Who We Are</h2>
           <p className="text-lg text-muted leading-relaxed">
-            <span className="whitespace-nowrap">Michael Hart Consulting Group LLC</span> was founded with a clear mission: to deliver high-quality, practical advisory services that help organizations solve complex problems and make confident decisions.
-          </p>
-          <p className="mt-6 text-lg text-muted leading-relaxed">
-            With deep expertise in operations, controls, automation, revenue accounting, financial close, and transformation, we bring traditional financial discipline and modern tools to every engagement.
+            Founded with a clear mission: deliver high-quality, practical advisory that helps organizations solve complex problems and make confident decisions. We bring deep expertise in operations, controls, automation, revenue accounting, and finance transformation — combining traditional discipline with modern tools.
           </p>
         </div>
       </div>
@@ -87,7 +84,7 @@ export default function About() {
           <h2 className="text-3xl font-semibold mb-6">Experience &amp; Expertise</h2>
           
           <p className="text-lg text-muted leading-relaxed mb-6">
-            With extensive experience across public, private, and PE-backed organizations, Michael Hart specializes in financial reporting, revenue accounting, reconciliations, audit support, and process optimization — all grounded in operations, controls, automation, and transformation.
+            With experience across public, private, and PE-backed organizations, Michael specializes in financial reporting, revenue accounting, reconciliations, audit support, and process optimization — grounded in operations, controls, automation, and transformation.
           </p>
 
           <div className="space-y-4 text-muted">
