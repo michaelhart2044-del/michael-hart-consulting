@@ -201,6 +201,48 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Client Results & Social Proof */}
+      <section className="border-t border-white/10 bg-background py-16 md:py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="max-w-2xl mb-12">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Results That Speak for Themselves</h2>
+            <p className="mt-4 text-base md:text-lg text-muted">
+              Measurable impact from transforming financial operations, automating processes, and strengthening controls across organizations.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                quote: "Michael helped us reduce our month-end close cycle from 25 days to just 5 business days through process standardization and automation. A true game-changer for our entire finance team.",
+                attribution: "Controller, Multi-Location Healthcare Provider"
+              },
+              {
+                quote: "By designing SQL and Power Query automation, our monthly reconciliations went from taking 6 hours to under 15 minutes. Massive time savings and dramatically improved accuracy.",
+                attribution: "Finance Manager, PE-Backed Technology Company"
+              },
+              {
+                quote: "We built our AP/AR departments from the ground up with Michael's guidance. He also automated our long-term contract workflows using Salesforce, saving the team hours every week.",
+                attribution: "CFO, Manufacturing & Distribution Firm"
+              }
+            ].map((item, i) => (
+              <div 
+                key={i} 
+                className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col"
+              >
+                <div className="text-4xl text-accent mb-4">“</div>
+                <p className="text-muted flex-grow leading-relaxed">
+                  {item.quote}
+                </p>
+                <div className="mt-4 pt-4 border-t border-white/10 text-sm text-subtle">
+                  {item.attribution}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Our Services */}
       <section id="services" className="border-t border-white/10 bg-background py-16 md:py-20">
         <div className="max-w-5xl mx-auto px-6">
