@@ -73,9 +73,51 @@ export default function Contact() {
               <div className="mt-10 pt-8 border-t border-white/10 text-sm text-subtle leading-relaxed">
                 We typically respond within 24 hours on business days.
               </div>
+
+              <div className="mt-6 pt-6 border-t border-white/10 text-xs text-subtle">
+                <div className="font-medium text-accent mb-1.5 tracking-widest">KEY OUTCOMES</div>
+                <ul className="space-y-1">
+                  <li>• Close cycles cut 80% (25 days → 5)</li>
+                  <li>• Reconciliations 95% faster (6 hrs → 15 min)</li>
+                </ul>
+              </div>
             </div>
           </div>
 
+        </div>
+      </div>
+
+      {/* Recent Client Results - proof right before booking CTA */}
+      <div className="max-w-5xl mx-auto px-6 pb-12">
+        <h2 className="text-2xl font-semibold mb-6 text-center">Recent client results</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            {
+              quote: "Michael helped us reduce our month-end close cycle from 25 days to just 5 business days through process standardization and automation. A true game-changer for our entire finance team.",
+              attribution: "Controller, Multi-Location Healthcare Provider"
+            },
+            {
+              quote: "By designing SQL and Power Query automation, our monthly reconciliations went from taking 6 hours to under 15 minutes. Massive time savings and dramatically improved accuracy.",
+              attribution: "Finance Manager, PE-Backed Technology Company"
+            },
+            {
+              quote: "Developed and led accounting teams, implementing standardized controls and procedures that supported scalable operations across multiple locations.",
+              attribution: "Controller, Private Equity-Backed Manufacturing Company"
+            }
+          ].map((item, i) => (
+            <div 
+              key={i} 
+              className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col"
+            >
+              <div className="text-4xl text-accent mb-4">“</div>
+              <p className="text-muted flex-grow leading-relaxed">
+                {item.quote}
+              </p>
+              <div className="mt-4 pt-4 border-t border-white/10 text-sm text-subtle">
+                {item.attribution}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
