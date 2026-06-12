@@ -12,8 +12,10 @@ export const site = {
   // Calendly scheduling link (used on /contact page)
   calendlyUrl: "https://calendly.com/michael-michaelhartconsulting/30min",
 
-  // Social links (placeholders for now)
+  // Social links (add your actual profile URLs to enable icons in the footer)
   social: {
+    // linkedin: "https://www.linkedin.com/in/yourprofile",
+    // x: "https://x.com/yourhandle",
     linkedin: undefined,
     x: undefined,
   } as { linkedin?: string; x?: string },

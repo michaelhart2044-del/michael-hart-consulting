@@ -65,6 +65,8 @@ export default function Footer() {
             </div>
 
             <div>
+              {/* Social links populated from lib/site.ts (linkedin + x supported).
+                  Add real URLs in site.ts to activate the icons/links here. */}
               <div className="font-medium text-accent mb-3">Social</div>
               <div className="flex gap-4 text-muted">
                 {site.social?.linkedin && (
