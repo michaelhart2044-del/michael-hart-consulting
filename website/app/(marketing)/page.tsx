@@ -176,24 +176,25 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                quote: "Michael helped us reduce our month-end close cycle from 25 days to just 5 business days through process standardization and automation. A true game-changer for our entire finance team.",
+                title: "Month-End Close Acceleration",
+                challenge: "25-day close cycle was draining the finance team and delaying reporting.",
+                approach: "Standardized processes across locations and implemented automation for reconciliations and close workflows.",
+                results: "Reduced to 5 business days — a game-changer for the entire team.",
                 attribution: "Controller, Multi-Location Healthcare Provider"
               },
               {
-                quote: "By designing SQL and Power Query automation, our monthly reconciliations went from taking 6 hours to under 15 minutes. Massive time savings and dramatically improved accuracy.",
+                title: "Reconciliation Automation",
+                challenge: "Monthly reconciliations taking 6 hours per person, prone to errors and bottlenecks.",
+                approach: "Designed SQL and Power Query automation for data pipelines and refreshes.",
+                results: "Cut time to under 15 minutes with dramatically improved accuracy.",
                 attribution: "Finance Manager, PE-Backed Technology Company"
               },
               {
-                quote: "We built our AP/AR departments from the ground up with Michael's guidance. He also automated our long-term contract workflows using Salesforce, saving the team hours every week.",
+                title: "Finance Function Build & Automation",
+                challenge: "AP/AR departments needed to be built from scratch; manual contract workflows consuming hours weekly.",
+                approach: "Built departments and automated long-term contract workflows using Salesforce and other tools.",
+                results: "Saved the team hours every week while establishing scalable operations.",
                 attribution: "CFO, Manufacturing & Distribution Firm"
-              },
-              {
-                quote: "Led Six Sigma Black Belt projects to automate cash reconciliation processes, delivering significant improvements in accuracy and efficiency for the finance team.",
-                attribution: "Finance Director, Multi-Location Organization"
-              },
-              {
-                quote: "Developed and led accounting teams, implementing standardized controls and procedures that supported scalable operations across multiple locations.",
-                attribution: "Controller, Private Equity-Backed Manufacturing Company"
               }
             ].map((item, i) => (
               <div 
@@ -201,10 +202,14 @@ export default function Home() {
                 className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col relative"
               >
                 <div className="absolute top-0 left-0 right-0 h-0.5 bg-accent/40 rounded-t-2xl" />
-                <div className="text-4xl text-accent mb-4">“</div>
-                <p className="text-muted flex-grow leading-relaxed">
-                  {item.quote}
-                </p>
+                <h3 className="text-xl font-semibold mb-3 group-hover:text-accent transition-colors">
+                  {item.title}
+                </h3>
+                <div className="text-sm space-y-2 text-muted flex-grow">
+                  <p><span className="font-medium text-foreground">Challenge:</span> {item.challenge}</p>
+                  <p><span className="font-medium text-foreground">Approach:</span> {item.approach}</p>
+                  <p><span className="font-medium text-foreground">Results:</span> {item.results}</p>
+                </div>
                 <div className="mt-4 pt-4 border-t border-white/10 text-sm text-subtle">
                   {item.attribution}
                 </div>
