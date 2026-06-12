@@ -62,6 +62,21 @@ const industries = [
     slug: 'professional-services',
     description: 'Professional services firms (consulting, accounting, legal) partner with us for finance transformation, team leadership development, and automation of time-intensive processes. We implement controls, standardize reporting, and deliver practical recommendations that improve profitability and scalability.',
   },
+  {
+    name: 'Restaurant Industry',
+    slug: 'restaurant-industry',
+    description: 'Restaurant groups and chains benefit from our multi-location month-end close, revenue accounting for complex sales and tips, and automation of inventory, labor, and payroll processes. We implement controls for franchise compliance and provide clear operational reporting to support growth and profitability.',
+  },
+  {
+    name: 'Hospitality',
+    slug: 'hospitality',
+    description: 'Hospitality businesses (hotels, resorts, and food service) use our expertise in property-level and portfolio-wide close processes, revenue management accounting, and automation of guest billing and expense tracking. We strengthen controls and deliver timely financial insights for operators managing multiple properties.',
+  },
+  {
+    name: 'Online Retail Industry',
+    slug: 'online-retail-industry',
+    description: 'E-commerce and online retail companies rely on us for ASC 606 revenue recognition, order-to-cash automation, returns and refund accounting, and financial forecasting tied to marketing and fulfillment metrics. We help scale finance operations with strong controls as transaction volumes grow.',
+  },
 ];
 
 export default function Industries() {

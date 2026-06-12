@@ -85,6 +85,9 @@ export default function Home() {
               { name: 'Healthcare', slug: 'healthcare' },
               { name: 'Real Estate', slug: 'real-estate' },
               { name: 'Professional Services', slug: 'professional-services' },
+              { name: 'Restaurant Industry', slug: 'restaurant-industry' },
+              { name: 'Hospitality', slug: 'hospitality' },
+              { name: 'Online Retail Industry', slug: 'online-retail-industry' },
             ].map(({ name, slug }) => (
               <Link
                 key={slug}
