@@ -73,9 +73,9 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
           <Image
             src="/mh-logo.png"
             alt="MH Logo"
-            width={80}
-            height={80}
-            className="h-20 w-20 rounded-full object-contain"
+            width={64}
+            height={64}
+            className="h-16 w-16 rounded-full object-contain"
           />
           <span className="font-semibold text-accent text-base md:text-lg tracking-[-0.3px] group-hover:text-accent-hover transition-colors whitespace-nowrap">
             <span className="md:hidden">MH Consulting</span>
@@ -99,7 +99,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
         {/* Desktop CTA Button */}
         <Link
           href={resolvedCtaHref}
-          className="hidden md:block px-6 py-2.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black text-sm font-medium rounded-full transition-all"
+          className="hidden md:block px-6 py-2.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black text-sm font-medium rounded-full transition-all active:scale-[0.985]"
         >
           Book a Consultation
         </Link>
@@ -133,30 +133,31 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
         </button>
       </div>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div id="mobile-menu" className="md:hidden bg-background border-t border-white/10 py-4 transition-all duration-200">
-          <div className="max-w-5xl mx-auto px-6 flex flex-col gap-4 text-sm">
-            {mobileItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`py-2 hover:text-accent transition-colors ${isActive(item.href) ? 'text-accent font-medium' : ''}`}
-                onClick={closeMenu}
-              >
-                {item.label}
-              </Link>
-            ))}
+      {/* Mobile Menu - polished collapse animation for better mobile UX */}
+      <div 
+        id="mobile-menu" 
+        className={`md:hidden bg-background/95 backdrop-blur border-t border-white/10 overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 py-4' : 'max-h-0'}`}
+      >
+        <div className="max-w-5xl mx-auto px-6 flex flex-col gap-4 text-sm">
+          {mobileItems.map((item) => (
             <Link
-              href={resolvedCtaHref}
-              className="mt-4 px-6 py-3 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium rounded-full text-center transition-all"
+              key={item.href}
+              href={item.href}
+              className={`py-2 hover:text-accent transition-colors ${isActive(item.href) ? 'text-accent font-medium' : ''}`}
               onClick={closeMenu}
             >
-              Book a Consultation
+              {item.label}
             </Link>
-          </div>
+          ))}
+          <Link
+            href={resolvedCtaHref}
+            className="mt-4 px-6 py-3 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium rounded-full text-center transition-all active:scale-[0.985]"
+            onClick={closeMenu}
+          >
+            Book a Consultation
+          </Link>
         </div>
-      )}
+      </div>
     </nav>
   );
 }

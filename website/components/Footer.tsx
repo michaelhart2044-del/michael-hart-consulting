@@ -5,7 +5,7 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-background border-t border-white/10 py-12">
+    <footer className="bg-background border-t border-white/10 py-16">
       <div className="max-w-5xl mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between gap-y-10">
           {/* Left side */}
