@@ -191,6 +191,121 @@ export default function Home() {
         </div>
       </section>
 
+      {/* FAQ Section for SEO and user clarity */}
+      <section id="faq" className="border-t border-white/10 bg-background py-16 md:py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="max-w-2xl mb-12">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Frequently Asked Questions</h2>
+            <p className="mt-4 text-base md:text-lg text-muted">
+              Answers to common questions about my advisory services, approach, and how we can work together.
+            </p>
+          </div>
+
+          <div className="max-w-3xl mx-auto space-y-4">
+            {[
+              {
+                q: "What services do you specialize in?",
+                a: "I advise on revenue accounting and compliance, month-end close and financial reporting, SOX controls and audit support, process automation, AI-assisted development, and overall finance function transformation and leadership.",
+              },
+              {
+                q: "Who do you typically work with?",
+                a: "Finance teams at public companies, PE-backed businesses, and growing organizations across healthcare, technology, manufacturing, distribution, and professional services. Engagements range from targeted fixes to multi-month transformations.",
+              },
+              {
+                q: "What does a typical engagement look like?",
+                a: "We start with a discovery call to understand your challenges and goals. I then deliver hands-on work—process redesign, automation, controls implementation, or reporting improvements—with clear milestones and measurable results.",
+              },
+              {
+                q: "How long do projects usually take?",
+                a: "It depends on scope. Focused close acceleration or automation projects often run 4–12 weeks. Broader finance transformation or ongoing advisory support can last several months on a project or retainer basis.",
+              },
+              {
+                q: "Do you work remotely or on-site?",
+                a: "I am flexible. Most work today is done remotely using secure collaboration tools, but I can support on-site or hybrid arrangements when it adds the most value.",
+              },
+              {
+                q: "How do I get started?",
+                a: "Book a no-obligation 30-minute consultation directly on the contact page, or call me at (747) 370-9393. We’ll discuss your situation and determine the best path forward.",
+              },
+            ].map((faq, index) => (
+              <details
+                key={index}
+                className="group border border-white/10 rounded-2xl bg-card open:bg-[#111827] transition-colors duration-200"
+              >
+                <summary className="cursor-pointer list-none px-6 py-5 font-medium text-lg flex justify-between items-center hover:text-accent transition-colors">
+                  {faq.q}
+                  <span className="text-accent text-2xl leading-none transition-transform group-open:rotate-180">⌄</span>
+                </summary>
+                <div className="px-6 pb-6 text-muted leading-relaxed">
+                  {faq.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQPage Structured Data for SEO (matches the visible FAQ section) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'What services do you specialize in?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'I advise on revenue accounting and compliance, month-end close and financial reporting, SOX controls and audit support, process automation, AI-assisted development, and overall finance function transformation and leadership.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Who do you typically work with?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Finance teams at public companies, PE-backed businesses, and growing organizations across healthcare, technology, manufacturing, distribution, and professional services. Engagements range from targeted fixes to multi-month transformations.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'What does a typical engagement look like?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'We start with a discovery call to understand your challenges and goals. I then deliver hands-on work—process redesign, automation, controls implementation, or reporting improvements—with clear milestones and measurable results.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'How long do projects usually take?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'It depends on scope. Focused close acceleration or automation projects often run 4–12 weeks. Broader finance transformation or ongoing advisory support can last several months on a project or retainer basis.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Do you work remotely or on-site?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'I am flexible. Most work today is done remotely using secure collaboration tools, but I can support on-site or hybrid arrangements when it adds the most value.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'How do I get started?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Book a no-obligation 30-minute consultation directly on the contact page, or call me at (747) 370-9393. We’ll discuss your situation and determine the best path forward.',
+                },
+              },
+            ],
+          }),
+        }}
+      />
+
       {/* Final CTA */}
       <section id="contact" className="border-t border-white/10 bg-section py-16 md:py-20">
         <div className="max-w-3xl mx-auto px-6">
