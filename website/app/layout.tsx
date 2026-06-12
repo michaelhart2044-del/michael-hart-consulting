@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Script from "next/script";
 import CookieConsent from "@/components/CookieConsent";
+import Analytics from "@/components/Analytics";
 import { services } from "@/lib/services";
 import { site } from "@/lib/site";
 
@@ -84,36 +84,14 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
 
-        {/* Microsoft Clarity */}
-        <Script id="clarity-script" strategy="afterInteractive">
-          {`
-            (function(c,l,a,r,i,t,y){
-              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-            })(window, document, "clarity", "script", "x2jdc6i4pa");
-          `}
-        </Script>
-
-        {/* Google Analytics 4 */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-4F2H29FYS7"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-4F2H29FYS7');
-          `}
-        </Script>
-
         {/* Business Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(businessJsonLd) }}
         />
+
+        {/* Analytics (GA4 + Clarity) — only loaded after explicit cookie consent */}
+        <Analytics />
 
         {/* Lightweight Cookie Consent Banner */}
         <CookieConsent />
