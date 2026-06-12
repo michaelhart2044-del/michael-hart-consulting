@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { services } from '@/lib/services';
+import { services, flagshipServiceSlugs } from '@/lib/services';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -179,7 +179,7 @@ export default function Home() {
                 No hardcoded titles, descriptions or icons here. Icons now live with their service data to eliminate brittle index coupling. */}
             {services
               .filter((service) =>
-                ["month-end-close-reporting", "process-automation-finance-transformation", "sox-controls-audit-support", "finance-function-transformation"].includes(service.slug)
+                flagshipServiceSlugs.includes(service.slug as typeof flagshipServiceSlugs[number])
               )
               .map((service) => (
                 <Link 

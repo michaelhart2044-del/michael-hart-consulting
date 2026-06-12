@@ -400,6 +400,13 @@ export const services: Service[] = [
   },
 ];
 
+export const flagshipServiceSlugs = [
+  "month-end-close-reporting",
+  "process-automation-finance-transformation",
+  "sox-controls-audit-support",
+  "finance-function-transformation",
+] as const;
+
 export function getServiceBySlug(slug: string): Service | undefined {
   return services.find((s) => s.slug === slug);
 }
