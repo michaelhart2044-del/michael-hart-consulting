@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -29,6 +29,8 @@ const allNavItems: NavItem[] = [
 export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const isHome = pathname === '/';
 
@@ -64,6 +66,36 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
     `hover:text-accent transition-colors ${isActive(href) ? 'text-accent font-medium' : ''}`;
 
   const closeMenu = () => setIsOpen(false);
+
+  // Close mobile menu on click outside or Escape key (improves mobile UX and accessibility)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b border-white/10">
@@ -104,7 +136,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
           Book a Consultation
         </Link>
 
-        {/* Hamburger - iOS Friendly */}
+        {/* Hamburger - iOS Friendly, animated to X for better UX */}
         <button
           onClick={() => setIsOpen(!isOpen)}
           onTouchEnd={(e) => {
@@ -115,27 +147,23 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
           aria-label="Toggle navigation menu"
           aria-expanded={isOpen}
           aria-controls="mobile-menu"
+          ref={buttonRef}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-8 w-8"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d={isOpen ? 'M6 18L18 6M6 6h12v12' : 'M4 6h16M4 12h16M4 18h16'}
+          <div className="relative h-6 w-6">
+            <span
+              className={`absolute left-0 block h-0.5 w-6 bg-current transition-all duration-300 ${isOpen ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-1'}`}
             />
-          </svg>
+            <span
+              className={`absolute left-0 block h-0.5 w-6 bg-current transition-all duration-300 ${isOpen ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'top-3'}`}
+            />
+          </div>
         </button>
       </div>
 
       {/* Mobile Menu - polished collapse animation for better mobile UX */}
       <div 
         id="mobile-menu" 
+        ref={menuRef}
         className={`md:hidden bg-background/95 backdrop-blur border-t border-white/10 overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 py-4' : 'max-h-0'}`}
       >
         <div className="max-w-5xl mx-auto px-6 flex flex-col gap-4 text-sm">
