@@ -37,12 +37,12 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="inline-block px-8 py-3 bg-accent hover:bg-accent-hover text-black font-medium rounded-full transition-all active:scale-[0.985]"
+          className="inline-block px-8 py-3 bg-accent hover:bg-accent-hover text-black font-medium rounded-full transition-all active:scale-[0.985] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
         >
           Back to home
         </Link>
         <p className="mt-6 text-xs text-subtle">
-          Or <Link href="/contact" className="underline hover:text-accent">contact us</Link> if you need help.
+          Or <Link href="/contact" className="underline hover:text-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded">contact us</Link> if you need help.
         </p>
       </div>
     </div>
