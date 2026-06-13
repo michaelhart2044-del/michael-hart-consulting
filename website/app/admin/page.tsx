@@ -10,6 +10,7 @@ import {
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
+import { site } from '@/lib/site';
 
 interface RecentItem {
   id: string;
@@ -102,18 +103,30 @@ export default function AdminProposalGenerator() {
     window.location.href = '/admin/login';
   }
 
-  function copyAll() {
+  async function copyAll() {
     const text = outputText || (proposal ? proposal.fullProposal : '');
-    if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
+    if (!text) {
+      setStatus('Nothing to copy — generate a proposal first');
+      setTimeout(() => setStatus(''), 2000);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
       setStatus('Copied to clipboard');
       setTimeout(() => setStatus(''), 1800);
-    });
+    } catch {
+      setStatus('Copy blocked — please select the text and copy manually');
+      setTimeout(() => setStatus(''), 3000);
+    }
   }
 
   function downloadTxt() {
     const text = outputText || (proposal ? proposal.fullProposal : '');
-    if (!text) return;
+    if (!text) {
+      setStatus('Nothing to download — generate a proposal first');
+      setTimeout(() => setStatus(''), 2000);
+      return;
+    }
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -123,44 +136,64 @@ export default function AdminProposalGenerator() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    setStatus('Downloaded as .txt');
+    setTimeout(() => setStatus(''), 1600);
   }
 
   function printToPdf() {
-    // Simple, reliable: open a clean print view. User chooses "Save as PDF"
     const text = outputText || (proposal ? proposal.fullProposal : '');
-    if (!text) return;
+    if (!text) {
+      setStatus('Nothing to print — generate a proposal first');
+      setTimeout(() => setStatus(''), 2000);
+      return;
+    }
 
     const w = window.open('', '_blank', 'width=900,height=700');
     if (!w) {
-      setStatus('Pop-up blocked — please allow pop-ups for print');
+      setStatus('Pop-up blocked — please allow pop-ups or use Download .txt instead');
+      setTimeout(() => setStatus(''), 3000);
       return;
     }
+
+    // Nicer printable layout with sections
+    const safeText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     w.document.write(`
       <html>
         <head>
           <title>Proposal — ${(loadedSub?.name || 'Client')}</title>
           <style>
-            body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.55; padding: 40px; color: #111; max-width: 820px; margin: 0 auto; }
-            pre { white-space: pre-wrap; font-family: inherit; }
-            h1, h2 { font-weight: 600; }
-            .section { margin: 28px 0; }
+            body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; padding: 40px; color: #111; max-width: 860px; margin: 0 auto; font-size: 14px; }
+            pre { white-space: pre-wrap; font-family: ui-monospace, monospace; background: #f8f8f8; padding: 16px; border-radius: 6px; }
+            h1 { font-size: 20px; margin: 0 0 12px; }
+            .meta { color: #555; font-size: 12px; margin-bottom: 24px; }
           </style>
         </head>
         <body>
-          <pre>${text.replace(/</g, '&lt;')}</pre>
+          <h1>Proposal for ${(loadedSub?.name || 'Client')}</h1>
+          <div class="meta">Generated privately • Michael Hart Consulting • ${new Date().toLocaleDateString()}</div>
+          <pre>${safeText}</pre>
           <script>window.print();</script>
         </body>
       </html>
     `);
     w.document.close();
+    setStatus('Print dialog opened (choose Save as PDF)');
+    setTimeout(() => setStatus(''), 2200);
   }
 
-  function generateEmailDraft() {
+  async function generateEmailDraft() {
     const text = outputText || (proposal ? proposal.fullProposal : '');
-    if (!text) return;
+    if (!text) {
+      setStatus('Generate a proposal first to create an email draft');
+      setTimeout(() => setStatus(''), 2200);
+      return;
+    }
 
-    const subject = `Initial Proposal — ${loadedSub?.name || 'Process Improvement Engagement'}`;
-    const body = `Hi ${loadedSub?.name?.split(' ')[0] || 'there'},
+    const clientName = loadedSub?.name || 'Client';
+    const subject = `Initial Proposal — ${clientName}`;
+    const greeting = loadedSub?.name?.split(' ')[0] || 'there';
+
+    const body = `Hi ${greeting},
 
 Thank you for the conversation. As discussed, here is the initial proposal based on the details you shared.
 
@@ -171,16 +204,50 @@ I'm happy to walk through any part of this on our follow-up call and tailor the 
 Best regards,
 Michael Hart
 Michael Hart Consulting Group LLC
-${loadedSub ? '' : ''}
+${site.phone}
 
 ---
 Prepared privately using internal tools.`;
 
-    const full = `Subject: ${subject}\n\n${body}`;
-    navigator.clipboard.writeText(full).then(() => {
-      setStatus('Email draft copied to clipboard');
-      setTimeout(() => setStatus(''), 2200);
-    });
+    // Full ready-to-send version for clipboard (user pastes into any email client)
+    const fullDraft = `Subject: ${subject}\n\n${body}`;
+
+    try {
+      await navigator.clipboard.writeText(fullDraft);
+      setStatus('Email draft copied!');
+    } catch {
+      setStatus('Clipboard unavailable — see console for full draft');
+      console.log('=== EMAIL DRAFT (copy manually) ===\n' + fullDraft);
+      setTimeout(() => setStatus(''), 4000);
+      return;
+    }
+
+    // Secondary: open mail client with a SHORT body (long bodies get truncated by most clients).
+    // User pastes the full version from clipboard into the email.
+    const shortBody = `Hi ${greeting},
+
+Thank you for the conversation. The full proposal is ready in your clipboard — please paste it below.
+
+Best regards,
+Michael Hart
+Michael Hart Consulting Group LLC
+${site.phone}`;
+
+    const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(shortBody)}`;
+
+    // Open mailto (best-effort; some browsers block or truncate)
+    try {
+      const link = document.createElement('a');
+      link.href = mailto;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch {
+      // Silently ignore — clipboard success is the main win
+    }
+
+    setTimeout(() => setStatus(''), 2600);
   }
 
   async function handleSaveDraft() {
