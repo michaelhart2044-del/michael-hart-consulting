@@ -29,27 +29,69 @@ const challengeOptions = [
   'Other (please describe)'
 ];
 
+interface AdditionalChallenge {
+  base: string;
+  otherText: string;
+  submittedValue: string;
+}
+
 export default function AnalysisPrepForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [selectedChallenge, setSelectedChallenge] = useState('');
-  const [additionalChallenges, setAdditionalChallenges] = useState<string[]>([]);
+  const [additionalChallenges, setAdditionalChallenges] = useState<AdditionalChallenge[]>([]);
 
-  function addAnotherChallenge() {
-    setAdditionalChallenges([...additionalChallenges, '']);
-  }
+  const getUsedNonOtherChallenges = (excludeIndex?: number): Set<string> => {
+    const used = new Set<string>();
+    if (selectedChallenge && selectedChallenge !== 'Other (please describe)') {
+      used.add(selectedChallenge);
+    }
+    additionalChallenges.forEach((ch, i) => {
+      if (excludeIndex !== undefined && i === excludeIndex) return;
+      if (ch.base && ch.base !== 'Other (please describe)') {
+        used.add(ch.base);
+      }
+    });
+    return used;
+  };
 
-  function updateAdditionalChallenge(index: number, value: string) {
+  const addAnotherChallenge = () => {
+    setAdditionalChallenges([
+      ...additionalChallenges,
+      { base: '', otherText: '', submittedValue: '' }
+    ]);
+  };
+
+  const updateAdditionalBase = (index: number, base: string) => {
     const newList = [...additionalChallenges];
-    newList[index] = value;
+    const item = { ...newList[index], base };
+    if (base === 'Other (please describe)') {
+      item.submittedValue = item.otherText
+        ? `Other (please describe): ${item.otherText}`
+        : 'Other (please describe)';
+    } else {
+      item.submittedValue = base;
+      item.otherText = '';
+    }
+    newList[index] = item;
     setAdditionalChallenges(newList);
-  }
+  };
 
-  function removeAdditionalChallenge(index: number) {
+  const updateAdditionalOther = (index: number, text: string) => {
+    const newList = [...additionalChallenges];
+    const item = { ...newList[index], otherText: text };
+    item.submittedValue = text
+      ? `Other (please describe): ${text}`
+      : 'Other (please describe)';
+    newList[index] = item;
+    setAdditionalChallenges(newList);
+  };
+
+  const removeAdditionalChallenge = (index: number) => {
     const newList = additionalChallenges.filter((_, i) => i !== index);
     setAdditionalChallenges(newList);
-  }
+  };
 
   async function handleSubmit(formData: FormData) {
     setIsSubmitting(true);
@@ -74,8 +116,8 @@ export default function AnalysisPrepForm() {
         aria-live="polite"
         className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center"
       >
-        <p className="text-green-400 text-lg font-medium">Thank you — your details have been sent to Michael.</p>
-        <p className="text-muted mt-2">We&apos;ve emailed you a copy as well.</p>
+        <p className="text-green-400 text-lg font-medium">Thank you — your details have been emailed to Michael right away.</p>
+        <p className="text-muted mt-2">Michael receives your responses immediately (before any call). You can now choose your preferred time slot below.</p>
 
         <a
           href={site.calendlyUrl}
@@ -164,7 +206,7 @@ export default function AnalysisPrepForm() {
         </div>
       )}
 
-      {/* + Add another challenge */}
+      {/* Smart + Add another challenge (dropdown that avoids duplicates) */}
       <div>
         <button
           type="button"
@@ -175,29 +217,59 @@ export default function AnalysisPrepForm() {
         </button>
 
         {additionalChallenges.length > 0 && (
-          <div className="space-y-3">
-            {additionalChallenges.map((val, index) => (
-              <div key={index}>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-sm text-muted">Additional challenge</label>
-                  <button
-                    type="button"
-                    onClick={() => removeAdditionalChallenge(index)}
-                    className="text-xs text-red-400 hover:text-red-500"
+          <div className="space-y-4">
+            {additionalChallenges.map((item, index) => {
+              const used = getUsedNonOtherChallenges(index);
+              const available = challengeOptions.filter(
+                (opt) => !used.has(opt) || opt === item.base
+              );
+
+              return (
+                <div key={index} className="border border-white/10 rounded-lg p-4 bg-[#111827]">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-sm text-muted">Additional challenge</label>
+                    <button
+                      type="button"
+                      onClick={() => removeAdditionalChallenge(index)}
+                      className="text-xs text-red-400 hover:text-red-500"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <select
+                    value={item.base}
+                    onChange={(e) => updateAdditionalBase(index, e.target.value)}
+                    className="w-full bg-[#0f172a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-accent text-sm"
                   >
-                    Remove
-                  </button>
+                    <option value="">Select...</option>
+                    {available.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+
+                  {item.base === 'Other (please describe)' && (
+                    <div className="mt-3">
+                      <label className="block text-sm text-muted mb-1.5">Please describe</label>
+                      <input
+                        type="text"
+                        value={item.otherText}
+                        onChange={(e) => updateAdditionalOther(index, e.target.value)}
+                        className="w-full bg-[#0f172a] border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder:text-subtle focus:outline-none focus:border-accent text-sm"
+                        placeholder="Describe the other challenge..."
+                      />
+                    </div>
+                  )}
+
+                  {/* Hidden input carries the final value (with description for Other) to the server action */}
+                  <input
+                    type="hidden"
+                    name="additional_challenge"
+                    value={item.submittedValue}
+                  />
                 </div>
-                <textarea
-                  name="additional_challenge"
-                  value={val}
-                  onChange={(e) => updateAdditionalChallenge(index, e.target.value)}
-                  rows={2}
-                  className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder:text-subtle focus:outline-none focus:border-accent text-sm"
-                  placeholder="Describe another issue..."
-                />
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

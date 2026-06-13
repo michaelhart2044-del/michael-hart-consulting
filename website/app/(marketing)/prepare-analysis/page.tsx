@@ -36,7 +36,7 @@ export default function PrepareAnalysis() {
             Prepare for Your Initial Consultation
           </h1>
           <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed">
-            Book a 30-minute call to discuss your finance operations. Share a few details below first so we can make the most of our time together.
+            Book a 30-minute call to discuss your finance operations. Fill out the form below to send your details to Michael right away (he reviews them before the call), then choose your time slot.
           </p>
         </div>
 
@@ -59,7 +59,7 @@ export default function PrepareAnalysis() {
           <div className="max-w-2xl">
             <div className="mb-6">
               <h2 className="text-2xl font-semibold tracking-tight">Help us prepare</h2>
-              <p className="mt-2 text-sm text-muted">Share a few details below so we can make the most of our time together.</p>
+              <p className="mt-2 text-sm text-muted">Share a few details below — this emails your responses to Michael immediately so he can prepare. After submitting, book your preferred time slot.</p>
             </div>
             <AnalysisPrepForm />
           </div>
