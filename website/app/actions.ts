@@ -120,6 +120,9 @@ export async function sendAnalysisPrep(formData: FormData) {
   const peopleInvolved = (formData.get('people_involved') as string) || '';
   const successLooksLike = (formData.get('success_looks_like') as string) || '';
   const additionalContext = (formData.get('additional_context') as string) || '';
+  const additionalChallengesList = formData.getAll('additional_challenge')
+    .map((v) => String(v).trim())
+    .filter(Boolean);
 
   if (!rawName.trim() || rawName.trim().length < 2) {
     return { success: false, error: 'Please provide your full name.' };
@@ -153,10 +156,16 @@ export async function sendAnalysisPrep(formData: FormData) {
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Industry / Business Type:</strong> ${safeIndustry || 'Not specified'}</p>
         <p><strong>Main Challenge:</strong> ${challengeDisplay || 'Not specified'}</p>
+        ${additionalChallengesList.length > 0 ? `
+          <p><strong>Additional challenges:</strong></p>
+          <ul style="margin:4px 0 12px 16px; padding:0; list-style:none;">
+            ${additionalChallengesList.map((c: string) => `<li style="margin:2px 0;">• ${escapeHtml(c)}</li>`).join('')}
+          </ul>
+        ` : ''}
         <p><strong>People involved in month-end / reporting:</strong> ${safePeople || 'Not specified'}</p>
         <p><strong>What success looks like (30–90 days):</strong><br>${safeSuccess || '<em>Not specified</em>'}</p>
         ${safeContext ? `<p><strong>Deadlines, stakeholders or upcoming changes:</strong><br>${safeContext}</p>` : ''}
-        <p style="margin-top:16px;font-size:12px;color:#666;">Submitted via the optional prep form on ${site.name}.</p>
+        <p style="margin-top:16px;font-size:12px;color:#666;">Submitted via the prep form on ${site.name}.</p>
       `,
     });
 

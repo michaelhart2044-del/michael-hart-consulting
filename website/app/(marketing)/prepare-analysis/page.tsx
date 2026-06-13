@@ -5,10 +5,10 @@ import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Prepare for Your Initial Consultation',
-  description: 'Book a 30-minute initial consultation. Optionally share a few details in advance to help us prepare.',
+  description: 'Book a 30-minute initial consultation. Share a few details in advance to help us prepare.',
   openGraph: {
     title: 'Prepare for Your Initial Consultation | ' + site.name,
-    description: 'Book your initial consultation. Optionally share industry, main challenge, and a couple of details so we can make the most of our time together.',
+    description: 'Book your initial consultation. Share industry, main challenge, and a couple of details so we can make the most of our time together.',
     images: [
       {
         url: site.ogImage,
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Prepare for Your Initial Consultation | ' + site.name,
-    description: 'Book your initial consultation. Optionally share industry, main challenge, and a couple of details so we can make the most of our time together.',
+    description: 'Book your initial consultation. Share industry, main challenge, and a couple of details so we can make the most of our time together.',
     images: [site.ogImage],
   },
 };
@@ -36,7 +36,7 @@ export default function PrepareAnalysis() {
             Prepare for Your Initial Consultation
           </h1>
           <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed">
-            Book a 30-minute call to discuss your finance operations. To help us prepare and make the most of our time, you can optionally share a few details below first.
+            Book a 30-minute call to discuss your finance operations. Share a few details below first so we can make the most of our time together.
           </p>
         </div>
 
@@ -53,14 +53,13 @@ export default function PrepareAnalysis() {
         </div>
       </div>
 
-      {/* Optional smart intake form */}
+      {/* Smart intake form */}
       <div className="border-t border-white/10 bg-section py-12">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl">
             <div className="mb-6">
-              <div className="text-sm text-accent tracking-widest font-medium mb-2">OPTIONAL</div>
-              <h2 className="text-2xl font-semibold tracking-tight">Share a few details in advance</h2>
-              <p className="mt-2 text-sm text-muted">This helps us come prepared. You can book without filling anything out.</p>
+              <h2 className="text-2xl font-semibold tracking-tight">Help us prepare</h2>
+              <p className="mt-2 text-sm text-muted">Share a few details below so we can make the most of our time together.</p>
             </div>
             <AnalysisPrepForm />
           </div>

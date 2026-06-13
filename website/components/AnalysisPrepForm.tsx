@@ -5,22 +5,28 @@ import { sendAnalysisPrep } from '@/app/actions';
 import { site } from '@/lib/site';
 
 const industryOptions = [
-  'Finance & Accounting',
-  'Healthcare',
-  'Manufacturing & Distribution',
+  'Legal & Litigation',
+  'Private Equity & Finance',
+  'Manufacturing',
   'Technology & SaaS',
+  'Healthcare',
+  'Real Estate',
   'Professional Services',
+  'Restaurant & Hospitality',
+  'Online Retail',
   'Other'
 ];
 
 const challengeOptions = [
-  'Month-end close / reporting takes too long',
-  'Balance sheet & account reconciliations are slow',
-  'Data not available to stakeholders on time',
-  'Too many manual processes / spreadsheets',
-  'Controls, audit or SOX concerns',
-  'Want to explore automation / AI tools',
-  'Other'
+  'Balance sheet & account reconciliations taking too long',
+  'Month-end close cycle is too slow',
+  'Financial data not available to stakeholders/leaders on time',
+  'Too many manual processes and spreadsheets',
+  'Controls, audit, SOX or compliance issues',
+  'Want to automate repetitive finance tasks / use AI tools',
+  'Finance team staffing and capacity problems',
+  'Cash flow visibility or forecasting issues',
+  'Other (please describe)'
 ];
 
 export default function AnalysisPrepForm() {
@@ -28,6 +34,22 @@ export default function AnalysisPrepForm() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [selectedChallenge, setSelectedChallenge] = useState('');
+  const [additionalChallenges, setAdditionalChallenges] = useState<string[]>([]);
+
+  function addAnotherChallenge() {
+    setAdditionalChallenges([...additionalChallenges, '']);
+  }
+
+  function updateAdditionalChallenge(index: number, value: string) {
+    const newList = [...additionalChallenges];
+    newList[index] = value;
+    setAdditionalChallenges(newList);
+  }
+
+  function removeAdditionalChallenge(index: number) {
+    const newList = additionalChallenges.filter((_, i) => i !== index);
+    setAdditionalChallenges(newList);
+  }
 
   async function handleSubmit(formData: FormData) {
     setIsSubmitting(true);
@@ -61,7 +83,7 @@ export default function AnalysisPrepForm() {
           rel="noopener noreferrer"
           className="mt-6 inline-block w-full md:w-auto text-center px-6 py-2.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm md:text-base rounded-full transition-all active:scale-[0.985]"
         >
-          Book Initial Consultation
+          Choose your preferred time slot
         </a>
         <p className="text-sm text-subtle mt-4">(opens Calendly in a new tab)</p>
       </div>
@@ -129,7 +151,7 @@ export default function AnalysisPrepForm() {
         </select>
       </div>
 
-      {selectedChallenge === 'Other' && (
+      {selectedChallenge === 'Other (please describe)' && (
         <div>
           <label htmlFor="main_challenge_other" className="block text-sm text-muted mb-1.5">Please describe your main challenge</label>
           <input
@@ -141,6 +163,44 @@ export default function AnalysisPrepForm() {
           />
         </div>
       )}
+
+      {/* + Add another challenge */}
+      <div>
+        <button
+          type="button"
+          onClick={addAnotherChallenge}
+          className="text-sm text-accent hover:underline flex items-center gap-1 mb-2"
+        >
+          + Add another challenge
+        </button>
+
+        {additionalChallenges.length > 0 && (
+          <div className="space-y-3">
+            {additionalChallenges.map((val, index) => (
+              <div key={index}>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-sm text-muted">Additional challenge</label>
+                  <button
+                    type="button"
+                    onClick={() => removeAdditionalChallenge(index)}
+                    className="text-xs text-red-400 hover:text-red-500"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <textarea
+                  name="additional_challenge"
+                  value={val}
+                  onChange={(e) => updateAdditionalChallenge(index, e.target.value)}
+                  rows={2}
+                  className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder:text-subtle focus:outline-none focus:border-accent text-sm"
+                  placeholder="Describe another issue..."
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div>
         <label htmlFor="people_involved" className="block text-sm text-muted mb-1.5">How many people are currently involved in month-end / reporting?</label>
@@ -165,7 +225,7 @@ export default function AnalysisPrepForm() {
       </div>
 
       <div>
-        <label htmlFor="additional_context" className="block text-sm text-muted mb-1.5">Any specific deadlines, stakeholders, or upcoming changes we should know about? (optional)</label>
+        <label htmlFor="additional_context" className="block text-sm text-muted mb-1.5">Any specific deadlines, stakeholders, or upcoming changes we should know about?</label>
         <textarea
           id="additional_context"
           name="additional_context"
@@ -191,10 +251,8 @@ export default function AnalysisPrepForm() {
         disabled={isSubmitting}
         className="w-full md:w-auto px-6 py-2.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm md:text-base rounded-full transition-all active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isSubmitting ? 'Sending...' : 'Send details (optional)'}
+        {isSubmitting ? 'Sending...' : 'Send my details & Book Consultation'}
       </button>
-
-      <p className="text-xs text-subtle">Optional — you can book without sharing details.</p>
     </form>
   );
 }
