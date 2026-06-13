@@ -279,61 +279,35 @@ ${site.phone}`;
   }
 
   async function copyForSigVai() {
-    const hasData = loadedSub || transcript.trim().length > 0;
-    if (!hasData) {
-      setStatus('Load a submission or paste notes first');
-      setTimeout(() => setStatus(''), 2200);
-      return;
-    }
-
-    const industry = loadedSub?.industry || 'Not specified';
-
-    const mainChallenges = [
-      loadedSub?.mainChallenge,
-      ...(loadedSub?.additionalChallenges || [])
-    ].filter(Boolean).join('; ') || 'Not specified';
-
-    const teamEffort = loadedSub?.peopleInvolved || 'Not specified';
-
-    const notes = transcript.trim() || loadedSub?.fullText || 'Not provided';
-
-    // Build the exact prompt block the user pastes into their private SigVai system
-    const formatted = `=== SIGVAI INPUT - READY TO PASTE ===
-
-You are Michael Hart's private SigVai system — an expert forensic accounting + AI-powered consulting advisor.
-
-Client Data:
-- Industry / Business Type: ${industry}
-- Main Challenges: ${mainChallenges}
-- Team size & effort: ${teamEffort}
-- Additional notes / transcript: ${notes}
-
-Task:
-Generate a professional consultation proposal in two clear sections:
-
-1. **DEFINE** – Current State & Opportunity for Client
-   (Summarize situation, key challenges, impact, and desired outcomes)
-
-2. **CLIENT PITCH** – Recommended Path Forward
-   - Why this matters for the client
-   - Estimated ROI (use realistic numbers and examples)
-   - Recommended starting engagement: "Engagement Activation Retainer"
-   - Deliverables list (what we will do)
-   - Clear next steps (numbered)
-   - Professional closing from Michael Hart
-
-Tone: Professional, confident, trustworthy, benefit-focused, not salesy. Use bullet points for readability. Make it ready to copy into an email.
-
-Generate now.
-`;
-
     try {
+      const name = loadedSub?.name || 'Unknown Client';
+      const email = loadedSub?.email || '';
+      const industry = loadedSub?.industry || 'Not specified';
+      const mainChallenge = loadedSub?.mainChallenge || 'Not specified';
+      const additionalChallenges = (loadedSub?.additionalChallenges || []).join(', ') || 'None';
+      const peopleInvolved = loadedSub?.peopleInvolved || 'Not specified';
+      const successLooksLike = loadedSub?.successLooksLike || 'Not specified';
+      const additionalContext = loadedSub?.additionalContext || 'None';
+
+      const notes = transcript.trim() || loadedSub?.fullText || 'No additional notes or transcript provided.';
+
+      let formatted = `=== SIGVAI INPUT - READY TO PASTE ===\n\n`;
+      formatted += `Client: ${name}${email ? ` <${email}>` : ''}\n`;
+      formatted += `Industry / Business Type: ${industry}\n`;
+      formatted += `Main Challenge: ${mainChallenge}\n`;
+      formatted += `Additional Challenges: ${additionalChallenges}\n`;
+      formatted += `Team size & effort (people involved): ${peopleInvolved}\n`;
+      formatted += `What success looks like (30-90 days): ${successLooksLike}\n`;
+      formatted += `Additional context / deadlines: ${additionalContext}\n\n`;
+      formatted += `Additional notes / transcript:\n${notes}\n\n`;
+      formatted += `=== END SIGVAI INPUT ===`;
+
       await navigator.clipboard.writeText(formatted);
-      setStatus('✅ Perfect input copied for SigVai — paste it into your SigVai tool');
-      setTimeout(() => setStatus(''), 3500);
-    } catch {
-      setStatus('Clipboard unavailable — full input logged to console for manual copy');
-      console.log(formatted);
+      setStatus('✅ Data copied for SigVai — paste it into your SigVai tool now');
+      setTimeout(() => setStatus(''), 3000);
+    } catch (err) {
+      console.error('Copy for SigVai error:', err);
+      setStatus('Failed to copy to clipboard. Check browser console for details.');
       setTimeout(() => setStatus(''), 4000);
     }
   }
