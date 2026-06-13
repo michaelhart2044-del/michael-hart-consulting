@@ -143,6 +143,17 @@ export async function sendAnalysisPrep(formData: FormData) {
   const safeSuccess = escapeHtml(successLooksLike).replace(/\n/g, '<br>');
   const safeContext = escapeHtml(additionalContext).replace(/\n/g, '<br>');
 
+  // Build plain text attachment with all prep data (will be attached to the owner email)
+  let attachContent = `Prep Answers for ${name} <${email}>\n\n`;
+  attachContent += `Industry / Business Type: ${safeIndustry || 'Not specified'}\n`;
+  attachContent += `Main Challenge: ${challengeDisplay || 'Not specified'}\n`;
+  if (additionalChallengesList.length > 0) {
+    attachContent += `Additional challenges:\n${additionalChallengesList.map((c: string) => `- ${c}`).join('\n')}\n`;
+  }
+  attachContent += `People involved in month-end / reporting: ${safePeople || 'Not specified'}\n`;
+  attachContent += `What success looks like (30–90 days): ${safeSuccess || 'Not specified'}\n`;
+  attachContent += `Additional context / deadlines: ${safeContext || 'Not specified'}\n`;
+
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
@@ -166,7 +177,14 @@ export async function sendAnalysisPrep(formData: FormData) {
         <p><strong>What success looks like (30–90 days):</strong><br>${safeSuccess || '<em>Not specified</em>'}</p>
         ${safeContext ? `<p><strong>Deadlines, stakeholders or upcoming changes:</strong><br>${safeContext}</p>` : ''}
         <p style="margin-top:16px;font-size:12px;color:#666;">Submitted via the prep form on ${site.name}.</p>
+        <p><small>Answers also attached as prep-answers.txt for easy import into SigVai / xAI.</small></p>
       `,
+      attachments: [
+        {
+          filename: 'prep-answers.txt',
+          content: Buffer.from(attachContent).toString('base64'),
+        },
+      ],
     });
 
     // Auto-reply (independent)

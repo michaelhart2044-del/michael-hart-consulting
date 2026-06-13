@@ -125,7 +125,16 @@ What does “success” look like in the next 30–90 days: ${success || 'Not pr
 Any specific deadlines, stakeholders, or upcoming changes: ${context || 'Not provided'}
 ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `- ${c}`).join('\n')}` : ''}`;
 
-    const prefilled = `${site.calendlyUrl}?questions[0][value]=${encodeURIComponent(summary)}`;
+    // Prefill name, email, and custom answers (a1 for the "Prep answers" custom question in Calendly).
+    // User must add a custom question in their Calendly 30min event (e.g. "Prep answers from website form").
+    // The booking notification will then include these answers.
+    const params = new URLSearchParams();
+    const clientName = formData.get('name') as string || '';
+    const clientEmail = formData.get('email') as string || '';
+    if (clientName) params.set('name', clientName);
+    if (clientEmail) params.set('email', clientEmail);
+    params.set('a1', summary);  // a1 maps to first custom question in the Calendly event
+    const prefilled = `${site.calendlyUrl}?${params.toString()}`;
     setPrefilledCalendlyUrl(prefilled);
     setSubmittedSummary(summary);
 
@@ -148,7 +157,7 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
         className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center"
       >
         <p className="text-green-400 text-lg font-medium">Thank you — your details have been sent.</p>
-        <p className="text-muted mt-2">Your answers are pre-filled below in the Calendly booking (they will appear in the booking notification Michael receives).</p>
+        <p className="text-muted mt-2">Your answers are pre-filled in the Calendly booking form below (they will be included in the booking notification Michael receives via Calendly, which is working reliably).</p>
 
         {submittedSummary && (
           <div className="mt-4 mb-4 text-left bg-black/30 p-3 rounded text-xs whitespace-pre-wrap font-mono overflow-auto max-h-40">
@@ -162,9 +171,12 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
           rel="noopener noreferrer"
           className="mt-2 inline-block w-full md:w-auto text-center px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985]"
         >
-          Choose your preferred time slot
+          Choose your preferred time slot (answers pre-filled)
         </a>
-        <p className="text-sm text-subtle mt-4">(opens Calendly with your answers pre-filled)</p>
+        <p className="text-sm text-subtle mt-4">
+          (Opens Calendly with answers pre-filled in the custom question. 
+          Make sure you have added a matching custom question like "Prep answers from website form" as the first custom question in your Calendly 30min event.)
+        </p>
       </div>
     );
   }

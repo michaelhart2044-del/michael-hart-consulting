@@ -36,7 +36,7 @@ export default function PrepareAnalysis() {
             Prepare for Your Initial Consultation
           </h1>
           <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed">
-            Book a 30-minute call to discuss your finance operations. Fill out the form below to send your details to Michael right away (he reviews them before the call), then choose your time slot.
+            Book a 30-minute call to discuss your finance operations. Fill out the form below first (this captures the key details for the consultation / SigVai pitch generation). Then book your slot — the answers will be pre-filled in Calendly and included in the booking notification (the reliable channel).
           </p>
         </div>
 
