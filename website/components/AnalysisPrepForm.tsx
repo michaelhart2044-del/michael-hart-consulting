@@ -153,6 +153,7 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
     if (clientName) params.set('name', clientName);
     if (clientEmail) params.set('email', clientEmail);
     params.set('a1', calendlyValue);  // a1 maps to first custom question in the Calendly event
+    // Keep a prefilled URL as fallback (for direct links), using the | version to minimize visible encoding.
     const prefilled = `${site.calendlyUrl}?${params.toString()}`;
     setPrefilledCalendlyUrl(prefilled);
     setSubmittedSummary(summary);
@@ -193,7 +194,10 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
 
         {showCalendly && (
           <div className="mt-6">
-            <CalendlyWidget url={prefilledCalendlyUrl} />
+            <CalendlyWidget 
+              url={site.calendlyUrl} 
+              prefill={{ customAnswers: { a1: submittedSummary } }} 
+            />
           </div>
         )}
       </div>

@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-export default function CalendlyWidget({ url }: { url?: string }) {
+export default function CalendlyWidget({ url, prefill }: { url?: string; prefill?: any }) {
   const [isOpen, setIsOpen] = useState(true);
   const widgetContainerRef = useRef<HTMLDivElement>(null);
 
@@ -22,10 +22,14 @@ export default function CalendlyWidget({ url }: { url?: string }) {
       if (window.Calendly && widgetContainerRef.current) {
         // Clear any previous content
         widgetContainerRef.current.innerHTML = '';
-        window.Calendly.initInlineWidget({
+        const options: any = {
           url: calendlyUrl,
           parentElement: widgetContainerRef.current,
-        });
+        };
+        if (prefill) {
+          options.prefill = prefill;
+        }
+        window.Calendly.initInlineWidget(options);
       }
     };
 
@@ -52,7 +56,7 @@ export default function CalendlyWidget({ url }: { url?: string }) {
         clearTimeout(timeout);
       };
     }
-  }, [isOpen, calendlyUrl]);
+  }, [isOpen, calendlyUrl, prefill]);
 
   if (!isOpen) {
     return (
