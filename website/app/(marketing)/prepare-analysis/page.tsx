@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Script from 'next/script';
 import AnalysisPrepForm from '@/components/AnalysisPrepForm';
 import { site } from '@/lib/site';
 
@@ -36,20 +37,8 @@ export default function PrepareAnalysis() {
             Prepare for Your Initial Consultation
           </h1>
           <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed">
-            Book a 30-minute call to discuss your finance operations. Fill out the form below first (this captures the key details for the consultation / SigVai pitch generation). Then book your slot — the answers will be pre-filled in Calendly and included in the booking notification (the reliable channel).
+            Fill out the form below first to capture details for your consultation. Then continue to book your slot.
           </p>
-        </div>
-
-        <div className="mt-8">
-          <a
-            href={site.calendlyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block w-full md:w-auto px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985]"
-          >
-            Book Consultation
-          </a>
-          <p className="mt-2 text-xs text-subtle">(opens Calendly in a new tab)</p>
         </div>
       </div>
 
@@ -59,7 +48,7 @@ export default function PrepareAnalysis() {
           <div className="max-w-2xl">
             <div className="mb-6">
               <h2 className="text-2xl font-semibold tracking-tight">Help us prepare</h2>
-              <p className="mt-2 text-sm text-muted">Share a few details below — this emails your responses to Michael immediately so he can prepare. After submitting, book your preferred time slot.</p>
+              <p className="mt-2 text-sm text-muted">Share a few details below. Then continue to book.</p>
             </div>
             <AnalysisPrepForm />
           </div>
@@ -71,6 +60,12 @@ export default function PrepareAnalysis() {
           Questions? <Link href="/contact" className="text-accent hover:underline">Contact us</Link> or call <a href={site.phoneHref} className="text-accent hover:underline">{site.phone}</a>.
         </p>
       </div>
+
+      {/* Calendly script for inline widget in prep success flow */}
+      <Script
+        src="https://assets.calendly.com/assets/external/widget.js"
+        strategy="lazyOnload"
+      />
     </>
   );
 }

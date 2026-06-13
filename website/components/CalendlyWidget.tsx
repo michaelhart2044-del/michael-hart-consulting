@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { site } from '@/lib/site';
 
-export default function CalendlyWidget() {
+export default function CalendlyWidget({ url }: { url?: string }) {
   const [isOpen, setIsOpen] = useState(true);
 
   if (!isOpen) {
@@ -30,7 +30,7 @@ export default function CalendlyWidget() {
       </button>
       <div
         className="calendly-inline-widget"
-        data-url={site.calendlyUrl}
+        data-url={url || site.calendlyUrl}
         style={{ minWidth: '320px', height: '700px' }}
       ></div>
     </div>
