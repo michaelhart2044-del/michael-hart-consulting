@@ -133,6 +133,7 @@ export default function AnalysisPrepForm() {
       mainDisplay += ` — ${mainChOther}`;
     }
 
+    // Clean multi-line version for the immediate email / attachment (great for humans and SigVai)
     const summary = `Industry / Business Type: ${industry || 'Not provided'}
 Main Challenge Right Now: ${mainDisplay || 'Not provided'}
 How many people involved in month-end / reporting: ${people || 'Not provided'}
@@ -140,15 +141,18 @@ What does “success” look like in the next 30–90 days: ${success || 'Not pr
 Any specific deadlines, stakeholders, or upcoming changes: ${context || 'Not provided'}
 ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `- ${c}`).join('\n')}` : ''}`;
 
+    // Single-line clean version for Calendly prefill (a1) — avoids URL-encoding artifacts like + in the final stored data
+    const calendlyValue = summary.replace(/\n/g, ' | ').replace(/\s+/g, ' ').trim();
+
     // Prefill name, email, and custom answers (a1 for the "Prep answers" custom question in Calendly).
     // User must add a custom question in their Calendly 30min event (e.g. "Prep answers from website form").
-    // The booking notification will then include these answers.
+    // The booking notification will then include these answers cleanly.
     const params = new URLSearchParams();
     const clientName = formData.get('name') as string || '';
     const clientEmail = formData.get('email') as string || '';
     if (clientName) params.set('name', clientName);
     if (clientEmail) params.set('email', clientEmail);
-    params.set('a1', summary);  // a1 maps to first custom question in the Calendly event
+    params.set('a1', calendlyValue);  // a1 maps to first custom question in the Calendly event
     const prefilled = `${site.calendlyUrl}?${params.toString()}`;
     setPrefilledCalendlyUrl(prefilled);
     setSubmittedSummary(summary);
