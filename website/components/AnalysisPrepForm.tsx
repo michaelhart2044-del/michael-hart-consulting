@@ -123,7 +123,7 @@ export default function AnalysisPrepForm() {
           href={site.calendlyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 inline-block w-full md:w-auto text-center px-6 py-2.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm md:text-base rounded-full transition-all active:scale-[0.985]"
+          className="mt-6 inline-block w-full md:w-auto text-center px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985]"
         >
           Choose your preferred time slot
         </a>
@@ -321,7 +321,7 @@ export default function AnalysisPrepForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full md:w-auto px-6 py-2.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm md:text-base rounded-full transition-all active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full md:w-auto px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting ? 'Sending...' : 'Send my details & Book Consultation'}
       </button>

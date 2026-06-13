@@ -109,7 +109,7 @@ export default function ContactForm() {
         type="submit"
         disabled={isSubmitting}
         aria-busy={isSubmitting}
-        className="w-full md:w-auto px-10 py-4 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium rounded-full transition-all active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full md:w-auto px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting ? 'Sending...' : 'Send Message'}
       </button>

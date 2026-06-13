@@ -45,9 +45,9 @@ export default function PrepareAnalysis() {
             href={site.calendlyUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block w-full md:w-auto px-6 py-2.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm md:text-base rounded-full transition-all active:scale-[0.985]"
+            className="inline-block w-full md:w-auto px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985]"
           >
-            Book Initial Consultation
+            Book Consultation
           </a>
           <p className="mt-2 text-xs text-subtle">(opens Calendly in a new tab)</p>
         </div>
