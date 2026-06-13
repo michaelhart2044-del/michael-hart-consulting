@@ -1,10 +1,58 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { site } from '@/lib/site';
+
+declare global {
+  interface Window {
+    Calendly?: any;
+  }
+}
 
 export default function CalendlyWidget({ url }: { url?: string }) {
   const [isOpen, setIsOpen] = useState(true);
+  const widgetContainerRef = useRef<HTMLDivElement>(null);
+
+  const calendlyUrl = url || site.calendlyUrl;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const initWidget = () => {
+      if (window.Calendly && widgetContainerRef.current) {
+        // Clear any previous content
+        widgetContainerRef.current.innerHTML = '';
+        window.Calendly.initInlineWidget({
+          url: calendlyUrl,
+          parentElement: widgetContainerRef.current,
+        });
+      }
+    };
+
+    // If script already loaded
+    if (window.Calendly) {
+      initWidget();
+    } else {
+      // Wait for script to load (the Script tag in page)
+      const checkInterval = setInterval(() => {
+        if (window.Calendly) {
+          clearInterval(checkInterval);
+          initWidget();
+        }
+      }, 100);
+
+      // Fallback timeout
+      const timeout = setTimeout(() => {
+        clearInterval(checkInterval);
+        if (window.Calendly) initWidget();
+      }, 3000);
+
+      return () => {
+        clearInterval(checkInterval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [isOpen, calendlyUrl]);
 
   if (!isOpen) {
     return (
@@ -29,8 +77,7 @@ export default function CalendlyWidget({ url }: { url?: string }) {
         ×
       </button>
       <div
-        className="calendly-inline-widget"
-        data-url={url || site.calendlyUrl}
+        ref={widgetContainerRef}
         style={{ minWidth: '320px', height: '700px' }}
       ></div>
     </div>

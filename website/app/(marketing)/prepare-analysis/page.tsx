@@ -64,7 +64,7 @@ export default function PrepareAnalysis() {
       {/* Calendly script for inline widget in prep success flow */}
       <Script
         src="https://assets.calendly.com/assets/external/widget.js"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
       />
     </>
   );
