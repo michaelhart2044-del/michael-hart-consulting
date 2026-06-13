@@ -41,6 +41,8 @@ export default function AnalysisPrepForm() {
   const [error, setError] = useState('');
   const [selectedChallenge, setSelectedChallenge] = useState('');
   const [additionalChallenges, setAdditionalChallenges] = useState<AdditionalChallenge[]>([]);
+  const [prefilledCalendlyUrl, setPrefilledCalendlyUrl] = useState('');
+  const [submittedSummary, setSubmittedSummary] = useState('');
 
   const getUsedNonOtherChallenges = (excludeIndex?: number): Set<string> => {
     const used = new Set<string>();
@@ -98,6 +100,35 @@ export default function AnalysisPrepForm() {
     setError('');
     setIsSuccess(false);
 
+    // === Collect prep answers and build Calendly prefill URL ===
+    // This lets the answers travel with the Calendly booking notification (no extra work for the client).
+    // User should add a matching "Prep answers / notes from website" custom question as the first custom question in their Calendly event.
+    const industry = formData.get('industry') as string || '';
+    const mainCh = formData.get('main_challenge') as string || '';
+    const mainChOther = formData.get('main_challenge_other') as string || '';
+    const people = formData.get('people_involved') as string || '';
+    const success = formData.get('success_looks_like') as string || '';
+    const context = formData.get('additional_context') as string || '';
+    const addChals = formData.getAll('additional_challenge')
+      .map((v) => String(v).trim())
+      .filter(Boolean);
+
+    let mainDisplay = mainCh;
+    if (mainCh === 'Other (please describe)' && mainChOther) {
+      mainDisplay += ` — ${mainChOther}`;
+    }
+
+    const summary = `Industry / Business Type: ${industry || 'Not provided'}
+Main Challenge Right Now: ${mainDisplay || 'Not provided'}
+How many people involved in month-end / reporting: ${people || 'Not provided'}
+What does “success” look like in the next 30–90 days: ${success || 'Not provided'}
+Any specific deadlines, stakeholders, or upcoming changes: ${context || 'Not provided'}
+${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `- ${c}`).join('\n')}` : ''}`;
+
+    const prefilled = `${site.calendlyUrl}?questions[0][value]=${encodeURIComponent(summary)}`;
+    setPrefilledCalendlyUrl(prefilled);
+    setSubmittedSummary(summary);
+
     const result = await sendAnalysisPrep(formData);
 
     if (result.success) {
@@ -116,18 +147,24 @@ export default function AnalysisPrepForm() {
         aria-live="polite"
         className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center"
       >
-        <p className="text-green-400 text-lg font-medium">Thank you — your details have been emailed to Michael right away.</p>
-        <p className="text-muted mt-2">Michael receives your responses immediately (before any call). You can now choose your preferred time slot below.</p>
+        <p className="text-green-400 text-lg font-medium">Thank you — your details have been sent.</p>
+        <p className="text-muted mt-2">Your answers are pre-filled below in the Calendly booking (they will appear in the booking notification Michael receives).</p>
+
+        {submittedSummary && (
+          <div className="mt-4 mb-4 text-left bg-black/30 p-3 rounded text-xs whitespace-pre-wrap font-mono overflow-auto max-h-40">
+            {submittedSummary}
+          </div>
+        )}
 
         <a
-          href={site.calendlyUrl}
+          href={prefilledCalendlyUrl || site.calendlyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 inline-block w-full md:w-auto text-center px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985]"
+          className="mt-2 inline-block w-full md:w-auto text-center px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985]"
         >
           Choose your preferred time slot
         </a>
-        <p className="text-sm text-subtle mt-4">(opens Calendly in a new tab)</p>
+        <p className="text-sm text-subtle mt-4">(opens Calendly with your answers pre-filled)</p>
       </div>
     );
   }
