@@ -286,35 +286,46 @@ ${site.phone}`;
       return;
     }
 
-    let formatted = '=== SIGVAI INPUT - READY TO PASTE ===\n\n';
+    const industry = loadedSub?.industry || 'Not specified';
 
-    if (loadedSub) {
-      formatted += `Name: ${loadedSub.name}\n`;
-      formatted += `Email: ${loadedSub.email}\n`;
-      formatted += `Industry / Business Type: ${loadedSub.industry}\n`;
-      formatted += `Main Challenge: ${loadedSub.mainChallenge}\n`;
+    const mainChallenges = [
+      loadedSub?.mainChallenge,
+      ...(loadedSub?.additionalChallenges || [])
+    ].filter(Boolean).join('; ') || 'Not specified';
 
-      if (loadedSub.additionalChallenges && loadedSub.additionalChallenges.length > 0) {
-        formatted += `Additional Challenges:\n${loadedSub.additionalChallenges.map((c: string) => `- ${c}`).join('\n')}\n`;
-      }
+    const teamEffort = loadedSub?.peopleInvolved || 'Not specified';
 
-      if (loadedSub.peopleInvolved) {
-        formatted += `People involved in month-end / reporting: ${loadedSub.peopleInvolved}\n`;
-      }
-      if (loadedSub.successLooksLike) {
-        formatted += `What success looks like (30–90 days): ${loadedSub.successLooksLike}\n`;
-      }
-      if (loadedSub.additionalContext) {
-        formatted += `Additional context / deadlines: ${loadedSub.additionalContext}\n`;
-      }
-    }
+    const notes = transcript.trim() || loadedSub?.fullText || 'Not provided';
 
-    const notes = transcript.trim() || (loadedSub?.fullText || '');
-    if (notes) {
-      formatted += `\n--- Additional Notes / Transcript ---\n${notes}\n`;
-    }
+    // Build the exact prompt block the user pastes into their private SigVai system
+    const formatted = `=== SIGVAI INPUT - READY TO PASTE ===
 
-    formatted += '\n=== END SIGVAI INPUT ===';
+You are Michael Hart's private SigVai system — an expert forensic accounting + AI-powered consulting advisor.
+
+Client Data:
+- Industry / Business Type: ${industry}
+- Main Challenges: ${mainChallenges}
+- Team size & effort: ${teamEffort}
+- Additional notes / transcript: ${notes}
+
+Task:
+Generate a professional consultation proposal in two clear sections:
+
+1. **DEFINE** – Current State & Opportunity for Client
+   (Summarize situation, key challenges, impact, and desired outcomes)
+
+2. **CLIENT PITCH** – Recommended Path Forward
+   - Why this matters for the client
+   - Estimated ROI (use realistic numbers and examples)
+   - Recommended starting engagement: "Engagement Activation Retainer"
+   - Deliverables list (what we will do)
+   - Clear next steps (numbered)
+   - Professional closing from Michael Hart
+
+Tone: Professional, confident, trustworthy, benefit-focused, not salesy. Use bullet points for readability. Make it ready to copy into an email.
+
+Generate now.
+`;
 
     try {
       await navigator.clipboard.writeText(formatted);
