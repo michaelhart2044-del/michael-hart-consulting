@@ -2,6 +2,51 @@
 
 import { Resend } from 'resend';
 import { site } from '@/lib/site';
+import { headers } from 'next/headers';
+import { saveSubmission, getRecentSubmissions, getSubmissionById, markSubmissionSent, saveProposalDraft } from '@/lib/submissions-store';
+import { createAdminSession, verifyAdminSession, setAdminCookie, clearAdminCookie, getAdminSessionToken } from '@/lib/admin-auth';
+import { generateProposal, GeneratorInput } from '@/lib/proposal-generator';
+
+/**
+ * Simple in-memory rate limiter (per-IP and per-email).
+ * Sufficient for a low-volume professional site. Resets on cold starts (acceptable).
+ * Limits: 5 submissions per 15 minutes per IP or per email.
+ */
+const rateLimitMap = new Map<string, number[]>();
+
+function isRateLimited(key: string, max = 5, windowMs = 15 * 60 * 1000): boolean {
+  const now = Date.now();
+  const arr = (rateLimitMap.get(key) || []).filter((t) => now - t < windowMs);
+  if (arr.length >= max) return true;
+  arr.push(now);
+  rateLimitMap.set(key, arr);
+  return false;
+}
+
+async function getClientIp(): Promise<string> {
+  const h = await headers();
+  const forwarded = h.get('x-forwarded-for') || h.get('x-real-ip') || '';
+  return forwarded.split(',')[0].trim() || 'unknown';
+}
+
+/**
+ * Basic spam / bot pattern checks. Expand as needed.
+ * Triggers return silent success so bots think they succeeded.
+ */
+function containsSpamPatterns(text: string): boolean {
+  const lower = text.toLowerCase();
+  const patterns = /(viagra|casino|lottery|free money|click here|buy now|earn cash|seo service|crypto|bitcoin|investment opportunity|make money fast|work from home|weight loss|adult|xxx|porn)/i;
+  if (patterns.test(lower)) return true;
+
+  // Too many URLs (common in spam)
+  const urlCount = (lower.match(/https?:\/\//g) || []).length;
+  if (urlCount >= 2) return true;
+
+  // Excessive repetition or all-caps subject-like noise
+  if (/(.)\1{6,}/.test(lower) || lower === lower.toUpperCase() && lower.length > 30) return true;
+
+  return false;
+}
 
 // Escape user input to prevent HTML injection when interpolating into the email body.
 // Always sanitize untrusted data (name, email, message) coming from the contact form.
@@ -18,7 +63,7 @@ export async function sendContactEmail(formData: FormData) {
   // Honeypot check for spam bots (field should be empty for humans)
   const honeypot = formData.get('company_website') as string;
   if (honeypot && honeypot.trim() !== '') {
-    // Pretend success for bots
+    // Pretend success for bots — do not reveal detection
     return { success: true };
   }
 
@@ -40,12 +85,17 @@ export async function sendContactEmail(formData: FormData) {
     return { success: false, error: 'Please provide a more detailed message (at least 10 characters).' };
   }
 
-  // Optional basic spam pattern filter
-  const combined = (rawName + ' ' + rawEmail + ' ' + rawMessage).toLowerCase();
-  const spamPatterns = /viagra|casino|lottery|free money|click here|buy now|earn cash/i;
-  if (spamPatterns.test(combined)) {
-    // Silent success for obvious spam
-    return { success: true };
+  // Rate limiting (IP + email)
+  const ip = await getClientIp();
+  const emailKey = rawEmail.trim().toLowerCase();
+  if (isRateLimited(`ip:${ip}`) || isRateLimited(`email:${emailKey}`)) {
+    return { success: true }; // silent success
+  }
+
+  // Strengthened spam pattern checks
+  const combined = `${rawName} ${rawEmail} ${rawMessage}`;
+  if (containsSpamPatterns(combined)) {
+    return { success: true }; // silent
   }
 
   // Sanitize all user-provided values before using them anywhere in the email
@@ -132,6 +182,19 @@ export async function sendAnalysisPrep(formData: FormData) {
     return { success: false, error: 'Please provide a valid email address.' };
   }
 
+  // Rate limiting (IP + email) — protects the private intake as well
+  const ip = await getClientIp();
+  const emailKey = rawEmail.trim().toLowerCase();
+  if (isRateLimited(`ip:${ip}`) || isRateLimited(`email:${emailKey}`)) {
+    return { success: true };
+  }
+
+  // Strengthened spam checks for the prep form
+  const combinedForSpam = `${rawName} ${rawEmail} ${mainChallenge} ${peopleInvolved} ${successLooksLike} ${additionalContext} ${additionalChallengesList.join(' ')}`;
+  if (containsSpamPatterns(combinedForSpam)) {
+    return { success: true };
+  }
+
   const name = escapeHtml(rawName.trim());
   const email = escapeHtml(rawEmail.trim());
   const safeIndustry = escapeHtml(industry);
@@ -143,16 +206,23 @@ export async function sendAnalysisPrep(formData: FormData) {
   const safeSuccess = escapeHtml(successLooksLike).replace(/\n/g, '<br>');
   const safeContext = escapeHtml(additionalContext).replace(/\n/g, '<br>');
 
-  // Build plain text attachment with all prep data (will be attached to the owner email)
-  let attachContent = `Prep Answers for ${name} <${email}>\n\n`;
-  attachContent += `Industry / Business Type: ${safeIndustry || 'Not specified'}\n`;
-  attachContent += `Main Challenge: ${challengeDisplay || 'Not specified'}\n`;
-  if (additionalChallengesList.length > 0) {
-    attachContent += `Additional challenges:\n${additionalChallengesList.map((c: string) => `- ${c}`).join('\n')}\n`;
+  // RAW version for attachment + private store (clean, natural text for SigVai / xAI — no HTML escaping)
+  let rawAttach = `Prep Answers for ${rawName.trim()} <${rawEmail.trim()}>\n\n`;
+  rawAttach += `Industry / Business Type: ${industry || 'Not specified'}\n`;
+  rawAttach += `Main Challenge: ${mainChallenge || 'Not specified'}`;
+  if (mainChallenge === 'Other' && mainChallengeOther.trim()) {
+    rawAttach += ` — ${mainChallengeOther.trim()}`;
   }
-  attachContent += `People involved in month-end / reporting: ${safePeople || 'Not specified'}\n`;
-  attachContent += `What success looks like (30–90 days): ${safeSuccess || 'Not specified'}\n`;
-  attachContent += `Additional context / deadlines: ${safeContext || 'Not specified'}\n`;
+  rawAttach += `\n`;
+  if (additionalChallengesList.length > 0) {
+    rawAttach += `Additional challenges:\n${additionalChallengesList.map((c: string) => `- ${c}`).join('\n')}\n`;
+  }
+  rawAttach += `People involved in month-end / reporting: ${peopleInvolved || 'Not specified'}\n`;
+  rawAttach += `What success looks like (30–90 days): ${successLooksLike || 'Not specified'}\n`;
+  rawAttach += `Additional context / deadlines: ${additionalContext || 'Not specified'}\n`;
+
+  // Sanitized version only for the HTML email body (owner notification)
+  const safeAdditional = additionalChallengesList.map((c: string) => escapeHtml(c));
 
   const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -167,10 +237,10 @@ export async function sendAnalysisPrep(formData: FormData) {
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Industry / Business Type:</strong> ${safeIndustry || 'Not specified'}</p>
         <p><strong>Main Challenge:</strong> ${challengeDisplay || 'Not specified'}</p>
-        ${additionalChallengesList.length > 0 ? `
+        ${safeAdditional.length > 0 ? `
           <p><strong>Additional challenges:</strong></p>
           <ul style="margin:4px 0 12px 16px; padding:0; list-style:none;">
-            ${additionalChallengesList.map((c: string) => `<li style="margin:2px 0;">• ${escapeHtml(c)}</li>`).join('')}
+            ${safeAdditional.map((c: string) => `<li style="margin:2px 0;">• ${c}</li>`).join('')}
           </ul>
         ` : ''}
         <p><strong>People involved in month-end / reporting:</strong> ${safePeople || 'Not specified'}</p>
@@ -182,10 +252,29 @@ export async function sendAnalysisPrep(formData: FormData) {
       attachments: [
         {
           filename: 'prep-answers.txt',
-          content: Buffer.from(attachContent).toString('base64'),
+          content: Buffer.from(rawAttach).toString('base64'),
         },
       ],
     });
+
+    // Persist to private admin store (only after successful owner email)
+    // We save RAW fields + the clean rawAttach so the /admin tool has perfect data.
+    try {
+      await saveSubmission({
+        name: rawName.trim(),
+        email: rawEmail.trim(),
+        industry: industry || 'Not specified',
+        mainChallenge: challengeDisplay || 'Not specified',
+        additionalChallenges: additionalChallengesList,
+        peopleInvolved: peopleInvolved || '',
+        successLooksLike: successLooksLike || '',
+        additionalContext: additionalContext || '',
+        fullText: rawAttach,
+      });
+    } catch (storeErr) {
+      // Never let storage failure affect the user or email delivery
+      console.error('Non-fatal: failed to persist prep submission for admin tool', storeErr);
+    }
 
     // Auto-reply (independent)
     try {
@@ -208,5 +297,122 @@ export async function sendAnalysisPrep(formData: FormData) {
   } catch (error) {
     console.error('Resend error (prep):', error);
     return { success: false, error: 'Failed to send your details. Please try again or email us directly.' };
+  }
+}
+
+/* ============================================================
+   ADMIN-ONLY ACTIONS (protected by middleware + explicit cookie verification)
+   ============================================================ */
+
+// Separate small rate limit for login attempts (very low tolerance)
+const loginAttemptMap = new Map<string, number[]>();
+
+function isLoginRateLimited(ip: string, max = 6, windowMs = 10 * 60 * 1000): boolean {
+  const now = Date.now();
+  const arr = (loginAttemptMap.get(ip) || []).filter((t) => now - t < windowMs);
+  if (arr.length >= max) return true;
+  arr.push(now);
+  loginAttemptMap.set(ip, arr);
+  return false;
+}
+
+export async function authenticateAdmin(formData: FormData) {
+  const password = (formData.get('password') as string) || '';
+  const ip = await getClientIp();
+
+  if (isLoginRateLimited(ip)) {
+    return { success: false, error: 'Too many attempts. Please wait a few minutes.' };
+  }
+
+  const secretsOk = !!process.env.ADMIN_PASSWORD && !!process.env.ADMIN_COOKIE_SECRET;
+  if (!secretsOk) {
+    // Misconfiguration — do not leak details
+    console.error('ADMIN_PASSWORD or ADMIN_COOKIE_SECRET is not configured');
+    return { success: false, error: 'Admin access is not configured.' };
+  }
+
+  // Constant-time friendly compare (simple here; in prod use timingSafeEqual on buffers)
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return { success: false, error: 'Invalid password.' };
+  }
+
+  const token = await createAdminSession();
+  if (!token) {
+    return { success: false, error: 'Unable to create session.' };
+  }
+
+  await setAdminCookie(token);
+  return { success: true };
+}
+
+export async function logoutAdmin() {
+  await clearAdminCookie();
+  return { success: true };
+}
+
+// Re-verify inside every admin action (defense in depth)
+async function requireAdmin(): Promise<boolean> {
+  const token = await getAdminSessionToken();
+  return verifyAdminSession(token);
+}
+
+export async function getRecentPrepsForAdmin() {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized', items: [] };
+  }
+  try {
+    const items = await getRecentSubmissions(25);
+    // Never return full raw email bodies in list for extra caution — the UI only needs summary fields
+    const safe = items.map((s) => ({
+      id: s.id,
+      createdAt: s.createdAt,
+      name: s.name,
+      email: s.email,
+      industry: s.industry,
+      mainChallenge: s.mainChallenge,
+      sentAt: s.sentAt,
+    }));
+    return { success: true, items: safe };
+  } catch (e) {
+    return { success: false, error: 'Failed to load submissions', items: [] };
+  }
+}
+
+export async function loadPrepForAdmin(id: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  const sub = await getSubmissionById(id);
+  if (!sub) return { success: false, error: 'Not found' };
+  return { success: true, submission: sub };
+}
+
+export async function markPrepAsSent(id: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  const ok = await markSubmissionSent(id);
+  return { success: ok };
+}
+
+export async function saveProposalDraftForAdmin(id: string, draft: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  const ok = await saveProposalDraft(id, draft);
+  return { success: ok };
+}
+
+// Server-side generation (keeps the logic private and consistent)
+export async function generateInitialProposal(input: GeneratorInput) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    const proposal = generateProposal(input);
+    return { success: true, proposal };
+  } catch (e) {
+    console.error('Proposal generation failed:', e);
+    return { success: false, error: 'Generation failed' };
   }
 }
