@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import ContactForm from '@/components/ContactForm';
 import { site } from '@/lib/site';
 import Script from 'next/script';
@@ -99,8 +100,14 @@ export default function Contact() {
       <div id="book" className="max-w-5xl mx-auto px-6 pb-20">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl font-semibold mb-4">Book a Consultation Directly</h2>
+          <p className="text-muted mb-4">
+            For the best results, we recommend preparing first with the key discovery questions:
+          </p>
+          <Link href="/prepare-analysis" className="inline-block text-accent hover:underline font-medium mb-6">
+            Go to AI-Powered Process Analysis prep page →
+          </Link>
           <p className="text-muted mb-8">
-            Choose a time that works for you. For example, one healthcare client reduced their close cycle from 25 days to 5 business days (80% faster). We’ll send a calendar invite and confirmation.
+            Or book now and come prepared. We’ll send a calendar invite and confirmation.
           </p>
         </div>
         <CalendlyWidget />

@@ -2,6 +2,7 @@
 
 import { Resend } from 'resend';
 import { site } from '@/lib/site';
+import { analysisQuestions } from '@/lib/analysis-questions';
 
 // Escape user input to prevent HTML injection when interpolating into the email body.
 // Always sanitize untrusted data (name, email, message) coming from the contact form.
@@ -97,5 +98,119 @@ export async function sendContactEmail(formData: FormData) {
   } catch (error) {
     console.error('Resend error:', error);
     return { success: false, error: 'Failed to send message' };
+  }
+}
+
+/**
+ * Server action for the AI-Powered Process Analysis prep form (/prepare-analysis).
+ * Collects structured discovery answers, sends a clean formatted email to Michael
+ * (and a confirmation copy to the client). Reuses the same Resend + sanitize + honeypot
+ * patterns as the contact form for consistency and safety.
+ *
+ * These answers are the primary input that later powers internal proposal generation
+ * (SigVai - private, Michael-only). Never exposed publicly.
+ */
+export async function sendAnalysisPrep(formData: FormData) {
+  // Honeypot (same field name as contact form for shared bot protection logic)
+  const honeypot = formData.get('company_website') as string;
+  if (honeypot && honeypot.trim() !== '') {
+    return { success: true };
+  }
+
+  const rawName = (formData.get('name') as string) || '';
+  const rawEmail = (formData.get('email') as string) || '';
+  const company = (formData.get('company') as string) || '';
+  const role = (formData.get('role') as string) || '';
+
+  // Minimal validation
+  if (!rawName.trim() || rawName.trim().length < 2) {
+    return { success: false, error: 'Please provide your full name.' };
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!rawEmail.trim() || !emailRegex.test(rawEmail.trim())) {
+    return { success: false, error: 'Please provide a valid email address.' };
+  }
+
+  // Collect answers using the canonical question ids (defensive - only known keys)
+  const answers: Record<string, string> = {};
+  for (const q of analysisQuestions) {
+    const val = (formData.get(q.id) as string) || '';
+    if (val.trim()) {
+      answers[q.id] = val.trim();
+    }
+  }
+
+  // If literally nothing provided beyond name/email, still allow (they just wanted the link)
+  // but we still send a minimal record.
+
+  // Sanitize
+  const name = escapeHtml(rawName.trim());
+  const email = escapeHtml(rawEmail.trim());
+  const safeCompany = escapeHtml(company.trim());
+  const safeRole = escapeHtml(role.trim());
+
+  // Build a nicely structured HTML body for Michael (easy to forward into SigVai)
+  const answersHtml = analysisQuestions
+    .map((q) => {
+      const a = answers[q.id] ? escapeHtml(answers[q.id]).replace(/\n/g, '<br>') : '<em>(not answered)</em>';
+      return `<p style="margin: 12px 0 4px;"><strong>${q.number}. ${escapeHtml(q.label)}</strong><br>${a}</p>`;
+    })
+    .join('');
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  try {
+    await resend.emails.send({
+      from: `Process Analysis Prep <${site.email}>`,
+      to: site.email,
+      subject: `AI-Powered Process Analysis Prep — ${rawName.trim().slice(0, 60)}`,
+      replyTo: rawEmail,
+      html: `
+        <p><strong>From:</strong> ${name} ${safeRole ? `(${safeRole})` : ''}</p>
+        ${safeCompany ? `<p><strong>Company:</strong> ${safeCompany}</p>` : ''}
+        <p><strong>Email:</strong> ${email}</p>
+
+        <hr style="margin:16px 0;border:none;border-top:1px solid #ddd" />
+
+        <h3 style="margin:0 0 8px;">Discovery Answers</h3>
+        ${answersHtml}
+
+        <p style="margin-top:20px;font-size:12px;color:#666;">Submitted via the public prep form on ${site.name}.</p>
+      `,
+    });
+
+    // Auto-reply to the client (independent)
+    try {
+      const answeredCount = Object.keys(answers).length;
+      await resend.emails.send({
+        from: `${site.name} <${site.email}>`,
+        to: rawEmail,
+        subject: `Your AI-Powered Process Analysis prep answers (copy)`,
+        html: `
+          <p>Dear ${name},</p>
+          <p>Thank you — we received your responses for the 30-min AI-Powered Process Analysis. Michael has them and will review before your call.</p>
+          ${answeredCount > 0 ? `<p>You answered ${answeredCount} of the discovery questions. A clean copy is below for your records.</p>` : ''}
+
+          <hr style="margin:16px 0;border:none;border-top:1px solid #ddd" />
+
+          <h3 style="margin:0 0 8px;">Your answers</h3>
+          ${answersHtml}
+
+          <p style="margin-top:16px;">Ready to book (or add more context)? Use this link:<br>
+          <a href="${site.calendlyUrl}">${site.calendlyUrl}</a></p>
+
+          <p>Feel free to reply to this email with anything else before the call.</p>
+
+          <p>Best regards,<br />${site.name}<br />${site.phone}</p>
+        `,
+      });
+    } catch (autoReplyError) {
+      console.error('Analysis prep auto-reply failed (owner notification succeeded):', autoReplyError);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Resend error (analysis prep):', error);
+    return { success: false, error: 'Failed to send your answers. Please try again or email us directly.' };
   }
 }
