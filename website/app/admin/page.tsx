@@ -278,6 +278,55 @@ ${site.phone}`;
     setTimeout(() => setStatus(''), 2200);
   }
 
+  async function copyForSigVai() {
+    const hasData = loadedSub || transcript.trim().length > 0;
+    if (!hasData) {
+      setStatus('Load a submission or paste notes first');
+      setTimeout(() => setStatus(''), 2200);
+      return;
+    }
+
+    let formatted = '=== SIGVAI INPUT - READY TO PASTE ===\n\n';
+
+    if (loadedSub) {
+      formatted += `Name: ${loadedSub.name}\n`;
+      formatted += `Email: ${loadedSub.email}\n`;
+      formatted += `Industry / Business Type: ${loadedSub.industry}\n`;
+      formatted += `Main Challenge: ${loadedSub.mainChallenge}\n`;
+
+      if (loadedSub.additionalChallenges && loadedSub.additionalChallenges.length > 0) {
+        formatted += `Additional Challenges:\n${loadedSub.additionalChallenges.map((c: string) => `- ${c}`).join('\n')}\n`;
+      }
+
+      if (loadedSub.peopleInvolved) {
+        formatted += `People involved in month-end / reporting: ${loadedSub.peopleInvolved}\n`;
+      }
+      if (loadedSub.successLooksLike) {
+        formatted += `What success looks like (30–90 days): ${loadedSub.successLooksLike}\n`;
+      }
+      if (loadedSub.additionalContext) {
+        formatted += `Additional context / deadlines: ${loadedSub.additionalContext}\n`;
+      }
+    }
+
+    const notes = transcript.trim() || (loadedSub?.fullText || '');
+    if (notes) {
+      formatted += `\n--- Additional Notes / Transcript ---\n${notes}\n`;
+    }
+
+    formatted += '\n=== END SIGVAI INPUT ===';
+
+    try {
+      await navigator.clipboard.writeText(formatted);
+      setStatus('✅ Perfect input copied for SigVai — paste it into your SigVai tool');
+      setTimeout(() => setStatus(''), 3500);
+    } catch {
+      setStatus('Clipboard unavailable — full input logged to console for manual copy');
+      console.log(formatted);
+      setTimeout(() => setStatus(''), 4000);
+    }
+  }
+
   return (
     <div className="space-y-8">
       {/* Top bar */}
@@ -354,8 +403,8 @@ ${site.phone}`;
         <p className="text-[11px] text-[#64748b] mt-2">Loading a prep submission above will pre-populate this with the exact structured answers the client provided.</p>
       </section>
 
-      {/* Generate */}
-      <div className="flex justify-center">
+      {/* Generate + Copy for SigVai */}
+      <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
         <button
           onClick={handleGenerate}
           disabled={isGenerating}
@@ -363,7 +412,17 @@ ${site.phone}`;
         >
           {isGenerating ? 'Generating…' : 'Generate Initial Proposal'}
         </button>
+
+        <button
+          onClick={copyForSigVai}
+          className="px-8 py-3.5 text-base font-semibold bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full transition-all active:scale-[0.985] ring-2 ring-offset-2 ring-offset-[#0a0f2c] ring-[#c5a46e]/60"
+        >
+          Copy for SigVai
+        </button>
       </div>
+      <p className="text-center text-xs text-[#64748b] -mt-1">
+        Use “Copy for SigVai” to send clean structured input directly to your separate SigVai system.
+      </p>
 
       {/* Output */}
       {(proposal || outputText) && (
