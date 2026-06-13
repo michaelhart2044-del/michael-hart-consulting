@@ -134,7 +134,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
           href={resolvedCtaHref}
           className="hidden md:block px-6 py-2.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black text-sm font-medium rounded-full transition-all active:scale-[0.985] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
         >
-          Book Free AI-Powered Process Analysis
+          Book Initial Consultation
         </Link>
 
         {/* Hamburger - iOS Friendly, animated to X for better UX */}
@@ -183,7 +183,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
             className="mt-4 px-6 py-3 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium rounded-full text-center transition-all active:scale-[0.985] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
             onClick={closeMenu}
           >
-            Book Free AI-Powered Process Analysis
+            Book Initial Consultation
           </Link>
         </div>
       </div>
