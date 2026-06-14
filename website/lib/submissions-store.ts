@@ -28,6 +28,11 @@ export interface PrepSubmission {
   additionalContext: string;
   fullText: string; // clean, structured plain text (ready for SigVai / xAI)
   sentAt?: string; // set when "Mark as Sent" is used
+  preMeetingDiscovery?: {
+    [questionId: string]: string; // client-friendly answers from guided portal flow (e.g. closeCycle, processOwners, etc.)
+  } & {
+    additionalNotes?: string;
+  };
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -129,6 +134,25 @@ export async function saveProposalDraft(id: string, draft: string): Promise<bool
 
   // We store the draft on the submission for simplicity (no separate drafts table)
   (all[idx] as any).proposalDraft = draft;
+  await saveToDisk(all);
+  return true;
+}
+
+/**
+ * Update the pre-meeting discovery data for a submission.
+ * Used by the client portal's guided first-time flow to collect additional
+ * structured info (client-friendly questions, no internal terms like DMAIC).
+ * This enriches the data for SigVai/DMAIC generation after the 1-hour meeting.
+ */
+export async function updatePreMeetingDiscovery(id: string, discovery: { [questionId: string]: string } & { additionalNotes?: string }): Promise<boolean> {
+  const all = await loadFromDisk();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return false;
+
+  all[idx] = {
+    ...all[idx],
+    preMeetingDiscovery: discovery,
+  };
   await saveToDisk(all);
   return true;
 }
