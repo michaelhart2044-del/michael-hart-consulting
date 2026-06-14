@@ -3,9 +3,10 @@
 import { Resend } from 'resend';
 import { site } from '@/lib/site';
 import { headers } from 'next/headers';
-import { saveSubmission, getRecentSubmissions, getSubmissionById, markSubmissionSent, saveProposalDraft } from '@/lib/submissions-store';
+import { saveSubmission, getRecentSubmissions, getSubmissionById, markSubmissionSent, saveProposalDraft, updatePreMeetingDiscovery } from '@/lib/submissions-store';
 import { createAdminSession, verifyAdminSession, setAdminCookie, clearAdminCookie, getAdminSessionToken } from '@/lib/admin-auth';
 import { generateProposal, GeneratorInput } from '@/lib/proposal-generator';
+import { createClientMagicToken, verifyClientMagicToken, setClientCookie, clearClientCookie, getClientSessionEmail } from '@/lib/client-auth';
 
 /**
  * Simple in-memory rate limiter (per-IP and per-email).
@@ -415,4 +416,113 @@ export async function generateInitialProposal(input: GeneratorInput) {
     console.error('Proposal generation failed:', e);
     return { success: false, error: 'Generation failed' };
   }
+}
+
+/* ============================================================
+   CLIENT PORTAL ACTIONS (minimal scope: magic link auth + guided pre-meeting data collection)
+   Uses email from existing prep submissions. No DMAIC/SigVai mentions to clients.
+   Data saved to private store to enrich future SigVai calls.
+   ============================================================ */
+
+export async function sendClientMagicLink(formData: FormData) {
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
+  if (!email) {
+    return { success: false, error: 'Please provide your email.' };
+  }
+
+  // Verify this email has a submission (client was invited post-agreement)
+  const submissions = await getRecentSubmissions(100); // small limit for lookup
+  const hasSubmission = submissions.some(s => s.email.toLowerCase() === email);
+  if (!hasSubmission) {
+    // Silent fail for security (don't reveal if email exists)
+    return { success: true };
+  }
+
+  const token = await createClientMagicToken(email);
+  if (!token) {
+    return { success: false, error: 'Magic links are not configured.' };
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL || site.url}/portal/verify?token=${encodeURIComponent(token)}`;
+
+  try {
+    await resend.emails.send({
+      from: `${site.name} <${site.email}>`,
+      to: email,
+      subject: `Access your private engagement portal - ${site.name}`,
+      html: `
+        <p>Hi,</p>
+        <p>You've been granted access to your private portal for the engagement with ${site.name}.</p>
+        <p>Click the link below to log in (this link will expire in 30 days):</p>
+        <p><a href="${loginUrl}">${loginUrl}</a></p>
+        <p>If you didn't request this, you can ignore this email.</p>
+        <p>Best regards,<br />${site.name}</p>
+      `,
+    });
+    return { success: true };
+  } catch (e) {
+    console.error('Magic link email failed:', e);
+    return { success: false, error: 'Failed to send access link.' };
+  }
+}
+
+export async function verifyClientMagicAndLogin(token: string) {
+  const email = await verifyClientMagicToken(token);
+  if (!email) {
+    return { success: false, error: 'Invalid or expired link.' };
+  }
+
+  await setClientCookie(email);
+  return { success: true, email };
+}
+
+export async function logoutClient() {
+  await clearClientCookie();
+  return { success: true };
+}
+
+export async function getClientSession() {
+  const email = await getClientSessionEmail();
+  if (!email) return { success: false };
+  return { success: true, email };
+}
+
+// Save the guided pre-meeting discovery data from the client portal (first-time flow).
+// Uses client-friendly labels (e.g. "Process owners", "Current metrics") - no DMAIC/SigVai.
+export async function savePreMeetingDiscovery(discovery: { [questionId: string]: string } & { additionalNotes?: string }) {
+  const email = await getClientSessionEmail();
+  if (!email) {
+    return { success: false, error: 'Not logged in.' };
+  }
+
+  // Find the matching submission by email
+  const submissions = await getRecentSubmissions(100);
+  const sub = submissions.find(s => s.email.toLowerCase() === email);
+  if (!sub) {
+    return { success: false, error: 'No engagement record found.' };
+  }
+
+  const ok = await updatePreMeetingDiscovery(sub.id, discovery);
+  if (!ok) {
+    return { success: false, error: 'Failed to save your answers.' };
+  }
+
+  return { success: true };
+}
+
+// For the portal to load the initial prep + any pre-meeting data for the guided flow.
+export async function getClientEngagementData() {
+  const email = await getClientSessionEmail();
+  if (!email) {
+    return { success: false, error: 'Not logged in.' };
+  }
+
+  const submissions = await getRecentSubmissions(100);
+  const sub = submissions.find(s => s.email.toLowerCase() === email);
+  if (!sub) {
+    return { success: false, error: 'No engagement record found.' };
+  }
+
+  return { success: true, submission: sub };
 }
