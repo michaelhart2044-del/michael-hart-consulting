@@ -3,6 +3,8 @@ export const site = {
   legalName: "Michael Hart Consulting Group LLC",
   url: "https://michaelhartconsulting.com",
   email: "michael@michaelhartconsulting.com",
+  // Verified Resend sender for all outbound transactional email
+  resendFromEmail: "onboarding@michaelhartconsulting.com",
   phone: "(747) 370-9393",
   phoneHref: "tel:7473709393",
   tagline: "Strategic advisory for complex financial and business challenges.",
