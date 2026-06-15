@@ -29,6 +29,11 @@ export default function Footer() {
                     Services
                   </Link>
                 </div>
+                <div>
+                  <Link href="/portal/login" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded">
+                    Client Portal
+                  </Link>
+                </div>
               </div>
             </div>
 
