@@ -1,6 +1,7 @@
 'use server';
 
 import { Resend } from 'resend';
+import { revalidatePath } from 'next/cache';
 import { site } from '@/lib/site';
 import { getResendFrom } from '@/lib/resend-email';
 import { headers } from 'next/headers';
@@ -471,7 +472,7 @@ async function sendPortalAccessEmail(
 ): Promise<{ success: true } | { success: false; error: string }> {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const greeting = clientName?.split(' ')[0] || 'there';
-  const portalUrl = `${getSiteBaseUrl()}/portal`;
+  const portalUrl = `${getSiteBaseUrl()}/portal/login`;
 
   try {
     await resend.emails.send({
@@ -616,6 +617,8 @@ export async function clientSignInWithPassword(formData: FormData) {
   }
 
   await setClientCookie(sub.email);
+  revalidatePath('/portal');
+  revalidatePath('/portal/login');
   return { success: true, mustChangePassword: mustChangePortalPassword(sub) };
 }
 
@@ -655,6 +658,9 @@ export async function clientChangePassword(formData: FormData) {
   const updated = await setClientPasswordHash(sub.id, hash, { mustChangePassword: false });
   if (!updated) return { success: false, error: 'Failed to save your password. Please try again.' };
 
+  revalidatePath('/portal');
+  revalidatePath('/portal/login');
+  revalidatePath('/portal/change-password');
   return { success: true };
 }
 

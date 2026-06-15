@@ -25,6 +25,6 @@ export async function GET(request: NextRequest) {
 
   await setClientCookie(email);
 
-  const dest = sub.mustChangePassword ? '/portal/change-password' : '/portal';
+  const dest = sub.mustChangePassword ? '/portal/login' : '/portal';
   return NextResponse.redirect(new URL(dest, request.url));
 }

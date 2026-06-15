@@ -1,5 +1,7 @@
 import { getClientEngagementData, savePreMeetingDiscovery, logoutClient } from '@/app/actions';
 import { redirect } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
 import { analysisQuestions } from '@/lib/analysis-questions';
 import ClientPreMeetingForm from './ClientPreMeetingForm';
 import { site } from '@/lib/site';
@@ -12,7 +14,7 @@ export default async function ClientPortal() {
   }
 
   if (session.mustChangePassword) {
-    redirect('/portal/change-password');
+    redirect('/portal/login');
   }
 
   const sub = session.submission;
