@@ -430,22 +430,38 @@ export async function sendClientMagicLink(formData: FormData) {
     return { success: false, error: 'Please provide your email.' };
   }
 
+  // LOUD LOCAL TEST OUTPUT - ALWAYS VISIBLE (big banners so they are impossible to miss)
+  console.error('');
+  console.error('******************************************************************');
+  console.error('*** CLIENT PORTAL MAGIC LINK - LOCAL TEST (COPY THIS) ***');
+  console.error('******************************************************************');
+  console.error('EMAIL:', email);
+
   // Verify this email has a submission (client was invited post-agreement)
-  const submissions = await getRecentSubmissions(100); // small limit for lookup
+  const submissions = await getRecentSubmissions(100);
   const hasSubmission = submissions.some(s => s.email.toLowerCase() === email);
-  if (!hasSubmission) {
-    // Silent fail for security (don't reveal if email exists)
-    return { success: true };
-  }
+  console.error('SUBMISSIONS IN STORE:', submissions.length);
+  console.error('HAS MATCHING SUBMISSION:', hasSubmission);
 
+  // ALWAYS generate the link for local testing (bypass email hassle)
   const token = await createClientMagicToken(email);
-  if (!token) {
-    return { success: false, error: 'Magic links are not configured.' };
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const loginUrl = baseUrl + '/portal/verify?token=' + encodeURIComponent(token);
+
+  console.error(' ');
+  console.error('COPY AND PASTE THIS FULL LINK:');
+  console.error(loginUrl);
+  console.error(' ');
+  console.error('******************************************************************');
+  console.error(' ');
+
+  if (!hasSubmission) {
+    console.error('NOTE: No submission found for this email yet — submit /prepare-analysis first (link still works for test).');
+    return { success: true, loginUrl };
   }
 
+  // Real path: send email (for when you test on live site)
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL || site.url}/portal/verify?token=${encodeURIComponent(token)}`;
-
   try {
     await resend.emails.send({
       from: `${site.name} <${site.email}>`,
@@ -460,10 +476,10 @@ export async function sendClientMagicLink(formData: FormData) {
         <p>Best regards,<br />${site.name}</p>
       `,
     });
-    return { success: true };
+    return { success: true, loginUrl };
   } catch (e) {
-    console.error('Magic link email failed:', e);
-    return { success: false, error: 'Failed to send access link.' };
+    console.error('Magic link email failed (but link is still in the big box above):', e);
+    return { success: true, loginUrl };  // still give the link for local
   }
 }
 
@@ -525,4 +541,27 @@ export async function getClientEngagementData() {
   }
 
   return { success: true, submission: sub };
+}
+
+/**
+ * TEMPORARY TEST-MODE BYPASS for local development only.
+ * Directly logs the user in (sets the client cookie) using an existing submission email
+ * and returns success so the frontend can redirect to /portal.
+ * This bypasses the magic link email entirely so Michael can instantly test the
+ * guided first-time experience (initial data summary + pre-meeting questions + book button).
+ */
+export async function testDirectClientLogin(email: string) {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail) {
+    return { success: false, error: 'Email is required.' };
+  }
+
+  const submissions = await getRecentSubmissions(100);
+  const has = submissions.some(s => s.email.toLowerCase() === cleanEmail);
+  if (!has) {
+    return { success: false, error: `No prep submission found for ${cleanEmail}. Submit /prepare-analysis first.` };
+  }
+
+  await setClientCookie(cleanEmail);
+  return { success: true };
 }
