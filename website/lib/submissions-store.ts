@@ -25,8 +25,12 @@ export interface PrepSubmission {
   sentAt?: string;
   /** Step 8 — agreement signed + non-refundable fee received */
   engagementCommittedAt?: string;
-  /** Step 9 — set when admin grants portal access after Step 8 */
+  /** Step 9 — set when admin invites client to the portal after Step 8 */
   portalAccessGrantedAt?: string;
+  /** Set when client clicks the email confirmation link */
+  emailConfirmedAt?: string;
+  /** scrypt password hash for email + password sign-in */
+  portalPasswordHash?: string;
   preMeetingDiscovery?: {
     [questionId: string]: string;
   } & {
@@ -161,6 +165,37 @@ export function hasEngagementCommitment(submission: PrepSubmission): boolean {
 
 export function hasPortalAccess(submission: PrepSubmission): boolean {
   return !!submission.portalAccessGrantedAt;
+}
+
+export async function confirmClientEmail(submissionId: string, email: string): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === submissionId);
+  if (idx === -1) return null;
+
+  const normalized = email.trim().toLowerCase();
+  if (all[idx].email.toLowerCase() !== normalized) return null;
+  if (!hasPortalAccess(all[idx])) return null;
+
+  const now = new Date().toISOString();
+  all[idx] = {
+    ...all[idx],
+    emailConfirmedAt: all[idx].emailConfirmedAt || now,
+  };
+  await persist(all);
+  return all[idx];
+}
+
+export async function setClientPasswordHash(submissionId: string, passwordHash: string): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === submissionId);
+  if (idx === -1) return null;
+
+  all[idx] = {
+    ...all[idx],
+    portalPasswordHash: passwordHash,
+  };
+  await persist(all);
+  return all[idx];
 }
 
 /** Step 8 — record agreement signed + payment received (admin simulation). */

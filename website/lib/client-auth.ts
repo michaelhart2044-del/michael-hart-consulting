@@ -2,23 +2,17 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
 
 /**
- * Simple client auth for the private portal using httpOnly signed cookies and magic links.
- * Reuses patterns from admin-auth but scoped to clients (email from submissions).
- * Magic links sent via existing Resend (no new deps).
- * Sessions expire after 30 days for convenience.
- *
- * Security: httpOnly, secure in prod, sameSite lax, signed with CLIENT_COOKIE_SECRET.
- * Clients identified by email (from their prep submission).
+ * Client portal auth: signed magic-link tokens, email-confirmation tokens,
+ * and httpOnly session cookies. No external auth provider required.
  */
 
 const COOKIE_NAME = 'mh_client';
 const SESSION_DAYS = 30;
+const CONFIRM_DAYS = 7;
 
 function getSecrets() {
   const secret = process.env.CLIENT_COOKIE_SECRET || process.env.ADMIN_COOKIE_SECRET;
-  if (!secret) {
-    return null;
-  }
+  if (!secret) return null;
   return { secret };
 }
 
@@ -38,6 +32,28 @@ function verifySignature(payload: string, sig: string, secret: string): boolean 
   }
 }
 
+function parseSignedToken(
+  token: string,
+  expectedPrefix: string,
+  partCount: number,
+): { parts: string[]; payload: string; sig: string; exp: number } | null {
+  if (!token) return null;
+  const secrets = getSecrets();
+  if (!secrets) return null;
+
+  const parts = token.split(':');
+  if (parts.length !== partCount) return null;
+  if (parts[0] !== expectedPrefix) return null;
+
+  const sig = parts[parts.length - 1];
+  const payload = parts.slice(0, -1).join(':');
+  const exp = Number(parts[parts.length - 2]);
+  if (!exp || Date.now() > exp) return null;
+  if (!verifySignature(payload, sig, secrets.secret)) return null;
+
+  return { parts, payload, sig, exp };
+}
+
 export async function createClientMagicToken(email: string): Promise<string | null> {
   const secrets = getSecrets();
   if (!secrets) return null;
@@ -49,49 +65,32 @@ export async function createClientMagicToken(email: string): Promise<string | nu
 }
 
 export async function verifyClientMagicToken(token: string): Promise<string | null> {
-  console.log('DEBUG verifyClientMagicToken: called with token (truncated):', token ? token.substring(0, 80) + '...' : null);
-  if (!token) {
-    console.log('DEBUG verify: no token');
-    return null;
-  }
+  const parsed = parseSignedToken(token, 'client', 4);
+  if (!parsed) return null;
+  const email = parsed.parts[1];
+  return email?.toLowerCase() || null;
+}
+
+/** Email confirmation token — ties invite to a specific submission record. */
+export async function createEmailConfirmToken(submissionId: string, email: string): Promise<string | null> {
   const secrets = getSecrets();
-  if (!secrets) {
-    console.log('DEBUG verify: no secrets');
-    return null;
-  }
+  if (!secrets) return null;
 
-  const parts = token.split(':');
-  console.log('DEBUG verify: parts.length =', parts.length);
-  if (parts.length !== 4) {
-    console.log('DEBUG verify: wrong parts length');
-    return null; // client:email:exp:sig
-  }
+  const exp = Date.now() + CONFIRM_DAYS * 24 * 60 * 60 * 1000;
+  const payload = `confirm:${submissionId}:${email.toLowerCase()}:${exp}`;
+  const sig = sign(payload, secrets.secret);
+  return `${payload}:${sig}`;
+}
 
-  const payload = `${parts[0]}:${parts[1]}:${parts[2]}`;
-  const sig = parts[3];
-  const exp = Number(parts[2]);
-  const email = parts[1];
-
-  console.log('DEBUG verify: exp=', exp, 'now=', Date.now(), 'expired=', (!exp || Date.now() > exp));
-  if (!exp || Date.now() > exp) {
-    console.log('DEBUG verify: expired');
-    return null;
-  }
-  console.log('DEBUG verify: parts[0]=', parts[0], 'email=', email);
-  if (parts[0] !== 'client' || !email) {
-    console.log('DEBUG verify: bad prefix or email');
-    return null;
-  }
-
-  const sigValid = verifySignature(payload, sig, secrets.secret);
-  console.log('DEBUG verify: sigValid=', sigValid, 'payload (truncated)=', payload.substring(0,50), 'sig (truncated)=', sig.substring(0,20));
-  if (!sigValid) {
-    console.log('DEBUG verify: signature mismatch');
-    return null;
-  }
-
-  console.log('DEBUG verify: success for email=', email.toLowerCase());
-  return email.toLowerCase();
+export async function verifyEmailConfirmToken(
+  token: string,
+): Promise<{ submissionId: string; email: string } | null> {
+  const parsed = parseSignedToken(token, 'confirm', 5);
+  if (!parsed) return null;
+  const submissionId = parsed.parts[1];
+  const email = parsed.parts[2];
+  if (!submissionId || !email) return null;
+  return { submissionId, email: email.toLowerCase() };
 }
 
 export async function setClientCookie(email: string) {

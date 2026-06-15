@@ -8,7 +8,9 @@ import {
   saveProposalDraftForAdmin,
   generateInitialProposal,
   markEngagementCommittedForAdmin,
-  grantPortalAccessForAdmin,
+  inviteClientForAdmin,
+  resendPortalInviteForAdmin,
+  sendPortalSignInLinkForAdmin,
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
@@ -24,6 +26,7 @@ interface RecentItem {
   sentAt?: string;
   engagementCommittedAt?: string;
   portalAccessGrantedAt?: string;
+  emailConfirmedAt?: string;
 }
 
 interface Generated {
@@ -291,7 +294,7 @@ ${site.phone}`;
     setTimeout(() => setStatus(''), 4000);
   }
 
-  async function handleGrantPortalAccess(submissionId?: string) {
+  async function handleInviteClient(submissionId?: string) {
     const id = submissionId || loadedSub?.id;
     if (!id) {
       setStatus('Load a submission first');
@@ -300,21 +303,43 @@ ${site.phone}`;
     setBusyId(id);
     setIsGrantingPortal(true);
     setStatus('');
-    const res = await grantPortalAccessForAdmin(id);
+    const res = await inviteClientForAdmin(id);
     if (res.success) {
-      setStatus(res.message || 'Portal access granted and magic link sent.');
+      setStatus(res.message || 'Invitation sent.');
       const grantedAt = res.portalAccessGrantedAt || new Date().toISOString();
       if (loadedSub?.id === id) {
         setLoadedSub({ ...loadedSub, portalAccessGrantedAt: grantedAt });
       }
       await refreshRecent();
     } else {
-      setStatus(res.error || 'Failed to grant portal access');
+      setStatus(res.error || 'Failed to invite client');
       if (loadedSub?.id === id && res.portalAccessGrantedAt) {
         setLoadedSub({ ...loadedSub, portalAccessGrantedAt: res.portalAccessGrantedAt });
       }
     }
     setIsGrantingPortal(false);
+    setBusyId(null);
+    setTimeout(() => setStatus(''), 5000);
+  }
+
+  async function handleResendInvite(submissionId?: string) {
+    const id = submissionId || loadedSub?.id;
+    if (!id) return;
+    setBusyId(id);
+    setStatus('');
+    const res = await resendPortalInviteForAdmin(id);
+    setStatus(res.success ? (res.message || 'Confirmation email resent.') : (res.error || 'Failed'));
+    setBusyId(null);
+    setTimeout(() => setStatus(''), 5000);
+  }
+
+  async function handleSendSignInLink(submissionId?: string) {
+    const id = submissionId || loadedSub?.id;
+    if (!id) return;
+    setBusyId(id);
+    setStatus('');
+    const res = await sendPortalSignInLinkForAdmin(id);
+    setStatus(res.success ? (res.message || 'Sign-in link sent.') : (res.error || 'Failed'));
     setBusyId(null);
     setTimeout(() => setStatus(''), 5000);
   }
@@ -430,7 +455,12 @@ ${site.phone}`;
                 {new Date(item.createdAt).toLocaleString()}
                 {item.sentAt && <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">SENT</span>}
                 {item.engagementCommittedAt && <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">STEP 8</span>}
-                {item.portalAccessGrantedAt && <span className="px-1.5 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[10px]">PORTAL</span>}
+                {item.portalAccessGrantedAt && !item.emailConfirmedAt && (
+                  <span className="px-1.5 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[10px]">INVITED</span>
+                )}
+                {item.emailConfirmedAt && (
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-300 text-[10px]">CONFIRMED</span>
+                )}
               </div>
               <div className="flex flex-wrap gap-2 mt-1">
                 <button
@@ -448,17 +478,31 @@ ${site.phone}`;
                     {busyId === item.id ? 'Saving…' : 'Mark Step 8'}
                   </button>
                 )}
-                {item.engagementCommittedAt && (
+                {item.engagementCommittedAt && !item.portalAccessGrantedAt && (
                   <button
-                    onClick={() => handleGrantPortalAccess(item.id)}
+                    onClick={() => handleInviteClient(item.id)}
                     disabled={busyId === item.id || isGrantingPortal}
                     className="text-xs px-3 py-1.5 rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium disabled:opacity-50"
                   >
-                    {busyId === item.id && isGrantingPortal
-                      ? 'Sending…'
-                      : item.portalAccessGrantedAt
-                        ? 'Resend Magic Link'
-                        : 'Grant Portal Access & Send Magic Link'}
+                    {busyId === item.id && isGrantingPortal ? 'Sending…' : 'Invite New Client'}
+                  </button>
+                )}
+                {item.portalAccessGrantedAt && !item.emailConfirmedAt && (
+                  <button
+                    onClick={() => handleResendInvite(item.id)}
+                    disabled={busyId === item.id}
+                    className="text-xs px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
+                  >
+                    {busyId === item.id ? 'Sending…' : 'Resend Confirmation'}
+                  </button>
+                )}
+                {item.emailConfirmedAt && (
+                  <button
+                    onClick={() => handleSendSignInLink(item.id)}
+                    disabled={busyId === item.id}
+                    className="text-xs px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
+                  >
+                    {busyId === item.id ? 'Sending…' : 'Send Sign-In Link'}
                   </button>
                 )}
               </div>
@@ -467,14 +511,14 @@ ${site.phone}`;
         </div>
       </section>
 
-      {/* Steps 8–9 — Engagement commitment + portal access */}
+      {/* Steps 8–9 — Engagement commitment + portal invite */}
       {loadedSub && (
         <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-4">
           <div>
-            <h2 className="font-semibold text-lg text-[#c5a46e]">Steps 8–9 — Engagement & Portal Access</h2>
+            <h2 className="font-semibold text-lg text-[#c5a46e]">Steps 8–9 — Engagement & Portal Invite</h2>
             <p className="text-sm text-[#94a3b8] mt-1">
-              Step 8: Mark agreement signed + payment received. Step 9: Grant portal access and email the magic link
-              (guided intake summary + 1-hour prep questions at /portal — not the public prep form).
+              Step 8: Mark agreement + payment. Step 9: Invite the client — they receive a welcome email with an email
+              confirmation link. After confirming, they set a password or use a secure sign-in link to access /portal.
             </p>
           </div>
           <div className="text-sm">
@@ -495,33 +539,47 @@ ${site.phone}`;
                 {busyId === loadedSub.id ? 'Saving…' : 'Mark Step 8 — Agreement & Payment Received'}
               </button>
             )}
-            {loadedSub.portalAccessGrantedAt ? (
-              <>
-                <span className="text-xs px-2 py-1 rounded bg-sky-900/40 text-sky-300">
-                  Portal granted {new Date(loadedSub.portalAccessGrantedAt).toLocaleString()}
-                </span>
-                <button
-                  onClick={() => handleGrantPortalAccess()}
-                  disabled={isGrantingPortal || !loadedSub.engagementCommittedAt}
-                  className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
-                >
-                  {isGrantingPortal ? 'Sending…' : 'Resend Magic Link'}
-                </button>
-              </>
-            ) : (
+            {loadedSub.emailConfirmedAt && (
+              <span className="text-xs px-2 py-1 rounded bg-emerald-900/40 text-emerald-300">
+                Email confirmed {new Date(loadedSub.emailConfirmedAt).toLocaleString()}
+              </span>
+            )}
+            {loadedSub.portalAccessGrantedAt && !loadedSub.emailConfirmedAt && (
+              <span className="text-xs px-2 py-1 rounded bg-sky-900/40 text-sky-300">
+                Invited {new Date(loadedSub.portalAccessGrantedAt).toLocaleString()} — awaiting confirmation
+              </span>
+            )}
+            {loadedSub.engagementCommittedAt && !loadedSub.portalAccessGrantedAt && (
               <button
-                onClick={() => handleGrantPortalAccess()}
-                disabled={isGrantingPortal || !loadedSub.engagementCommittedAt}
+                onClick={() => handleInviteClient()}
+                disabled={isGrantingPortal}
                 className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-60"
-                title={!loadedSub.engagementCommittedAt ? 'Complete Step 8 first' : undefined}
               >
-                {isGrantingPortal ? 'Granting & sending…' : 'Grant Portal Access & Send Magic Link'}
+                {isGrantingPortal ? 'Sending…' : 'Invite New Client'}
+              </button>
+            )}
+            {loadedSub.portalAccessGrantedAt && !loadedSub.emailConfirmedAt && (
+              <button
+                onClick={() => handleResendInvite()}
+                disabled={busyId === loadedSub.id}
+                className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
+              >
+                {busyId === loadedSub.id ? 'Sending…' : 'Resend Confirmation Email'}
+              </button>
+            )}
+            {loadedSub.emailConfirmedAt && (
+              <button
+                onClick={() => handleSendSignInLink()}
+                disabled={busyId === loadedSub.id}
+                className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
+              >
+                {busyId === loadedSub.id ? 'Sending…' : 'Send Sign-In Link'}
               </button>
             )}
           </div>
           {!loadedSub.engagementCommittedAt && (
             <p className="text-xs text-[#64748b]">
-              Grant is disabled until Step 8 is marked. Clients cannot self-request a magic link before you grant access.
+              Invitations are disabled until Step 8 is marked. Clients cannot access the portal until invited and confirmed.
             </p>
           )}
         </section>

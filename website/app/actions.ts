@@ -15,11 +15,20 @@ import {
   markEngagementCommitted,
   markSubmissionSent,
   saveProposalDraft,
+  setClientPasswordHash,
   updatePreMeetingDiscovery,
 } from '@/lib/submissions-store';
 import { createAdminSession, verifyAdminSession, setAdminCookie, clearAdminCookie, getAdminSessionToken } from '@/lib/admin-auth';
 import { generateProposal, GeneratorInput } from '@/lib/proposal-generator';
-import { createClientMagicToken, verifyClientMagicToken, setClientCookie, clearClientCookie, getClientSessionEmail } from '@/lib/client-auth';
+import {
+  createClientMagicToken,
+  createEmailConfirmToken,
+  setClientCookie,
+  clearClientCookie,
+  getClientSessionEmail,
+} from '@/lib/client-auth';
+import { hashClientPassword, isPasswordStrongEnough, verifyClientPassword } from '@/lib/client-password';
+import { canClientSignIn, hasPortalPassword, isEmailConfirmed } from '@/lib/portal-access';
 
 /**
  * Simple in-memory rate limiter (per-IP and per-email).
@@ -384,6 +393,7 @@ export async function getRecentPrepsForAdmin() {
       sentAt: s.sentAt,
       engagementCommittedAt: s.engagementCommittedAt,
       portalAccessGrantedAt: s.portalAccessGrantedAt,
+      emailConfirmedAt: s.emailConfirmedAt,
     }));
     return { success: true, items: safe };
   } catch (e) {
@@ -432,21 +442,78 @@ export async function generateInitialProposal(input: GeneratorInput) {
 
 /* ============================================================
    CLIENT PORTAL ACTIONS (Step 9+ only — post-agreement access)
-   Magic link auth + guided pre-meeting data collection.
+   Email confirmation + password or magic-link sign-in.
    Portal access is granted exclusively from /admin after Steps 1–8.
    ============================================================ */
 
+const portalRateLimitMap = new Map<string, number[]>();
+
+function isPortalRateLimited(key: string, max = 8, windowMs = 15 * 60 * 1000): boolean {
+  const now = Date.now();
+  const arr = (portalRateLimitMap.get(key) || []).filter((t) => now - t < windowMs);
+  if (arr.length >= max) return true;
+  arr.push(now);
+  portalRateLimitMap.set(key, arr);
+  return false;
+}
+
+function getSiteBaseUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL || site.url || 'http://localhost:3000';
+}
+
 async function buildPortalMagicLink(email: string): Promise<{ loginUrl: string } | { error: string }> {
   const token = await createClientMagicToken(email);
-  if (!token) {
-    return { error: 'Magic links are not configured.' };
-  }
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || site.url || 'http://localhost:3000';
-  const loginUrl = `${baseUrl}/portal/verify?token=${encodeURIComponent(token)}`;
+  if (!token) return { error: 'Sign-in links are not configured.' };
+  const loginUrl = `${getSiteBaseUrl()}/portal/verify?token=${encodeURIComponent(token)}`;
   return { loginUrl };
 }
 
-async function sendPortalMagicLinkEmail(email: string, clientName?: string): Promise<{ success: true; loginUrl: string } | { success: false; error: string }> {
+async function buildEmailConfirmLink(submissionId: string, email: string): Promise<{ confirmUrl: string } | { error: string }> {
+  const token = await createEmailConfirmToken(submissionId, email);
+  if (!token) return { error: 'Email confirmation is not configured.' };
+  const confirmUrl = `${getSiteBaseUrl()}/portal/confirm?token=${encodeURIComponent(token)}`;
+  return { confirmUrl };
+}
+
+async function sendPortalInviteEmail(
+  submissionId: string,
+  email: string,
+  clientName?: string,
+): Promise<{ success: true } | { success: false; error: string }> {
+  const linkResult = await buildEmailConfirmLink(submissionId, email);
+  if ('error' in linkResult) {
+    return { success: false, error: linkResult.error };
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const greeting = clientName?.split(' ')[0] || 'there';
+
+  try {
+    await resend.emails.send({
+      from: getResendFrom('Client Portal'),
+      to: email,
+      subject: `Welcome to your private client portal — ${site.name}`,
+      html: `
+        <p>Hi ${greeting},</p>
+        <p>Welcome to your private engagement portal with ${site.name}.</p>
+        <p>Please confirm your email address to activate your portal access. This helps us keep the portal secure and available only to engaged clients.</p>
+        <p><strong><a href="${linkResult.confirmUrl}">Confirm your email to activate your private portal</a></strong></p>
+        <p>This confirmation link expires in 7 days. After confirming, you can sign in with a password or a secure email link.</p>
+        <p>If you did not expect this invitation, you can safely ignore this email.</p>
+        <p>Best regards,<br />Michael Hart<br />${site.name}</p>
+      `,
+    });
+    return { success: true };
+  } catch (e) {
+    console.error('Portal invite email failed:', e);
+    return { success: false, error: 'Failed to send the invitation email. Please try again.' };
+  }
+}
+
+async function sendPortalMagicLinkEmail(
+  email: string,
+  clientName?: string,
+): Promise<{ success: true; loginUrl: string } | { success: false; error: string }> {
   const linkResult = await buildPortalMagicLink(email);
   if ('error' in linkResult) {
     return { success: false, error: linkResult.error };
@@ -457,22 +524,21 @@ async function sendPortalMagicLinkEmail(email: string, clientName?: string): Pro
 
   try {
     await resend.emails.send({
-      from: getResendFrom(),
+      from: getResendFrom('Client Portal'),
       to: email,
-      subject: `Access your private engagement portal - ${site.name}`,
+      subject: `Your secure sign-in link — ${site.name}`,
       html: `
         <p>Hi ${greeting},</p>
-        <p>Your private engagement portal for ${site.name} is now ready.</p>
-        <p>Click the link below to log in and prepare for your 1-hour deep-dive meeting (this link expires in 30 days):</p>
+        <p>Use the secure link below to sign in to your private engagement portal (valid for 30 days):</p>
         <p><a href="${linkResult.loginUrl}">${linkResult.loginUrl}</a></p>
-        <p>If you did not expect this email, you can ignore it.</p>
+        <p>If you did not request this link, you can ignore this email.</p>
         <p>Best regards,<br />${site.name}</p>
       `,
     });
     return { success: true, loginUrl: linkResult.loginUrl };
   } catch (e) {
     console.error('Portal magic link email failed:', e);
-    return { success: false, error: 'Failed to send the magic link email. Please try again.' };
+    return { success: false, error: 'Failed to send the sign-in link. Please try again.' };
   }
 }
 
@@ -499,8 +565,8 @@ export async function markEngagementCommittedForAdmin(submissionId: string) {
   };
 }
 
-/** Step 9 — admin-only: grant portal access and email the client their magic link. */
-export async function grantPortalAccessForAdmin(submissionId: string) {
+/** Step 9 — admin-only: invite client and send welcome + email confirmation. */
+export async function inviteClientForAdmin(submissionId: string) {
   if (!(await requireAdmin())) {
     return { success: false, error: 'Unauthorized' };
   }
@@ -513,17 +579,17 @@ export async function grantPortalAccessForAdmin(submissionId: string) {
   if (!hasEngagementCommitment(sub)) {
     return {
       success: false,
-      error: 'Step 8 required first: mark agreement signed and payment received before granting portal access.',
+      error: 'Step 8 required first: mark agreement signed and payment received before inviting a client.',
       engagementCommittedAt: sub.engagementCommittedAt,
     };
   }
 
   const updated = await grantPortalAccess(submissionId);
   if (!updated) {
-    return { success: false, error: 'Failed to record portal access.' };
+    return { success: false, error: 'Failed to record portal invitation.' };
   }
 
-  const sent = await sendPortalMagicLinkEmail(updated.email, updated.name);
+  const sent = await sendPortalInviteEmail(updated.id, updated.email, updated.name);
   if (!sent.success) {
     return { success: false, error: sent.error, portalAccessGrantedAt: updated.portalAccessGrantedAt };
   }
@@ -531,15 +597,146 @@ export async function grantPortalAccessForAdmin(submissionId: string) {
   return {
     success: true,
     portalAccessGrantedAt: updated.portalAccessGrantedAt,
-    message: `Portal access granted and magic link sent to ${updated.email}.`,
+    message: `Invitation sent to ${updated.email}. They must confirm their email before signing in.`,
   };
 }
 
-/** Client self-service resend — only works if admin already granted access (Step 9). */
+/** Admin-only: resend confirmation email for clients who have not confirmed yet. */
+export async function resendPortalInviteForAdmin(submissionId: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub || !hasPortalAccess(sub)) {
+    return { success: false, error: 'Client has not been invited yet.' };
+  }
+
+  if (isEmailConfirmed(sub)) {
+    return { success: false, error: 'Email already confirmed. Use “Send Sign-In Link” instead.' };
+  }
+
+  const sent = await sendPortalInviteEmail(sub.id, sub.email, sub.name);
+  if (!sent.success) return { success: false, error: sent.error };
+
+  return { success: true, message: `Confirmation email resent to ${sub.email}.` };
+}
+
+/** Admin-only: send magic sign-in link after email is confirmed. */
+export async function sendPortalSignInLinkForAdmin(submissionId: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub || !canClientSignIn(sub)) {
+    return { success: false, error: 'Client must confirm their email before receiving a sign-in link.' };
+  }
+
+  const sent = await sendPortalMagicLinkEmail(sub.email, sub.name);
+  if (!sent.success) return { success: false, error: sent.error };
+
+  return { success: true, message: `Sign-in link sent to ${sub.email}.` };
+}
+
+/** Backward-compatible alias used by admin UI. */
+export async function grantPortalAccessForAdmin(submissionId: string) {
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) return inviteClientForAdmin(submissionId);
+  if (isEmailConfirmed(sub)) return sendPortalSignInLinkForAdmin(submissionId);
+  if (hasPortalAccess(sub)) return resendPortalInviteForAdmin(submissionId);
+  return inviteClientForAdmin(submissionId);
+}
+
+/** Client password sign-in — requires confirmed email + admin invite. */
+export async function clientSignInWithPassword(formData: FormData) {
+  const honeypot = formData.get('company_website') as string;
+  if (honeypot?.trim()) return { success: true };
+
+  const email = ((formData.get('email') as string) || '').trim().toLowerCase();
+  const password = (formData.get('password') as string) || '';
+
+  if (!email) return { success: false, error: 'Please enter your email address.' };
+  if (!password) return { success: false, error: 'Please enter your password.' };
+
+  const ip = await getClientIp();
+  if (isPortalRateLimited(`portal-signin:ip:${ip}`, 10) || isPortalRateLimited(`portal-signin:email:${email}`, 8)) {
+    return { success: false, error: 'Too many sign-in attempts. Please wait a few minutes and try again.' };
+  }
+
+  const sub = await getSubmissionByEmail(email);
+  if (!sub) {
+    return { success: false, error: 'No portal account found for this email.' };
+  }
+
+  if (!hasPortalAccess(sub)) {
+    return { success: false, error: 'Portal access has not been granted yet. You will receive an invitation after your agreement and payment are complete.' };
+  }
+
+  if (!isEmailConfirmed(sub)) {
+    return { success: false, error: 'Please confirm your email using the link we sent before signing in.' };
+  }
+
+  if (!hasPortalPassword(sub) || !sub.portalPasswordHash) {
+    return { success: false, error: 'No password is set for this account yet. Create one using the “Set Password” tab, or sign in with an email link.' };
+  }
+
+  const valid = await verifyClientPassword(password, sub.portalPasswordHash);
+  if (!valid) {
+    return { success: false, error: 'Incorrect email or password.' };
+  }
+
+  await setClientCookie(sub.email);
+  return { success: true };
+}
+
+/** Client sets or updates portal password after email confirmation. */
+export async function clientSetPassword(formData: FormData) {
+  const honeypot = formData.get('company_website') as string;
+  if (honeypot?.trim()) return { success: true };
+
+  const email = ((formData.get('email') as string) || '').trim().toLowerCase();
+  const password = (formData.get('password') as string) || '';
+  const confirm = (formData.get('confirm_password') as string) || '';
+
+  if (!email) return { success: false, error: 'Please enter your email address.' };
+  if (!isPasswordStrongEnough(password)) {
+    return { success: false, error: 'Password must be at least 8 characters.' };
+  }
+  if (password !== confirm) {
+    return { success: false, error: 'Passwords do not match.' };
+  }
+
+  const ip = await getClientIp();
+  if (isPortalRateLimited(`portal-password:ip:${ip}`, 6)) {
+    return { success: false, error: 'Too many attempts. Please wait a few minutes.' };
+  }
+
+  const sub = await getSubmissionByEmail(email);
+  if (!sub) return { success: false, error: 'No portal account found for this email.' };
+  if (!canClientSignIn(sub)) {
+    return { success: false, error: 'Confirm your email using the invitation link before creating a password.' };
+  }
+
+  const hash = await hashClientPassword(password);
+  const updated = await setClientPasswordHash(sub.id, hash);
+  if (!updated) return { success: false, error: 'Failed to save your password. Please try again.' };
+
+  await setClientCookie(sub.email);
+  return { success: true };
+}
+
+/** Client self-service secure sign-in link — only after email confirmed. */
 export async function sendClientMagicLink(formData: FormData) {
-  const email = (formData.get('email') as string || '').trim().toLowerCase();
-  if (!email) {
-    return { success: false, error: 'Please provide your email.' };
+  const honeypot = formData.get('company_website') as string;
+  if (honeypot?.trim()) return { success: true };
+
+  const email = ((formData.get('email') as string) || '').trim().toLowerCase();
+  if (!email) return { success: false, error: 'Please provide your email.' };
+
+  const ip = await getClientIp();
+  if (isPortalRateLimited(`portal-magic:ip:${ip}`, 5) || isPortalRateLimited(`portal-magic:email:${email}`, 4)) {
+    return { success: true };
   }
 
   const sub = await getSubmissionByEmail(email);
@@ -557,22 +754,17 @@ export async function sendClientMagicLink(formData: FormData) {
     };
   }
 
-  const sent = await sendPortalMagicLinkEmail(sub.email, sub.name);
-  if (!sent.success) {
-    return { success: false, error: sent.error };
+  if (!isEmailConfirmed(sub)) {
+    return {
+      success: false,
+      error: 'Please confirm your email using the invitation link we sent before requesting a sign-in link.',
+    };
   }
+
+  const sent = await sendPortalMagicLinkEmail(sub.email, sub.name);
+  if (!sent.success) return { success: false, error: sent.error };
 
   return { success: true };
-}
-
-export async function verifyClientMagicAndLogin(token: string) {
-  const email = await verifyClientMagicToken(token);
-  if (!email) {
-    return { success: false, error: 'Invalid or expired link.' };
-  }
-
-  await setClientCookie(email);
-  return { success: true, email };
 }
 
 export async function logoutClient() {
@@ -599,8 +791,8 @@ export async function savePreMeetingDiscovery(discovery: { [questionId: string]:
     return { success: false, error: 'No engagement record found.' };
   }
 
-  if (!hasPortalAccess(sub)) {
-    return { success: false, error: 'Portal access not granted.' };
+  if (!canClientSignIn(sub)) {
+    return { success: false, error: 'Portal access not activated.' };
   }
 
   const ok = await updatePreMeetingDiscovery(sub.id, discovery);
@@ -623,8 +815,8 @@ export async function getClientEngagementData() {
     return { success: false, error: 'No engagement record found.' };
   }
 
-  if (!hasPortalAccess(sub)) {
-    return { success: false, error: 'Portal access not granted.' };
+  if (!canClientSignIn(sub)) {
+    return { success: false, error: 'Portal access not activated.' };
   }
 
   return { success: true, submission: sub };

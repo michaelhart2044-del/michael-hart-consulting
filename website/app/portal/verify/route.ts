@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyClientMagicToken, setClientCookie } from '@/lib/client-auth';
-import { getSubmissionByEmail, hasPortalAccess } from '@/lib/submissions-store';
+import { getSubmissionByEmail } from '@/lib/submissions-store';
+import { canClientSignIn } from '@/lib/portal-access';
 
 /**
  * Route Handler for /portal/verify
@@ -18,8 +19,8 @@ export async function GET(request: NextRequest) {
   }
 
   const sub = await getSubmissionByEmail(email);
-  if (!sub || !hasPortalAccess(sub)) {
-    return NextResponse.redirect(new URL('/portal/login?error=not-invited', request.url));
+  if (!sub || !canClientSignIn(sub)) {
+    return NextResponse.redirect(new URL('/portal/login?error=not-activated', request.url));
   }
 
   await setClientCookie(email);
