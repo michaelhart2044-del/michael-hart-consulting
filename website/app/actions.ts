@@ -554,26 +554,3 @@ export async function getClientEngagementData() {
 
   return { success: true, submission: sub };
 }
-
-/**
- * TEMPORARY TEST-MODE BYPASS for local development only.
- * Directly logs the user in (sets the client cookie) using an existing submission email
- * and returns success so the frontend can redirect to /portal.
- * This bypasses the magic link email entirely so Michael can instantly test the
- * guided first-time experience (initial data summary + pre-meeting questions + book button).
- */
-export async function testDirectClientLogin(email: string) {
-  const cleanEmail = (email || '').trim().toLowerCase();
-  if (!cleanEmail) {
-    return { success: false, error: 'Email is required.' };
-  }
-
-  const submissions = await getRecentSubmissions(100);
-  const has = submissions.some(s => s.email.toLowerCase() === cleanEmail);
-  if (!has) {
-    return { success: false, error: `No prep submission found for ${cleanEmail}. Submit /prepare-analysis first.` };
-  }
-
-  await setClientCookie(cleanEmail);
-  return { success: true };
-}
