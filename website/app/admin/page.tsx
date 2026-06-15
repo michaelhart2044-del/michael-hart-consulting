@@ -14,9 +14,11 @@ import {
   revokePortalAccessForAdmin,
   deleteClientForAdmin,
   clearAllClientsForAdmin,
+  saveConsultTranscriptsForAdmin,
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
+import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
 import { site } from '@/lib/site';
 
 interface RecentItem {
@@ -51,6 +53,8 @@ export default function AdminProposalGenerator() {
   const [status, setStatus] = useState('');
   const [isGrantingPortal, setIsGrantingPortal] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [consult30Transcript, setConsult30Transcript] = useState('');
+  const [consult60Transcript, setConsult60Transcript] = useState('');
 
   // Load recent on mount
   async function refreshRecent() {
@@ -77,12 +81,31 @@ export default function AdminProposalGenerator() {
     }
     const sub = res.submission as PrepSubmission;
     setLoadedSub(sub);
+    setConsult30Transcript(sub.consult30Transcript || '');
+    setConsult60Transcript(sub.consult60Transcript || '');
     // Pre-fill the transcript/notes area with the clean fullText from the form
     setTranscript(sub.fullText || '');
     // Clear any prior generated output so user can re-generate with fresh data
     setProposal(null);
     setOutputText('');
     setStatus(`Loaded: ${sub.name} (${new Date(sub.createdAt).toLocaleDateString()})`);
+  }
+
+  async function handleSaveConsultTranscripts() {
+    if (!loadedSub) return;
+
+    const res = await saveConsultTranscriptsForAdmin(
+      loadedSub.id,
+      consult30Transcript,
+      consult60Transcript,
+    );
+    if (res.success && res.submission) {
+      setLoadedSub(res.submission as PrepSubmission);
+      setStatus('Consult transcripts saved.');
+    } else {
+      setStatus(res.error || 'Failed to save transcripts');
+    }
+    setTimeout(() => setStatus(''), 2500);
   }
 
   async function handleGenerate() {
@@ -427,6 +450,8 @@ ${site.phone}`;
         setProposal(null);
         setOutputText('');
         setTranscript('');
+        setConsult30Transcript('');
+        setConsult60Transcript('');
       }
       await refreshRecent();
     } else {
@@ -674,6 +699,8 @@ ${site.phone}`;
                 setProposal(null);
                 setOutputText('');
                 setTranscript('');
+                setConsult30Transcript('');
+                setConsult60Transcript('');
                 await refreshRecent();
               }
               setStatus(res.success ? (res.message || 'All records deleted.') : (res.error || 'Reset failed.'));
@@ -685,6 +712,17 @@ ${site.phone}`;
           </button>
         </div>
       </section>
+
+      {loadedSub && (
+        <ClientEvidenceTimeline
+          submission={loadedSub}
+          consult30Transcript={consult30Transcript}
+          onConsult30TranscriptChange={setConsult30Transcript}
+          consult60Transcript={consult60Transcript}
+          onConsult60TranscriptChange={setConsult60Transcript}
+          onSaveTranscripts={handleSaveConsultTranscripts}
+        />
+      )}
 
       {/* Steps 8–9 — Engagement commitment + portal invite */}
       {loadedSub && (

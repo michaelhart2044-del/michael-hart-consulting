@@ -22,6 +22,7 @@ import {
   markSubmissionSent,
   revokePortalAccess,
   saveProposalDraft,
+  saveConsultTranscripts,
   setClientPasswordHash,
   updatePreMeetingDiscovery,
 } from '@/lib/submissions-store';
@@ -509,6 +510,26 @@ export async function saveProposalDraftForAdmin(id: string, draft: string) {
   }
   const ok = await saveProposalDraft(id, draft);
   return { success: ok };
+}
+
+export async function saveConsultTranscriptsForAdmin(
+  id: string,
+  consult30Transcript: string,
+  consult60Transcript: string,
+) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const updated = await saveConsultTranscripts(id, {
+    consult30Transcript,
+    consult60Transcript,
+  });
+  if (!updated) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  return { success: true, submission: updated };
 }
 
 // Server-side generation (keeps the logic private and consistent)

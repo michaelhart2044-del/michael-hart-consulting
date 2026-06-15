@@ -42,6 +42,10 @@ export interface PrepSubmission {
   } & {
     additionalNotes?: string;
   };
+  /** Admin — 30-minute Teams transcript / call notes */
+  consult30Transcript?: string;
+  /** Admin — 60-minute deep-dive transcript / meeting notes */
+  consult60Transcript?: string;
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -376,4 +380,26 @@ export async function updatePreMeetingDiscovery(
   };
   await persist(all);
   return true;
+}
+
+/** Admin — persist 30-min and/or 60-min consult transcripts on the client record. */
+export async function saveConsultTranscripts(
+  id: string,
+  transcripts: { consult30Transcript?: string; consult60Transcript?: string },
+): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  all[idx] = {
+    ...all[idx],
+    ...(transcripts.consult30Transcript !== undefined
+      ? { consult30Transcript: transcripts.consult30Transcript }
+      : {}),
+    ...(transcripts.consult60Transcript !== undefined
+      ? { consult60Transcript: transcripts.consult60Transcript }
+      : {}),
+  };
+  await persist(all);
+  return all[idx];
 }
