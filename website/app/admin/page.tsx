@@ -304,6 +304,8 @@ ${site.phone}`;
       setStatus('Load a submission first');
       return;
     }
+    if (isGrantingPortal || busyId === id) return;
+
     setBusyId(id);
     setIsGrantingPortal(true);
     setStatus('');
@@ -501,6 +503,22 @@ ${site.phone}`;
             {loadingRecent ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
+
+        {recent.length > 0 && (() => {
+          const byEmail = new Map<string, number>();
+          recent.forEach((item) => {
+            const key = item.email.toLowerCase();
+            byEmail.set(key, (byEmail.get(key) || 0) + 1);
+          });
+          const dupes = [...byEmail.entries()].filter(([, n]) => n > 1);
+          if (dupes.length === 0) return null;
+          return (
+            <div className="mb-4 p-3 rounded-lg border border-amber-500/40 bg-amber-950/20 text-xs text-amber-100">
+              <strong>Duplicate emails detected.</strong> Multiple intake records share the same address.
+              Portal sign-in uses the record with active portal access — delete extra test duplicates to avoid confusion.
+            </div>
+          );
+        })()}
 
         {recent.length === 0 && !loadingRecent && (
           <div className="text-sm text-[#94a3b8] space-y-2">

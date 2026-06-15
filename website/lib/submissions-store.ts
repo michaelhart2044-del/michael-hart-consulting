@@ -174,10 +174,38 @@ export async function getSubmissionById(id: string): Promise<PrepSubmission | nu
   return all.find((s) => s.id === id) ?? null;
 }
 
+function pickBestSubmissionForEmail(matches: PrepSubmission[]): PrepSubmission {
+  const activePortal = matches.filter(
+    (s) => !!s.portalAccessGrantedAt && !!s.portalPasswordHash,
+  );
+  if (activePortal.length > 0) {
+    return [...activePortal].sort((a, b) =>
+      (b.portalAccessGrantedAt || '').localeCompare(a.portalAccessGrantedAt || ''),
+    )[0];
+  }
+
+  const committed = matches.filter((s) => !!s.engagementCommittedAt);
+  if (committed.length > 0) {
+    return [...committed].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  }
+
+  return [...matches].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+}
+
 export async function getSubmissionByEmail(email: string): Promise<PrepSubmission | null> {
   const normalized = email.trim().toLowerCase();
   const all = await loadAll();
-  return all.find((s) => s.email.toLowerCase() === normalized) ?? null;
+  const matches = all.filter((s) => s.email.toLowerCase() === normalized);
+  if (matches.length === 0) return null;
+  if (matches.length === 1) return matches[0];
+  return pickBestSubmissionForEmail(matches);
+}
+
+/** All intake records sharing an email (used for duplicate warnings in admin). */
+export async function getSubmissionsByEmail(email: string): Promise<PrepSubmission[]> {
+  const normalized = email.trim().toLowerCase();
+  const all = await loadAll();
+  return all.filter((s) => s.email.toLowerCase() === normalized);
 }
 
 export function hasEngagementCommitment(submission: PrepSubmission): boolean {

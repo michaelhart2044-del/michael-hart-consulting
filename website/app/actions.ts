@@ -581,6 +581,21 @@ export async function grantPortalAccessForAdmin(submissionId: string): Promise<P
   if (!(await requireAdmin())) {
     return { success: false, error: 'Unauthorized' };
   }
+
+  const existing = await getSubmissionById(submissionId);
+  if (
+    existing &&
+    hasPortalAccess(existing) &&
+    existing.portalPasswordHash &&
+    existing.mustChangePassword !== false
+  ) {
+    return {
+      success: true,
+      portalAccessGrantedAt: existing.portalAccessGrantedAt!,
+      message: `Portal access already granted for ${existing.name}. Use Resend Portal Access if the client needs a new email.`,
+    };
+  }
+
   return grantPortalAccessAndEmail(submissionId);
 }
 
@@ -690,12 +705,21 @@ export async function clientSignInWithPassword(formData: FormData) {
     return { success: false, error: 'Too many sign-in attempts. Please wait a few minutes and try again.' };
   }
 
-  const sub = await getSubmissionByEmail(email);
+  let sub = await getSubmissionByEmail(email);
   if (!sub) {
     return { success: false, error: 'No portal account found for this email.' };
   }
 
   if (!canClientSignIn(sub)) {
+    // Brief retry — Vercel Blob can lag a few hundred ms after admin grants access.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      sub = await getSubmissionByEmail(email);
+      if (sub && canClientSignIn(sub)) break;
+    }
+  }
+
+  if (!sub || !canClientSignIn(sub)) {
     return {
       success: false,
       error: 'Portal access has not been granted yet. You will receive an email after your agreement and payment are complete.',
