@@ -445,6 +445,9 @@ export async function sendClientMagicLink(formData: FormData) {
 
   // ALWAYS generate the link for local testing (bypass email hassle)
   const token = await createClientMagicToken(email);
+  if (!token) {
+    return { success: false, error: 'Magic links are not configured.' };
+  }
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const loginUrl = baseUrl + '/portal/verify?token=' + encodeURIComponent(token);
 
