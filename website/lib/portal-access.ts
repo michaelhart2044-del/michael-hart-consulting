@@ -1,21 +1,21 @@
 import type { PrepSubmission } from './submissions-store';
 
-/** Admin has invited the client (Step 9). */
+/** Admin has granted portal access (Step 9). */
 export function isPortalInvited(submission: PrepSubmission): boolean {
   return !!submission.portalAccessGrantedAt;
 }
 
-/** Client confirmed their email via the verification link. */
-export function isEmailConfirmed(submission: PrepSubmission): boolean {
-  return !!submission.emailConfirmedAt;
-}
-
-/** Client may sign in (password or magic link). */
+/** Client may sign in with email + password. */
 export function canClientSignIn(submission: PrepSubmission): boolean {
-  return isPortalInvited(submission) && isEmailConfirmed(submission);
+  return isPortalInvited(submission) && !!submission.portalPasswordHash;
 }
 
-/** Client has set a portal password. */
-export function hasPortalPassword(submission: PrepSubmission): boolean {
-  return !!submission.portalPasswordHash;
+/** Client must set a permanent password before using the portal. */
+export function mustChangePortalPassword(submission: PrepSubmission): boolean {
+  return !!submission.mustChangePassword;
+}
+
+/** Client has set a permanent portal password. */
+export function hasPermanentPortalPassword(submission: PrepSubmission): boolean {
+  return !!submission.portalPasswordHash && !submission.mustChangePassword;
 }

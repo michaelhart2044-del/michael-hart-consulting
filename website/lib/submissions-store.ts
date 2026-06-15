@@ -31,6 +31,8 @@ export interface PrepSubmission {
   emailConfirmedAt?: string;
   /** scrypt password hash for email + password sign-in */
   portalPasswordHash?: string;
+  /** True until the client sets a permanent password after first sign-in */
+  mustChangePassword?: boolean;
   preMeetingDiscovery?: {
     [questionId: string]: string;
   } & {
@@ -185,7 +187,11 @@ export async function confirmClientEmail(submissionId: string, email: string): P
   return all[idx];
 }
 
-export async function setClientPasswordHash(submissionId: string, passwordHash: string): Promise<PrepSubmission | null> {
+export async function setClientPasswordHash(
+  submissionId: string,
+  passwordHash: string,
+  options?: { mustChangePassword?: boolean },
+): Promise<PrepSubmission | null> {
   const all = await loadAll();
   const idx = all.findIndex((s) => s.id === submissionId);
   if (idx === -1) return null;
@@ -193,6 +199,7 @@ export async function setClientPasswordHash(submissionId: string, passwordHash: 
   all[idx] = {
     ...all[idx],
     portalPasswordHash: passwordHash,
+    mustChangePassword: options?.mustChangePassword ?? false,
   };
   await persist(all);
   return all[idx];
@@ -213,8 +220,11 @@ export async function markEngagementCommitted(id: string): Promise<PrepSubmissio
   return all[idx];
 }
 
-/** Step 9 — record that the client may access the private engagement portal. */
-export async function grantPortalAccess(id: string): Promise<PrepSubmission | null> {
+/** Step 9 — grant portal access and set a temporary password the client must replace on first sign-in. */
+export async function grantPortalAccessWithTempPassword(
+  id: string,
+  passwordHash: string,
+): Promise<PrepSubmission | null> {
   const all = await loadAll();
   const idx = all.findIndex((s) => s.id === id);
   if (idx === -1) return null;
@@ -227,6 +237,8 @@ export async function grantPortalAccess(id: string): Promise<PrepSubmission | nu
   all[idx] = {
     ...all[idx],
     portalAccessGrantedAt: all[idx].portalAccessGrantedAt || now,
+    portalPasswordHash: passwordHash,
+    mustChangePassword: true,
   };
   await persist(all);
   return all[idx];

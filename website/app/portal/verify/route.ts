@@ -20,11 +20,11 @@ export async function GET(request: NextRequest) {
 
   const sub = await getSubmissionByEmail(email);
   if (!sub || !canClientSignIn(sub)) {
-    return NextResponse.redirect(new URL('/portal/login?error=not-activated', request.url));
+    return NextResponse.redirect(new URL('/portal/login', request.url));
   }
 
   await setClientCookie(email);
 
-  // Success - go to the portal (will show guided first-time experience if needed)
-  return NextResponse.redirect(new URL('/portal', request.url));
+  const dest = sub.mustChangePassword ? '/portal/change-password' : '/portal';
+  return NextResponse.redirect(new URL(dest, request.url));
 }

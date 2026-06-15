@@ -12,8 +12,7 @@ export default function PortalPrivateNotice() {
         <div>
           <p className="font-medium text-[#f1f5f9]">Private client portal</p>
           <p className="mt-2 text-[#94a3b8]">
-            This is a private client portal for engaged clients of {site.name} only.
-            Access is granted manually by Michael after our initial agreement and payment.
+            Access granted for engaged clients only.
           </p>
         </div>
       </div>

@@ -8,9 +8,8 @@ import {
   saveProposalDraftForAdmin,
   generateInitialProposal,
   markEngagementCommittedForAdmin,
-  inviteClientForAdmin,
-  resendPortalInviteForAdmin,
-  sendPortalSignInLinkForAdmin,
+  grantPortalAccessForAdmin,
+  resendPortalAccessForAdmin,
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
@@ -26,7 +25,7 @@ interface RecentItem {
   sentAt?: string;
   engagementCommittedAt?: string;
   portalAccessGrantedAt?: string;
-  emailConfirmedAt?: string;
+  mustChangePassword?: boolean;
 }
 
 interface Generated {
@@ -294,7 +293,7 @@ ${site.phone}`;
     setTimeout(() => setStatus(''), 4000);
   }
 
-  async function handleInviteClient(submissionId?: string) {
+  async function handleGrantPortalAccess(submissionId?: string) {
     const id = submissionId || loadedSub?.id;
     if (!id) {
       setStatus('Load a submission first');
@@ -303,18 +302,26 @@ ${site.phone}`;
     setBusyId(id);
     setIsGrantingPortal(true);
     setStatus('');
-    const res = await inviteClientForAdmin(id);
+    const res = await grantPortalAccessForAdmin(id);
     if (res.success) {
-      setStatus(res.message || 'Invitation sent.');
+      setStatus(res.message || 'Portal access granted.');
       const grantedAt = res.portalAccessGrantedAt || new Date().toISOString();
       if (loadedSub?.id === id) {
-        setLoadedSub({ ...loadedSub, portalAccessGrantedAt: grantedAt });
+        setLoadedSub({
+          ...loadedSub,
+          portalAccessGrantedAt: grantedAt,
+          mustChangePassword: true,
+        });
       }
       await refreshRecent();
     } else {
-      setStatus(res.error || 'Failed to invite client');
+      setStatus(res.error || 'Failed to grant portal access');
       if (loadedSub?.id === id && res.portalAccessGrantedAt) {
-        setLoadedSub({ ...loadedSub, portalAccessGrantedAt: res.portalAccessGrantedAt });
+        setLoadedSub({
+          ...loadedSub,
+          portalAccessGrantedAt: res.portalAccessGrantedAt,
+          mustChangePassword: true,
+        });
       }
     }
     setIsGrantingPortal(false);
@@ -322,24 +329,23 @@ ${site.phone}`;
     setTimeout(() => setStatus(''), 5000);
   }
 
-  async function handleResendInvite(submissionId?: string) {
+  async function handleResendPortalAccess(submissionId?: string) {
     const id = submissionId || loadedSub?.id;
     if (!id) return;
     setBusyId(id);
+    setIsGrantingPortal(true);
     setStatus('');
-    const res = await resendPortalInviteForAdmin(id);
-    setStatus(res.success ? (res.message || 'Confirmation email resent.') : (res.error || 'Failed'));
-    setBusyId(null);
-    setTimeout(() => setStatus(''), 5000);
-  }
-
-  async function handleSendSignInLink(submissionId?: string) {
-    const id = submissionId || loadedSub?.id;
-    if (!id) return;
-    setBusyId(id);
-    setStatus('');
-    const res = await sendPortalSignInLinkForAdmin(id);
-    setStatus(res.success ? (res.message || 'Sign-in link sent.') : (res.error || 'Failed'));
+    const res = await resendPortalAccessForAdmin(id);
+    if (res.success) {
+      setStatus(res.message || 'Portal access email resent.');
+      if (loadedSub?.id === id) {
+        setLoadedSub({ ...loadedSub, mustChangePassword: true });
+      }
+      await refreshRecent();
+    } else {
+      setStatus(res.error || 'Failed to resend portal access');
+    }
+    setIsGrantingPortal(false);
     setBusyId(null);
     setTimeout(() => setStatus(''), 5000);
   }
@@ -455,11 +461,11 @@ ${site.phone}`;
                 {new Date(item.createdAt).toLocaleString()}
                 {item.sentAt && <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">SENT</span>}
                 {item.engagementCommittedAt && <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">STEP 8</span>}
-                {item.portalAccessGrantedAt && !item.emailConfirmedAt && (
-                  <span className="px-1.5 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[10px]">INVITED</span>
+                {item.portalAccessGrantedAt && item.mustChangePassword !== false && (
+                  <span className="px-1.5 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[10px]">PORTAL — AWAITING LOGIN</span>
                 )}
-                {item.emailConfirmedAt && (
-                  <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-300 text-[10px]">CONFIRMED</span>
+                {item.portalAccessGrantedAt && item.mustChangePassword === false && (
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-300 text-[10px]">PORTAL ACTIVE</span>
                 )}
               </div>
               <div className="flex flex-wrap gap-2 mt-1">
@@ -480,29 +486,20 @@ ${site.phone}`;
                 )}
                 {item.engagementCommittedAt && !item.portalAccessGrantedAt && (
                   <button
-                    onClick={() => handleInviteClient(item.id)}
+                    onClick={() => handleGrantPortalAccess(item.id)}
                     disabled={busyId === item.id || isGrantingPortal}
                     className="text-xs px-3 py-1.5 rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium disabled:opacity-50"
                   >
-                    {busyId === item.id && isGrantingPortal ? 'Sending…' : 'Invite New Client'}
+                    {busyId === item.id && isGrantingPortal ? 'Sending…' : 'Grant Portal Access'}
                   </button>
                 )}
-                {item.portalAccessGrantedAt && !item.emailConfirmedAt && (
+                {item.portalAccessGrantedAt && (
                   <button
-                    onClick={() => handleResendInvite(item.id)}
-                    disabled={busyId === item.id}
+                    onClick={() => handleResendPortalAccess(item.id)}
+                    disabled={busyId === item.id || isGrantingPortal}
                     className="text-xs px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
                   >
-                    {busyId === item.id ? 'Sending…' : 'Resend Confirmation'}
-                  </button>
-                )}
-                {item.emailConfirmedAt && (
-                  <button
-                    onClick={() => handleSendSignInLink(item.id)}
-                    disabled={busyId === item.id}
-                    className="text-xs px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
-                  >
-                    {busyId === item.id ? 'Sending…' : 'Send Sign-In Link'}
+                    {busyId === item.id && isGrantingPortal ? 'Sending…' : 'Resend Portal Access'}
                   </button>
                 )}
               </div>
@@ -515,10 +512,10 @@ ${site.phone}`;
       {loadedSub && (
         <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-4">
           <div>
-            <h2 className="font-semibold text-lg text-[#c5a46e]">Steps 8–9 — Engagement & Portal Invite</h2>
+            <h2 className="font-semibold text-lg text-[#c5a46e]">Steps 8–9 — Engagement & Portal Access</h2>
             <p className="text-sm text-[#94a3b8] mt-1">
-              Step 8: Mark agreement + payment. Step 9: Invite the client — they receive a welcome email with an email
-              confirmation link. After confirming, they set a password or use a secure sign-in link to access /portal.
+              Step 8: Mark agreement + payment. Step 9: Grant portal access — the client receives an email with a
+              temporary password and a link to sign in. On first login they set their own permanent password.
             </p>
           </div>
           <div className="text-sm">
@@ -539,47 +536,38 @@ ${site.phone}`;
                 {busyId === loadedSub.id ? 'Saving…' : 'Mark Step 8 — Agreement & Payment Received'}
               </button>
             )}
-            {loadedSub.emailConfirmedAt && (
-              <span className="text-xs px-2 py-1 rounded bg-emerald-900/40 text-emerald-300">
-                Email confirmed {new Date(loadedSub.emailConfirmedAt).toLocaleString()}
+            {loadedSub.portalAccessGrantedAt && loadedSub.mustChangePassword !== false && (
+              <span className="text-xs px-2 py-1 rounded bg-sky-900/40 text-sky-300">
+                Portal granted {new Date(loadedSub.portalAccessGrantedAt).toLocaleString()} — awaiting first login
               </span>
             )}
-            {loadedSub.portalAccessGrantedAt && !loadedSub.emailConfirmedAt && (
-              <span className="text-xs px-2 py-1 rounded bg-sky-900/40 text-sky-300">
-                Invited {new Date(loadedSub.portalAccessGrantedAt).toLocaleString()} — awaiting confirmation
+            {loadedSub.portalAccessGrantedAt && loadedSub.mustChangePassword === false && (
+              <span className="text-xs px-2 py-1 rounded bg-emerald-900/40 text-emerald-300">
+                Portal active since {new Date(loadedSub.portalAccessGrantedAt).toLocaleString()}
               </span>
             )}
             {loadedSub.engagementCommittedAt && !loadedSub.portalAccessGrantedAt && (
               <button
-                onClick={() => handleInviteClient()}
+                onClick={() => handleGrantPortalAccess()}
                 disabled={isGrantingPortal}
                 className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-60"
               >
-                {isGrantingPortal ? 'Sending…' : 'Invite New Client'}
+                {isGrantingPortal ? 'Sending…' : 'Grant Portal Access'}
               </button>
             )}
-            {loadedSub.portalAccessGrantedAt && !loadedSub.emailConfirmedAt && (
+            {loadedSub.portalAccessGrantedAt && (
               <button
-                onClick={() => handleResendInvite()}
-                disabled={busyId === loadedSub.id}
+                onClick={() => handleResendPortalAccess()}
+                disabled={busyId === loadedSub.id || isGrantingPortal}
                 className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
               >
-                {busyId === loadedSub.id ? 'Sending…' : 'Resend Confirmation Email'}
-              </button>
-            )}
-            {loadedSub.emailConfirmedAt && (
-              <button
-                onClick={() => handleSendSignInLink()}
-                disabled={busyId === loadedSub.id}
-                className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
-              >
-                {busyId === loadedSub.id ? 'Sending…' : 'Send Sign-In Link'}
+                {busyId === loadedSub.id && isGrantingPortal ? 'Sending…' : 'Resend Portal Access'}
               </button>
             )}
           </div>
           {!loadedSub.engagementCommittedAt && (
             <p className="text-xs text-[#64748b]">
-              Invitations are disabled until Step 8 is marked. Clients cannot access the portal until invited and confirmed.
+              Portal access is disabled until Step 8 is marked. Clients receive a temporary password by email after you grant access.
             </p>
           )}
         </section>

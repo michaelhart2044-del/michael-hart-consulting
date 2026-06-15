@@ -11,6 +11,10 @@ export default async function ClientPortal() {
     redirect('/portal/login');
   }
 
+  if (session.mustChangePassword) {
+    redirect('/portal/change-password');
+  }
+
   const sub = session.submission;
 
   // If they have already completed pre-meeting discovery, show summary + book prompt
