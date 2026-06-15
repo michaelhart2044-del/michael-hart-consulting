@@ -1,92 +1,135 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { savePreMeetingDiscovery } from '@/app/actions';
-import { analysisQuestions } from '@/lib/analysis-questions';
+import { portalPrepQuestions } from '@/lib/portal-prep-questions';
 
 interface Props {
-  initialData: any; // the submission for display
+  initialData: { name: string; email: string };
 }
 
 export default function ClientPreMeetingForm({ initialData }: Props) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
-
-  // Client-friendly questions: use the existing ones (great for DMAIC prep) + 2 extras
-  // Labels/prompts kept professional and clear - no internal terms shown to client.
-  const questions = [
-    ...analysisQuestions,
-    {
-      id: 'processOwners',
-      number: 8,
-      label: 'Process owners and key stakeholders',
-      prompt: 'Who owns each part of the close/reporting processes? Who are the main decision-makers or approvers for changes?',
-    },
-    {
-      id: 'currentMetrics',
-      number: 9,
-      label: 'Current metrics and visibility',
-      prompt: 'What KPIs, reports, or performance measures are tracked today (if any)? How do you currently know if processes are working well?',
-    },
-  ];
-
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [notes, setNotes] = useState('');
+  const [multiAnswers, setMultiAnswers] = useState<Record<string, string[]>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
+    for (const q of portalPrepQuestions) {
+      if (!q.required || q.type !== 'multiselect') continue;
+      if (!(multiAnswers[q.id]?.length)) {
+        setError(`Please select at least one option for "${q.label}".`);
+        return;
+      }
+    }
+
     startTransition(async () => {
-      const discovery: any = { ...answers };
-      if (notes.trim()) discovery.additionalNotes = notes.trim();
+      const discovery: Record<string, string> = { ...answers };
+      for (const [key, values] of Object.entries(multiAnswers)) {
+        if (values.length > 0) {
+          discovery[key] = values.join('; ');
+        }
+      }
 
       const result = await savePreMeetingDiscovery(discovery);
       if (result.success) {
-        setSaved(true);
+        router.refresh();
       } else {
         setError(result.error || 'Something went wrong. Please try again.');
       }
     });
   };
 
-  if (saved) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-[#c5a46e] font-medium">Your answers have been saved.</p>
-        <p className="text-sm text-[#94a3b8] mt-2">Michael now has a complete picture. Use the button on the main page to book your meeting.</p>
-      </div>
-    );
-  }
+  const toggleMulti = (id: string, option: string) => {
+    setMultiAnswers((prev) => {
+      const current = prev[id] || [];
+      const next = current.includes(option)
+        ? current.filter((v) => v !== option)
+        : [...current, option];
+      return { ...prev, [id]: next };
+    });
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {questions.map((q) => (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <p className="text-sm text-[#94a3b8]">
+        Quick selections only — most detail will be captured together on your 1-hour call.
+      </p>
+
+      {portalPrepQuestions.map((q) => (
         <div key={q.id} className="border border-white/10 rounded-xl p-4 bg-black/10">
-          <label className="block font-medium mb-1 text-sm">{q.label}</label>
-          <p className="text-xs text-[#94a3b8] mb-2">{q.prompt}</p>
-          <textarea
-            required
-            rows={3}
-            className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-[#c5a46e]"
-            placeholder="Your answer..."
-            value={answers[q.id] || ''}
-            onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
-          />
+          <label className="block font-medium mb-1 text-sm" htmlFor={q.type === 'select' ? q.id : undefined}>
+            {q.label}
+            {q.required ? ' *' : ''}
+          </label>
+          {q.helper && <p className="text-xs text-[#64748b] mb-2">{q.helper}</p>}
+
+          {q.type === 'select' && q.options && (
+            <select
+              id={q.id}
+              required={q.required}
+              className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#c5a46e]"
+              value={answers[q.id] || ''}
+              onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
+            >
+              <option value="">Select one…</option>
+              {q.options.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {q.type === 'multiselect' && q.options && (
+            <div className="flex flex-wrap gap-2 mt-1">
+              {q.options.map((opt) => {
+                const selected = (multiAnswers[q.id] || []).includes(opt);
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => toggleMulti(q.id, opt)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                      selected
+                        ? 'bg-[#8f6f3d]/30 border-[#c5a46e]/60 text-[#f1f5f9]'
+                        : 'border-white/20 text-[#94a3b8] hover:border-white/40'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {q.type === 'shorttext' && (
+            <textarea
+              rows={3}
+              className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-[#c5a46e]"
+              placeholder={q.placeholder || 'Optional…'}
+              value={answers[q.id] || ''}
+              onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
+            />
+          )}
+
+          {q.options?.some((o) => o.includes('Other')) &&
+            (answers[q.id]?.includes('Other') || (multiAnswers[q.id] || []).some((v) => v.includes('Other'))) && (
+              <input
+                type="text"
+                className="mt-2 w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-[#c5a46e]"
+                placeholder="Please describe…"
+                value={answers[`${q.id}_other`] || ''}
+                onChange={(e) => setAnswers({ ...answers, [`${q.id}_other`]: e.target.value })}
+              />
+            )}
         </div>
       ))}
-
-      <div className="border border-white/10 rounded-xl p-4 bg-black/10">
-        <label className="block font-medium mb-1 text-sm">Any other details or context for the meeting?</label>
-        <textarea
-          rows={4}
-          className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-[#c5a46e]"
-          placeholder="Optional additional notes..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-      </div>
 
       {error && <p className="text-red-400 text-sm">{error}</p>}
 
@@ -95,10 +138,12 @@ export default function ClientPreMeetingForm({ initialData }: Props) {
         disabled={isPending}
         className="w-full md:w-auto px-6 py-3 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all disabled:opacity-60"
       >
-        {isPending ? 'Saving your answers...' : 'Save and Continue to Meeting Booking'}
+        {isPending ? 'Saving…' : 'Save & Schedule 1-Hour Meeting'}
       </button>
 
-      <p className="text-xs text-[#64748b]">Your answers are private and will only be used to prepare for your engagement.</p>
+      <p className="text-xs text-[#64748b]">
+        Signed in as {initialData.name} ({initialData.email}). Answers are private.
+      </p>
     </form>
   );
 }

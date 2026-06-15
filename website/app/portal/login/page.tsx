@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import PortalPrivateNotice from '@/components/portal/PortalPrivateNotice';
+import PasswordField from '@/components/PasswordField';
 import {
   clientChangePasswordAndEnterPortal,
   clientSignInWithPassword,
@@ -135,20 +136,16 @@ export default function ClientPortalLogin() {
                   placeholder="you@company.com"
                 />
               </div>
-              <div>
-                <label htmlFor="signin-password" className="block text-sm text-[#94a3b8] mb-1.5">Password</label>
-                <input
-                  id="signin-password"
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-[#64748b] focus:outline-none focus:border-[#c5a46e]"
-                  placeholder="Temporary password from your email"
-                />
-              </div>
+              <PasswordField
+                id="signin-password"
+                name="password"
+                label="Password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Temporary password from your email"
+              />
               <button
                 type="submit"
                 disabled={isLoading}
@@ -159,32 +156,24 @@ export default function ClientPortalLogin() {
             </form>
           ) : (
             <form action={passwordAction} className="space-y-4">
-              <div>
-                <label htmlFor="new-password" className="block text-sm text-[#94a3b8] mb-1.5">New password</label>
-                <input
-                  id="new-password"
-                  name="password"
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-[#64748b] focus:outline-none focus:border-[#c5a46e]"
-                  placeholder="At least 8 characters"
-                />
-              </div>
-              <div>
-                <label htmlFor="confirm-password" className="block text-sm text-[#94a3b8] mb-1.5">Confirm password</label>
-                <input
-                  id="confirm-password"
-                  name="confirm_password"
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-[#64748b] focus:outline-none focus:border-[#c5a46e]"
-                  placeholder="Re-enter password"
-                />
-              </div>
+              <PasswordField
+                id="new-password"
+                name="password"
+                label="New password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                placeholder="At least 8 characters"
+              />
+              <PasswordField
+                id="confirm-password"
+                name="confirm_password"
+                label="Confirm password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                placeholder="Re-enter password"
+              />
               <button
                 type="submit"
                 disabled={passwordPending}

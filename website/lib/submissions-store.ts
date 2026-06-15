@@ -208,6 +208,16 @@ export async function getSubmissionsByEmail(email: string): Promise<PrepSubmissi
   return all.filter((s) => s.email.toLowerCase() === normalized);
 }
 
+/** Newest intake for an email that has not completed Calendly booking yet. */
+export async function getLatestUnbookedSubmissionByEmail(
+  email: string,
+): Promise<PrepSubmission | null> {
+  const matches = await getSubmissionsByEmail(email);
+  const unbooked = matches.filter((s) => !s.calendlyBookedAt);
+  if (unbooked.length === 0) return null;
+  return [...unbooked].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+}
+
 export function hasEngagementCommitment(submission: PrepSubmission): boolean {
   return !!submission.engagementCommittedAt;
 }

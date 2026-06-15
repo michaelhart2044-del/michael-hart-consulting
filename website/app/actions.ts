@@ -12,6 +12,7 @@ import {
   getRecentSubmissions,
   getSubmissionById,
   getSubmissionByEmail,
+  getLatestUnbookedSubmissionByEmail,
   grantPortalAccessWithTempPassword,
   deleteSubmission,
   clearAllSubmissions,
@@ -298,25 +299,8 @@ export async function sendAnalysisPrep(formData: FormData) {
   }
 }
 
-/** Step 2 — client finished Calendly: notify Michael with prep attachment + mark booked in admin. */
-export async function completePrepBooking(submissionId: string) {
-  if (!submissionId?.trim()) {
-    return { success: false, error: 'Missing submission reference.' };
-  }
-
-  const sub = await getSubmissionById(submissionId);
-  if (!sub) {
-    return { success: false, error: 'Submission not found.' };
-  }
-
-  if (sub.calendlyBookedAt) {
-    return { success: true, alreadyBooked: true };
-  }
-
-  const updated = await markConsultationBooked(submissionId);
-  if (!updated) {
-    return { success: false, error: 'Failed to record booking.' };
-  }
+async function notifyMichaelConsultBooked(updated: Awaited<ReturnType<typeof markConsultationBooked>>) {
+  if (!updated) return { success: false, error: 'No submission to notify.' };
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   try {
@@ -333,12 +317,90 @@ export async function completePrepBooking(submissionId: string) {
         },
       ],
     });
+    return { success: true };
   } catch (error) {
     console.error('Prep booking notification failed:', error);
     return { success: false, error: 'Booking recorded but notification failed.' };
   }
+}
+
+/** Step 2 — client finished Calendly: notify Michael with prep attachment + mark booked in admin. */
+export async function completePrepBooking(submissionId: string) {
+  if (!submissionId?.trim()) {
+    return { success: false, error: 'Missing submission reference.' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  if (sub.calendlyBookedAt) {
+    return { success: true, alreadyBooked: true, calendlyBookedAt: sub.calendlyBookedAt };
+  }
+
+  const updated = await markConsultationBooked(submissionId);
+  if (!updated) {
+    return { success: false, error: 'Failed to record booking.' };
+  }
+
+  const sent = await notifyMichaelConsultBooked(updated);
+  if (!sent.success) {
+    return { success: false, error: sent.error, calendlyBookedAt: updated.calendlyBookedAt };
+  }
 
   return { success: true, calendlyBookedAt: updated.calendlyBookedAt };
+}
+
+/** Fallback when Calendly fires but the browser lost the submission id — match by client email. */
+export async function completePrepBookingByEmail(email: string) {
+  const normalized = (email || '').trim().toLowerCase();
+  if (!normalized) {
+    return { success: false, error: 'Missing client email.' };
+  }
+
+  const sub = await getLatestUnbookedSubmissionByEmail(normalized);
+  if (!sub) {
+    const existing = await getSubmissionByEmail(normalized);
+    if (existing?.calendlyBookedAt) {
+      return { success: true, alreadyBooked: true, calendlyBookedAt: existing.calendlyBookedAt };
+    }
+    return { success: false, error: 'No pending prep submission found for this email.' };
+  }
+
+  return completePrepBooking(sub.id);
+}
+
+/** Admin-only: manually mark consult booked if Calendly callback was missed. */
+export async function markConsultBookedForAdmin(submissionId: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  if (sub.calendlyBookedAt) {
+    return {
+      success: true,
+      alreadyBooked: true,
+      calendlyBookedAt: sub.calendlyBookedAt,
+      message: 'Already marked as consult booked.',
+    };
+  }
+
+  const updated = await markConsultationBooked(submissionId);
+  if (!updated) {
+    return { success: false, error: 'Failed to record booking.' };
+  }
+
+  return {
+    success: true,
+    calendlyBookedAt: updated.calendlyBookedAt,
+    message: `Marked CONSULT BOOKED for ${updated.name}.`,
+  };
 }
 
 /* ============================================================

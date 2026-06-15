@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Script from 'next/script';
-import AnalysisPrepForm from '@/components/AnalysisPrepForm';
+import PrepareAnalysisSection from '@/components/PrepareAnalysisSection';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -45,13 +45,7 @@ export default function PrepareAnalysis() {
       {/* Smart intake form */}
       <div className="border-t border-white/10 bg-section py-12">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="max-w-2xl">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold tracking-tight">Step 1 — Your details</h2>
-              <p className="mt-2 text-sm text-muted">Helps Michael prepare for your 30-minute consultation.</p>
-            </div>
-            <AnalysisPrepForm />
-          </div>
+          <PrepareAnalysisSection />
         </div>
       </div>
 

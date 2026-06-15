@@ -11,8 +11,11 @@ export const site = {
   description:
     "Expert financial advisory in operations, controls, automation, revenue accounting, financial close, and transformation. Helping organizations achieve efficiency, compliance, and strategic growth.",
 
-  // Calendly scheduling link (used on /contact page)
+  // Calendly — 30-min initial consultation (public prep flow)
   calendlyUrl: "https://calendly.com/michael-michaelhartconsulting/30min",
+  // Calendly — 1-hour comprehensive meeting (client portal, post-agreement)
+  comprehensiveCalendlyUrl:
+    "https://calendly.com/michael-michaelhartconsulting/comprehensive-process-review-roadmap",
 
   // Social links (add your actual profile URLs to enable icons in the footer)
   social: {

@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { sendAnalysisPrep, completePrepBooking } from '@/app/actions';
+import { sendAnalysisPrep, completePrepBooking, completePrepBookingByEmail } from '@/app/actions';
+
+const PREP_ID_KEY = 'mh_prep_submission_id';
+const PREP_EMAIL_KEY = 'mh_prep_client_email';
 import { site } from '@/lib/site';
 import CalendlyWidget from './CalendlyWidget';
 
@@ -102,13 +105,25 @@ export default function AnalysisPrepForm() {
   // Listen for Calendly booking complete — notify Michael and show thank-you
   useEffect(() => {
     const handler = (e: MessageEvent) => {
-      if (e.data.event === 'calendly.event_scheduled' && submissionId) {
-        setShowCalendly(false);
-        setBookingDone(true);
-        completePrepBooking(submissionId).catch((err) => {
-          console.error('Failed to complete prep booking notification:', err);
-        });
-      }
+      const eventName = e.data?.event;
+      if (eventName !== 'calendly.event_scheduled') return;
+
+      const storedId = sessionStorage.getItem(PREP_ID_KEY) || '';
+      const storedEmail = sessionStorage.getItem(PREP_EMAIL_KEY) || '';
+      const id = submissionId || storedId;
+
+      setShowCalendly(false);
+      setBookingDone(true);
+
+      const finish = id
+        ? completePrepBooking(id)
+        : storedEmail
+          ? completePrepBookingByEmail(storedEmail)
+          : Promise.resolve({ success: false, error: 'Missing booking reference' });
+
+      finish.catch((err) => {
+        console.error('Failed to complete prep booking notification:', err);
+      });
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
@@ -165,7 +180,13 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
     const result = await sendAnalysisPrep(formData);
 
     if (result.success) {
-      if (result.submissionId) setSubmissionId(result.submissionId);
+      if (result.submissionId) {
+        setSubmissionId(result.submissionId);
+        sessionStorage.setItem(PREP_ID_KEY, result.submissionId);
+      }
+      if (clientEmail) {
+        sessionStorage.setItem(PREP_EMAIL_KEY, clientEmail.trim().toLowerCase());
+      }
       setIsSuccess(true);
     } else {
       setError(result.error || 'Something went wrong. Please try again or email us directly.');
@@ -177,20 +198,30 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
   if (isSuccess) {
     if (bookingDone) {
       return (
-        <div className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center">
-          <p className="text-green-400 text-lg font-medium">You&apos;re booked — thank you!</p>
-          <p className="text-muted mt-2 text-sm max-w-md mx-auto">
-            Your calendar invite is on its way — check your inbox and spam/junk folder for the Calendly email with your meeting time and Teams link.
-          </p>
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-green-300">Step 2 complete — you&apos;re booked</h2>
+            <p className="mt-2 text-sm text-muted">Your 30-minute initial consultation is scheduled.</p>
+          </div>
+          <div className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center">
+            <p className="text-green-400 text-lg font-medium">Thank you!</p>
+            <p className="text-muted mt-2 text-sm max-w-md mx-auto">
+              Your calendar invite is on its way — check your inbox and spam/junk folder for the Calendly email with your meeting time and Teams link.
+            </p>
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center">
-        <p className="text-lg font-medium text-green-300">Step 1 done.</p>
-        <p className="text-muted mt-2 text-sm max-w-md mx-auto">
-          Step 2: pick a time below. Your confirmation email arrives only after you schedule.
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight text-green-300">Step 1 complete</h2>
+          <p className="mt-2 text-sm text-muted">Step 2 — pick your 30-minute consultation time below.</p>
+        </div>
+        <div className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center">
+        <p className="text-muted text-sm max-w-md mx-auto">
+          Your confirmation email arrives only after you schedule.
         </p>
 
         {!showCalendly && (
@@ -210,11 +241,17 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
             />
           </div>
         )}
+        </div>
       </div>
     );
   }
 
   return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Step 1 — Your details</h2>
+        <p className="mt-2 text-sm text-muted">Helps Michael prepare for your 30-minute consultation.</p>
+      </div>
     <form action={handleSubmit} className="space-y-5">
       <div className="grid md:grid-cols-2 gap-5">
         <div>
@@ -408,5 +445,6 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
         {isSubmitting ? 'Saving...' : 'Continue to Booking'}
       </button>
     </form>
+    </div>
   );
 }

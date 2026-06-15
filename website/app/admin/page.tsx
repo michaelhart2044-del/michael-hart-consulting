@@ -8,6 +8,7 @@ import {
   saveProposalDraftForAdmin,
   generateInitialProposal,
   markEngagementCommittedForAdmin,
+  markConsultBookedForAdmin,
   grantPortalAccessForAdmin,
   resendPortalAccessForAdmin,
   revokePortalAccessForAdmin,
@@ -271,6 +272,24 @@ ${site.phone}`;
     const res = await saveProposalDraftForAdmin(loadedSub.id, outputText);
     setStatus(res.success ? 'Draft saved to this submission record' : (res.error || 'Failed to save draft'));
     setTimeout(() => setStatus(''), 2200);
+  }
+
+  async function handleMarkConsultBooked(submissionId?: string) {
+    const id = submissionId || loadedSub?.id;
+    if (!id) {
+      setStatus('Load a submission first');
+      return;
+    }
+    setBusyId(id);
+    const res = await markConsultBookedForAdmin(id);
+    if (res.success) {
+      setStatus(res.message || 'Marked as consult booked.');
+      await refreshRecent();
+    } else {
+      setStatus(res.error || 'Failed to mark consult booked');
+    }
+    setBusyId(null);
+    setTimeout(() => setStatus(''), 4000);
   }
 
   async function handleMarkStep8(submissionId?: string) {
@@ -567,6 +586,15 @@ ${site.phone}`;
                 >
                   Load
                 </button>
+                {!item.calendlyBookedAt && (
+                  <button
+                    onClick={() => handleMarkConsultBooked(item.id)}
+                    disabled={busyId === item.id}
+                    className="text-xs px-3 py-1.5 rounded-full border border-emerald-500/40 text-emerald-200 hover:bg-emerald-900/20 disabled:opacity-50"
+                  >
+                    {busyId === item.id ? 'Saving…' : 'Mark Consult Booked'}
+                  </button>
+                )}
                 {!item.engagementCommittedAt && (
                   <button
                     onClick={() => handleMarkStep8(item.id)}
