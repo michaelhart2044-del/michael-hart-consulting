@@ -275,6 +275,15 @@ export async function deleteSubmission(id: string): Promise<boolean> {
   return true;
 }
 
+/** Admin — wipe all client records (intake, portal, proposals). Returns count removed. */
+export async function clearAllSubmissions(): Promise<number> {
+  const all = await loadAll();
+  const count = all.length;
+  if (count === 0) return 0;
+  await persist([]);
+  return count;
+}
+
 export async function markSubmissionSent(id: string): Promise<boolean> {
   const all = await loadAll();
   const idx = all.findIndex((s) => s.id === id);

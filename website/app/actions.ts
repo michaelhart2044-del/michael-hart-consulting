@@ -13,6 +13,7 @@ import {
   getSubmissionByEmail,
   grantPortalAccessWithTempPassword,
   deleteSubmission,
+  clearAllSubmissions,
   hasEngagementCommitment,
   hasPortalAccess,
   markEngagementCommitted,
@@ -609,6 +610,29 @@ export async function revokePortalAccessForAdmin(submissionId: string) {
     success: true,
     portalRevokedAt: updated.portalRevokedAt,
     message: `Portal access revoked for ${updated.name}. They can no longer sign in. Grant access again anytime to re-onboard.`,
+  };
+}
+
+/** Admin-only: permanently delete every client record — for a clean live test or full reset. */
+export async function clearAllClientsForAdmin(confirmation: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  if (confirmation !== 'DELETE ALL') {
+    return { success: false, error: 'Confirmation phrase did not match.' };
+  }
+
+  const count = await clearAllSubmissions();
+  revalidatePath('/portal');
+  revalidatePath('/portal/login');
+  return {
+    success: true,
+    count,
+    message:
+      count === 0
+        ? 'No client records to delete — already empty.'
+        : `Deleted ${count} client record${count === 1 ? '' : 's'}. Ready for a fresh live test.`,
   };
 }
 

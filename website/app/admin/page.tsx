@@ -12,6 +12,7 @@ import {
   resendPortalAccessForAdmin,
   revokePortalAccessForAdmin,
   deleteClientForAdmin,
+  clearAllClientsForAdmin,
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
@@ -504,11 +505,11 @@ ${site.phone}`;
           <div className="text-sm text-[#94a3b8] space-y-2">
             <p>No submissions yet.</p>
             <p>
-              Submit the test form at{' '}
+              When a client completes the intake at{' '}
               <a href="/prepare-analysis" className="text-[#c5a46e] underline" target="_blank" rel="noreferrer">
                 /prepare-analysis
               </a>
-              , then click Refresh. Entries are stored in Vercel Blob so they persist across deploys.
+              , click Refresh to see them here.
             </p>
           </div>
         )}
@@ -591,6 +592,44 @@ ${site.phone}`;
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-red-500/20">
+          <p className="text-xs font-medium text-red-200/90 mb-1">Reset all client data</p>
+          <p className="text-xs text-[#64748b] mb-3">
+            Permanently deletes every intake, portal, and proposal record. Use before a real end-to-end test from scratch.
+          </p>
+          <button
+            onClick={async () => {
+              if (
+                !window.confirm(
+                  'Delete ALL client records?\n\nThis cannot be undone. Use only to wipe test data before a live run.',
+                )
+              ) {
+                return;
+              }
+              const phrase = window.prompt('Type DELETE ALL to confirm:');
+              if (phrase !== 'DELETE ALL') {
+                setStatus('Reset cancelled — confirmation phrase did not match.');
+                setTimeout(() => setStatus(''), 4000);
+                return;
+              }
+              setStatus('Deleting all records…');
+              const res = await clearAllClientsForAdmin('DELETE ALL');
+              if (res.success) {
+                setLoadedSub(null);
+                setProposal(null);
+                setOutputText('');
+                setTranscript('');
+                await refreshRecent();
+              }
+              setStatus(res.success ? (res.message || 'All records deleted.') : (res.error || 'Reset failed.'));
+              setTimeout(() => setStatus(''), 6000);
+            }}
+            className="text-xs px-4 py-2 rounded-full border border-red-500/40 text-red-200 hover:bg-red-900/20"
+          >
+            Delete All Client Records
+          </button>
         </div>
       </section>
 
