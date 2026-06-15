@@ -49,23 +49,48 @@ export async function createClientMagicToken(email: string): Promise<string | nu
 }
 
 export async function verifyClientMagicToken(token: string): Promise<string | null> {
-  if (!token) return null;
+  console.log('DEBUG verifyClientMagicToken: called with token (truncated):', token ? token.substring(0, 80) + '...' : null);
+  if (!token) {
+    console.log('DEBUG verify: no token');
+    return null;
+  }
   const secrets = getSecrets();
-  if (!secrets) return null;
+  if (!secrets) {
+    console.log('DEBUG verify: no secrets');
+    return null;
+  }
 
   const parts = token.split(':');
-  if (parts.length !== 4) return null; // client:email:exp:sig
+  console.log('DEBUG verify: parts.length =', parts.length);
+  if (parts.length !== 4) {
+    console.log('DEBUG verify: wrong parts length');
+    return null; // client:email:exp:sig
+  }
 
   const payload = `${parts[0]}:${parts[1]}:${parts[2]}`;
   const sig = parts[3];
   const exp = Number(parts[2]);
   const email = parts[1];
 
-  if (!exp || Date.now() > exp) return null;
-  if (parts[0] !== 'client' || !email) return null;
+  console.log('DEBUG verify: exp=', exp, 'now=', Date.now(), 'expired=', (!exp || Date.now() > exp));
+  if (!exp || Date.now() > exp) {
+    console.log('DEBUG verify: expired');
+    return null;
+  }
+  console.log('DEBUG verify: parts[0]=', parts[0], 'email=', email);
+  if (parts[0] !== 'client' || !email) {
+    console.log('DEBUG verify: bad prefix or email');
+    return null;
+  }
 
-  if (!verifySignature(payload, sig, secrets.secret)) return null;
+  const sigValid = verifySignature(payload, sig, secrets.secret);
+  console.log('DEBUG verify: sigValid=', sigValid, 'payload (truncated)=', payload.substring(0,50), 'sig (truncated)=', sig.substring(0,20));
+  if (!sigValid) {
+    console.log('DEBUG verify: signature mismatch');
+    return null;
+  }
 
+  console.log('DEBUG verify: success for email=', email.toLowerCase());
   return email.toLowerCase();
 }
 

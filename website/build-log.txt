@@ -1,0 +1,33 @@
+﻿
+> website@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.2.7 (Turbopack)
+
+node.exe : ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: 
+https://nextjs.org/docs/messages/middleware-to-proxy
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ΓÜá The "middle...leware-to-proxy:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 1387ms
+  Running TypeScript ...
+Failed to type check.
+
+./app/actions.ts:449:75
+Type error: Argument of type 'string | null' is not assignable to parameter of type 'string | number | boolean'.
+  Type 'null' is not assignable to type 'string | number | boolean'.
+
+  [90m447 |[0m   [36mconst[0m token = [36mawait[0m createClientMagicToken(email);
+  [90m448 |[0m   [36mconst[0m baseUrl = process.env.[33mNEXT_PUBLIC_SITE_URL[0m || 
+[32m'http://localhost:3000'[0m;
+[31m[1m>[0m [90m449 |[0m   [36mconst[0m loginUrl = baseUrl + [32m'/portal/verify?token='[0m + 
+encodeURIComponent(token);
+  [90m    |[0m                                                                           [31m[1m^[0m
+  [90m450 |[0m
+  [90m451 |[0m   console.error([32m' '[0m);
+  [90m452 |[0m   console.error([32m'COPY AND PASTE THIS FULL LINK:'[0m);
+Next.js build worker exited with code: 1 and signal: null
