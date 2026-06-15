@@ -28,6 +28,8 @@ export interface PrepSubmission {
   additionalContext: string;
   fullText: string; // clean, structured plain text (ready for SigVai / xAI)
   sentAt?: string; // set when "Mark as Sent" is used
+  /** Step 9 — set when admin grants portal access after agreement + payment */
+  portalAccessGrantedAt?: string;
   preMeetingDiscovery?: {
     [questionId: string]: string; // client-friendly answers from guided portal flow (e.g. closeCycle, processOwners, etc.)
   } & {
@@ -111,6 +113,31 @@ export async function getRecentSubmissions(limit = 20): Promise<PrepSubmission[]
 export async function getSubmissionById(id: string): Promise<PrepSubmission | null> {
   const all = await loadFromDisk();
   return all.find((s) => s.id === id) ?? null;
+}
+
+export async function getSubmissionByEmail(email: string): Promise<PrepSubmission | null> {
+  const normalized = email.trim().toLowerCase();
+  const all = await loadFromDisk();
+  return all.find((s) => s.email.toLowerCase() === normalized) ?? null;
+}
+
+export function hasPortalAccess(submission: PrepSubmission): boolean {
+  return !!submission.portalAccessGrantedAt;
+}
+
+/** Step 9 — record that the client may access the private engagement portal. */
+export async function grantPortalAccess(id: string): Promise<PrepSubmission | null> {
+  const all = await loadFromDisk();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  const now = new Date().toISOString();
+  all[idx] = {
+    ...all[idx],
+    portalAccessGrantedAt: all[idx].portalAccessGrantedAt || now,
+  };
+  await saveToDisk(all);
+  return all[idx];
 }
 
 export async function markSubmissionSent(id: string): Promise<boolean> {

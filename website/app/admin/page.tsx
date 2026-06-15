@@ -7,6 +7,7 @@ import {
   markPrepAsSent,
   saveProposalDraftForAdmin,
   generateInitialProposal,
+  grantPortalAccessForAdmin,
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
@@ -20,6 +21,7 @@ interface RecentItem {
   industry: string;
   mainChallenge: string;
   sentAt?: string;
+  portalAccessGrantedAt?: string;
 }
 
 interface Generated {
@@ -37,6 +39,7 @@ export default function AdminProposalGenerator() {
   const [proposal, setProposal] = useState<Generated | null>(null);
   const [outputText, setOutputText] = useState(''); // editable full text
   const [status, setStatus] = useState('');
+  const [isGrantingPortal, setIsGrantingPortal] = useState(false);
 
   // Load recent on mount
   async function refreshRecent() {
@@ -260,6 +263,29 @@ ${site.phone}`;
     setTimeout(() => setStatus(''), 2200);
   }
 
+  async function handleGrantPortalAccess() {
+    if (!loadedSub) {
+      setStatus('Load a submission first');
+      return;
+    }
+    setIsGrantingPortal(true);
+    setStatus('');
+    const res = await grantPortalAccessForAdmin(loadedSub.id);
+    if (res.success) {
+      setStatus(res.message || 'Portal access granted and magic link sent.');
+      const grantedAt = res.portalAccessGrantedAt || new Date().toISOString();
+      setLoadedSub({ ...loadedSub, portalAccessGrantedAt: grantedAt });
+      await refreshRecent();
+    } else {
+      setStatus(res.error || 'Failed to grant portal access');
+      if (res.portalAccessGrantedAt) {
+        setLoadedSub({ ...loadedSub, portalAccessGrantedAt: res.portalAccessGrantedAt });
+      }
+    }
+    setIsGrantingPortal(false);
+    setTimeout(() => setStatus(''), 4000);
+  }
+
   async function handleMarkSent() {
     if (!loadedSub) {
       setStatus('Load a submission first');
@@ -361,6 +387,7 @@ ${site.phone}`;
               <div className="text-[11px] text-[#64748b] flex items-center gap-2">
                 {new Date(item.createdAt).toLocaleString()}
                 {item.sentAt && <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">SENT</span>}
+                {item.portalAccessGrantedAt && <span className="px-1.5 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[10px]">PORTAL</span>}
               </div>
               <div>
                 <button
@@ -374,6 +401,44 @@ ${site.phone}`;
           ))}
         </div>
       </section>
+
+      {/* Step 9 — Grant portal access (post-agreement only) */}
+      {loadedSub && (
+        <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6">
+          <h2 className="font-semibold text-lg text-[#c5a46e]">Step 9 — Grant Portal Access</h2>
+          <p className="text-sm text-[#94a3b8] mt-1 mb-4">
+            Use only after the client has agreed, signed the engagement agreement, and paid the non-refundable fee (Step 8).
+            This sends their private portal magic link for the 1-hour deep-dive preparation flow.
+          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="text-sm">
+              <span className="text-[#94a3b8]">Client:</span> {loadedSub.name} <span className="text-[#64748b]">({loadedSub.email})</span>
+            </div>
+            {loadedSub.portalAccessGrantedAt ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs px-2 py-1 rounded bg-sky-900/40 text-sky-300">
+                  Granted {new Date(loadedSub.portalAccessGrantedAt).toLocaleString()}
+                </span>
+                <button
+                  onClick={handleGrantPortalAccess}
+                  disabled={isGrantingPortal}
+                  className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
+                >
+                  {isGrantingPortal ? 'Sending…' : 'Resend Magic Link'}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleGrantPortalAccess}
+                disabled={isGrantingPortal}
+                className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-60"
+              >
+                {isGrantingPortal ? 'Granting & sending…' : 'Grant Portal Access & Send Magic Link'}
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Transcript / Notes input */}
       <section className="border border-white/10 rounded-2xl bg-[#0f172a] p-6">

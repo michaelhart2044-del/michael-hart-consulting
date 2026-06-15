@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyClientMagicToken, setClientCookie } from '@/lib/client-auth';
+import { getSubmissionByEmail, hasPortalAccess } from '@/lib/submissions-store';
 
 /**
  * Route Handler for /portal/verify
@@ -13,11 +14,14 @@ export async function GET(request: NextRequest) {
   const email = await verifyClientMagicToken(token);
 
   if (!email) {
-    // Invalid/expired token - send back to login with error
     return NextResponse.redirect(new URL('/portal/login?error=invalid', request.url));
   }
 
-  // This is allowed here because we are inside a Route Handler
+  const sub = await getSubmissionByEmail(email);
+  if (!sub || !hasPortalAccess(sub)) {
+    return NextResponse.redirect(new URL('/portal/login?error=not-invited', request.url));
+  }
+
   await setClientCookie(email);
 
   // Success - go to the portal (will show guided first-time experience if needed)

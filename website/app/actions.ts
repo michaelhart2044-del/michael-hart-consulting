@@ -4,7 +4,17 @@ import { Resend } from 'resend';
 import { site } from '@/lib/site';
 import { getResendFrom } from '@/lib/resend-email';
 import { headers } from 'next/headers';
-import { saveSubmission, getRecentSubmissions, getSubmissionById, markSubmissionSent, saveProposalDraft, updatePreMeetingDiscovery } from '@/lib/submissions-store';
+import {
+  saveSubmission,
+  getRecentSubmissions,
+  getSubmissionById,
+  getSubmissionByEmail,
+  grantPortalAccess,
+  hasPortalAccess,
+  markSubmissionSent,
+  saveProposalDraft,
+  updatePreMeetingDiscovery,
+} from '@/lib/submissions-store';
 import { createAdminSession, verifyAdminSession, setAdminCookie, clearAdminCookie, getAdminSessionToken } from '@/lib/admin-auth';
 import { generateProposal, GeneratorInput } from '@/lib/proposal-generator';
 import { createClientMagicToken, verifyClientMagicToken, setClientCookie, clearClientCookie, getClientSessionEmail } from '@/lib/client-auth';
@@ -370,6 +380,7 @@ export async function getRecentPrepsForAdmin() {
       industry: s.industry,
       mainChallenge: s.mainChallenge,
       sentAt: s.sentAt,
+      portalAccessGrantedAt: s.portalAccessGrantedAt,
     }));
     return { success: true, items: safe };
   } catch (e) {
@@ -417,52 +428,29 @@ export async function generateInitialProposal(input: GeneratorInput) {
 }
 
 /* ============================================================
-   CLIENT PORTAL ACTIONS (minimal scope: magic link auth + guided pre-meeting data collection)
-   Uses email from existing prep submissions. No DMAIC/SigVai mentions to clients.
-   Data saved to private store to enrich future SigVai calls.
+   CLIENT PORTAL ACTIONS (Step 9+ only — post-agreement access)
+   Magic link auth + guided pre-meeting data collection.
+   Portal access is granted exclusively from /admin after Steps 1–8.
    ============================================================ */
 
-export async function sendClientMagicLink(formData: FormData) {
-  const email = (formData.get('email') as string || '').trim().toLowerCase();
-  if (!email) {
-    return { success: false, error: 'Please provide your email.' };
-  }
-
-  // LOUD LOCAL TEST OUTPUT - ALWAYS VISIBLE (big banners so they are impossible to miss)
-  console.error('');
-  console.error('******************************************************************');
-  console.error('*** CLIENT PORTAL MAGIC LINK - LOCAL TEST (COPY THIS) ***');
-  console.error('******************************************************************');
-  console.error('EMAIL:', email);
-
-  // Verify this email has a submission (client was invited post-agreement)
-  const submissions = await getRecentSubmissions(100);
-  const hasSubmission = submissions.some(s => s.email.toLowerCase() === email);
-  console.error('SUBMISSIONS IN STORE:', submissions.length);
-  console.error('HAS MATCHING SUBMISSION:', hasSubmission);
-
-  // ALWAYS generate the link for local testing (bypass email hassle)
+async function buildPortalMagicLink(email: string): Promise<{ loginUrl: string } | { error: string }> {
   const token = await createClientMagicToken(email);
   if (!token) {
-    return { success: false, error: 'Magic links are not configured.' };
+    return { error: 'Magic links are not configured.' };
   }
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const loginUrl = baseUrl + '/portal/verify?token=' + encodeURIComponent(token);
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || site.url || 'http://localhost:3000';
+  const loginUrl = `${baseUrl}/portal/verify?token=${encodeURIComponent(token)}`;
+  return { loginUrl };
+}
 
-  console.error(' ');
-  console.error('COPY AND PASTE THIS FULL LINK:');
-  console.error(loginUrl);
-  console.error(' ');
-  console.error('******************************************************************');
-  console.error(' ');
-
-  if (!hasSubmission) {
-    console.error('NOTE: No submission found for this email yet — submit /prepare-analysis first (link still works for test).');
-    return { success: true, loginUrl };
+async function sendPortalMagicLinkEmail(email: string, clientName?: string): Promise<{ success: true; loginUrl: string } | { success: false; error: string }> {
+  const linkResult = await buildPortalMagicLink(email);
+  if ('error' in linkResult) {
+    return { success: false, error: linkResult.error };
   }
 
-  // Real path: send email (for when you test on live site)
   const resend = new Resend(process.env.RESEND_API_KEY);
+  const greeting = clientName?.split(' ')[0] || 'there';
 
   try {
     await resend.emails.send({
@@ -470,19 +458,77 @@ export async function sendClientMagicLink(formData: FormData) {
       to: email,
       subject: `Access your private engagement portal - ${site.name}`,
       html: `
-        <p>Hi,</p>
-        <p>You've been granted access to your private portal for the engagement with ${site.name}.</p>
-        <p>Click the link below to log in (this link will expire in 30 days):</p>
-        <p><a href="${loginUrl}">${loginUrl}</a></p>
-        <p>If you didn't request this, you can ignore this email.</p>
+        <p>Hi ${greeting},</p>
+        <p>Your private engagement portal for ${site.name} is now ready.</p>
+        <p>Click the link below to log in and prepare for your 1-hour deep-dive meeting (this link expires in 30 days):</p>
+        <p><a href="${linkResult.loginUrl}">${linkResult.loginUrl}</a></p>
+        <p>If you did not expect this email, you can ignore it.</p>
         <p>Best regards,<br />${site.name}</p>
       `,
     });
-    return { success: true, loginUrl };
+    return { success: true, loginUrl: linkResult.loginUrl };
   } catch (e) {
-    console.error('Magic link email failed (but link is still in the big box above):', e);
-    return { success: true, loginUrl };  // still give the link for local
+    console.error('Portal magic link email failed:', e);
+    return { success: false, error: 'Failed to send the magic link email. Please try again.' };
   }
+}
+
+/** Step 9 — admin-only: grant portal access and email the client their magic link. */
+export async function grantPortalAccessForAdmin(submissionId: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  const updated = await grantPortalAccess(submissionId);
+  if (!updated) {
+    return { success: false, error: 'Failed to record portal access.' };
+  }
+
+  const sent = await sendPortalMagicLinkEmail(updated.email, updated.name);
+  if (!sent.success) {
+    return { success: false, error: sent.error, portalAccessGrantedAt: updated.portalAccessGrantedAt };
+  }
+
+  return {
+    success: true,
+    portalAccessGrantedAt: updated.portalAccessGrantedAt,
+    message: `Portal access granted and magic link sent to ${updated.email}.`,
+  };
+}
+
+/** Client self-service resend — only works if admin already granted access (Step 9). */
+export async function sendClientMagicLink(formData: FormData) {
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
+  if (!email) {
+    return { success: false, error: 'Please provide your email.' };
+  }
+
+  const sub = await getSubmissionByEmail(email);
+  if (!sub) {
+    return {
+      success: false,
+      error: 'No engagement record found for this email. Portal access is granted after your initial consultation and signed agreement.',
+    };
+  }
+
+  if (!hasPortalAccess(sub)) {
+    return {
+      success: false,
+      error: 'Portal access has not been activated yet. You will receive an invitation email after your engagement agreement and payment are complete.',
+    };
+  }
+
+  const sent = await sendPortalMagicLinkEmail(sub.email, sub.name);
+  if (!sent.success) {
+    return { success: false, error: sent.error };
+  }
+
+  return { success: true };
 }
 
 export async function verifyClientMagicAndLogin(token: string) {
@@ -514,11 +560,13 @@ export async function savePreMeetingDiscovery(discovery: { [questionId: string]:
     return { success: false, error: 'Not logged in.' };
   }
 
-  // Find the matching submission by email
-  const submissions = await getRecentSubmissions(100);
-  const sub = submissions.find(s => s.email.toLowerCase() === email);
+  const sub = await getSubmissionByEmail(email);
   if (!sub) {
     return { success: false, error: 'No engagement record found.' };
+  }
+
+  if (!hasPortalAccess(sub)) {
+    return { success: false, error: 'Portal access not granted.' };
   }
 
   const ok = await updatePreMeetingDiscovery(sub.id, discovery);
@@ -536,10 +584,13 @@ export async function getClientEngagementData() {
     return { success: false, error: 'Not logged in.' };
   }
 
-  const submissions = await getRecentSubmissions(100);
-  const sub = submissions.find(s => s.email.toLowerCase() === email);
+  const sub = await getSubmissionByEmail(email);
   if (!sub) {
     return { success: false, error: 'No engagement record found.' };
+  }
+
+  if (!hasPortalAccess(sub)) {
+    return { success: false, error: 'Portal access not granted.' };
   }
 
   return { success: true, submission: sub };
