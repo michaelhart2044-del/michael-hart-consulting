@@ -2,6 +2,7 @@
 
 import { Resend } from 'resend';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { site } from '@/lib/site';
 import { getResendFrom } from '@/lib/resend-email';
 import { headers } from 'next/headers';
@@ -678,11 +679,10 @@ export async function clientSignInWithPassword(formData: FormData) {
   return { success: true, mustChangePassword: mustChangePortalPassword(sub) };
 }
 
-/** Client sets a permanent password after first sign-in (required when mustChangePassword is set). */
-export async function clientChangePassword(formData: FormData) {
-  const honeypot = formData.get('company_website') as string;
-  if (honeypot?.trim()) return { success: true };
+type PasswordSetupResult = { success: true } | { success: false; error: string };
 
+/** Client sets a permanent password after first sign-in (required when mustChangePassword is set). */
+async function completeClientPasswordSetup(formData: FormData): Promise<PasswordSetupResult> {
   const email = await getClientSessionEmail();
   if (!email) return { success: false, error: 'Please sign in first.' };
 
@@ -707,17 +707,46 @@ export async function clientChangePassword(formData: FormData) {
   }
 
   if (!mustChangePortalPassword(sub)) {
-    return { success: false, error: 'Password change is not required for this account.' };
+    return { success: true };
   }
 
   const hash = await hashClientPassword(password);
   const updated = await setClientPasswordHash(sub.id, hash, { mustChangePassword: false });
-  if (!updated) return { success: false, error: 'Failed to save your password. Please try again.' };
+  if (!updated || mustChangePortalPassword(updated)) {
+    return { success: false, error: 'Failed to save your password. Please try again.' };
+  }
 
-  revalidatePath('/portal');
-  revalidatePath('/portal/login');
-  revalidatePath('/portal/change-password');
-  return { success: true };
+  // Confirm the write landed (Blob can be briefly eventually consistent).
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const fresh = await getSubmissionById(sub.id);
+    if (fresh && !mustChangePortalPassword(fresh)) {
+      revalidatePath('/portal');
+      revalidatePath('/portal/login');
+      return { success: true };
+    }
+    if (attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+
+  return { success: false, error: 'Password saved but could not be verified. Please try again.' };
+}
+
+/** Form action: save permanent password then server-redirect into the portal. */
+export async function clientChangePasswordAndEnterPortal(
+  _prevState: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const result = await completeClientPasswordSetup(formData);
+  if (!result.success) {
+    return { error: result.error };
+  }
+  redirect('/portal');
+}
+
+/** @deprecated Use clientChangePasswordAndEnterPortal — kept for any legacy callers. */
+export async function clientChangePassword(formData: FormData) {
+  return completeClientPasswordSetup(formData);
 }
 
 export async function logoutClient() {

@@ -198,10 +198,13 @@ export async function setClientPasswordHash(
   const idx = all.findIndex((s) => s.id === submissionId);
   if (idx === -1) return null;
 
+  const mustChangePassword =
+    options && 'mustChangePassword' in options ? !!options.mustChangePassword : false;
+
   all[idx] = {
     ...all[idx],
     portalPasswordHash: passwordHash,
-    mustChangePassword: options?.mustChangePassword ?? false,
+    mustChangePassword,
   };
   await persist(all);
   return all[idx];
