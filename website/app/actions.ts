@@ -10,7 +10,9 @@ import {
   getSubmissionById,
   getSubmissionByEmail,
   grantPortalAccess,
+  hasEngagementCommitment,
   hasPortalAccess,
+  markEngagementCommitted,
   markSubmissionSent,
   saveProposalDraft,
   updatePreMeetingDiscovery,
@@ -380,6 +382,7 @@ export async function getRecentPrepsForAdmin() {
       industry: s.industry,
       mainChallenge: s.mainChallenge,
       sentAt: s.sentAt,
+      engagementCommittedAt: s.engagementCommittedAt,
       portalAccessGrantedAt: s.portalAccessGrantedAt,
     }));
     return { success: true, items: safe };
@@ -473,6 +476,29 @@ async function sendPortalMagicLinkEmail(email: string, clientName?: string): Pro
   }
 }
 
+/** Step 8 — admin-only: simulate agreement signed + payment received. */
+export async function markEngagementCommittedForAdmin(submissionId: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  const updated = await markEngagementCommitted(submissionId);
+  if (!updated) {
+    return { success: false, error: 'Failed to record engagement commitment.' };
+  }
+
+  return {
+    success: true,
+    engagementCommittedAt: updated.engagementCommittedAt,
+    message: `Step 8 complete for ${updated.name}. You can now grant portal access (Step 9).`,
+  };
+}
+
 /** Step 9 — admin-only: grant portal access and email the client their magic link. */
 export async function grantPortalAccessForAdmin(submissionId: string) {
   if (!(await requireAdmin())) {
@@ -482,6 +508,14 @@ export async function grantPortalAccessForAdmin(submissionId: string) {
   const sub = await getSubmissionById(submissionId);
   if (!sub) {
     return { success: false, error: 'Submission not found.' };
+  }
+
+  if (!hasEngagementCommitment(sub)) {
+    return {
+      success: false,
+      error: 'Step 8 required first: mark agreement signed and payment received before granting portal access.',
+      engagementCommittedAt: sub.engagementCommittedAt,
+    };
   }
 
   const updated = await grantPortalAccess(submissionId);

@@ -7,6 +7,7 @@ import {
   markPrepAsSent,
   saveProposalDraftForAdmin,
   generateInitialProposal,
+  markEngagementCommittedForAdmin,
   grantPortalAccessForAdmin,
   logoutAdmin,
 } from '@/app/actions';
@@ -21,6 +22,7 @@ interface RecentItem {
   industry: string;
   mainChallenge: string;
   sentAt?: string;
+  engagementCommittedAt?: string;
   portalAccessGrantedAt?: string;
 }
 
@@ -40,6 +42,7 @@ export default function AdminProposalGenerator() {
   const [outputText, setOutputText] = useState(''); // editable full text
   const [status, setStatus] = useState('');
   const [isGrantingPortal, setIsGrantingPortal] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   // Load recent on mount
   async function refreshRecent() {
@@ -263,27 +266,57 @@ ${site.phone}`;
     setTimeout(() => setStatus(''), 2200);
   }
 
-  async function handleGrantPortalAccess() {
-    if (!loadedSub) {
+  async function handleMarkStep8(submissionId?: string) {
+    const id = submissionId || loadedSub?.id;
+    if (!id) {
       setStatus('Load a submission first');
       return;
     }
+    setBusyId(id);
+    setStatus('');
+    const res = await markEngagementCommittedForAdmin(id);
+    if (res.success) {
+      setStatus(res.message || 'Step 8 recorded.');
+      if (loadedSub?.id === id) {
+        setLoadedSub({
+          ...loadedSub,
+          engagementCommittedAt: res.engagementCommittedAt || new Date().toISOString(),
+        });
+      }
+      await refreshRecent();
+    } else {
+      setStatus(res.error || 'Failed to mark Step 8');
+    }
+    setBusyId(null);
+    setTimeout(() => setStatus(''), 4000);
+  }
+
+  async function handleGrantPortalAccess(submissionId?: string) {
+    const id = submissionId || loadedSub?.id;
+    if (!id) {
+      setStatus('Load a submission first');
+      return;
+    }
+    setBusyId(id);
     setIsGrantingPortal(true);
     setStatus('');
-    const res = await grantPortalAccessForAdmin(loadedSub.id);
+    const res = await grantPortalAccessForAdmin(id);
     if (res.success) {
       setStatus(res.message || 'Portal access granted and magic link sent.');
       const grantedAt = res.portalAccessGrantedAt || new Date().toISOString();
-      setLoadedSub({ ...loadedSub, portalAccessGrantedAt: grantedAt });
+      if (loadedSub?.id === id) {
+        setLoadedSub({ ...loadedSub, portalAccessGrantedAt: grantedAt });
+      }
       await refreshRecent();
     } else {
       setStatus(res.error || 'Failed to grant portal access');
-      if (res.portalAccessGrantedAt) {
+      if (loadedSub?.id === id && res.portalAccessGrantedAt) {
         setLoadedSub({ ...loadedSub, portalAccessGrantedAt: res.portalAccessGrantedAt });
       }
     }
     setIsGrantingPortal(false);
-    setTimeout(() => setStatus(''), 4000);
+    setBusyId(null);
+    setTimeout(() => setStatus(''), 5000);
   }
 
   async function handleMarkSent() {
@@ -374,7 +407,16 @@ ${site.phone}`;
         </div>
 
         {recent.length === 0 && !loadingRecent && (
-          <p className="text-sm text-[#94a3b8]">No submissions yet. New form entries on /prepare-analysis will appear here automatically.</p>
+          <div className="text-sm text-[#94a3b8] space-y-2">
+            <p>No submissions yet.</p>
+            <p>
+              Submit the test form at{' '}
+              <a href="/prepare-analysis" className="text-[#c5a46e] underline" target="_blank" rel="noreferrer">
+                /prepare-analysis
+              </a>
+              , then click Refresh. Entries are stored in Vercel Blob so they persist across deploys.
+            </p>
+          </div>
         )}
 
         <div className="grid gap-3 md:grid-cols-2">
@@ -384,59 +426,104 @@ ${site.phone}`;
               <div className="text-[#94a3b8] text-xs">
                 {item.industry} — {item.mainChallenge?.slice(0, 70)}{item.mainChallenge?.length > 70 ? '…' : ''}
               </div>
-              <div className="text-[11px] text-[#64748b] flex items-center gap-2">
+              <div className="text-[11px] text-[#64748b] flex flex-wrap items-center gap-2">
                 {new Date(item.createdAt).toLocaleString()}
                 {item.sentAt && <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">SENT</span>}
+                {item.engagementCommittedAt && <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">STEP 8</span>}
                 {item.portalAccessGrantedAt && <span className="px-1.5 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[10px]">PORTAL</span>}
               </div>
-              <div>
+              <div className="flex flex-wrap gap-2 mt-1">
                 <button
                   onClick={() => handleLoad(item.id)}
-                  className="mt-1 text-xs px-4 py-1.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full font-medium"
+                  className="text-xs px-4 py-1.5 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full font-medium"
                 >
                   Load
                 </button>
+                {!item.engagementCommittedAt && (
+                  <button
+                    onClick={() => handleMarkStep8(item.id)}
+                    disabled={busyId === item.id}
+                    className="text-xs px-3 py-1.5 rounded-full border border-amber-500/40 text-amber-200 hover:bg-amber-900/20 disabled:opacity-50"
+                  >
+                    {busyId === item.id ? 'Saving…' : 'Mark Step 8'}
+                  </button>
+                )}
+                {item.engagementCommittedAt && (
+                  <button
+                    onClick={() => handleGrantPortalAccess(item.id)}
+                    disabled={busyId === item.id || isGrantingPortal}
+                    className="text-xs px-3 py-1.5 rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium disabled:opacity-50"
+                  >
+                    {busyId === item.id && isGrantingPortal
+                      ? 'Sending…'
+                      : item.portalAccessGrantedAt
+                        ? 'Resend Magic Link'
+                        : 'Grant Portal Access & Send Magic Link'}
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Step 9 — Grant portal access (post-agreement only) */}
+      {/* Steps 8–9 — Engagement commitment + portal access */}
       {loadedSub && (
-        <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6">
-          <h2 className="font-semibold text-lg text-[#c5a46e]">Step 9 — Grant Portal Access</h2>
-          <p className="text-sm text-[#94a3b8] mt-1 mb-4">
-            Use only after the client has agreed, signed the engagement agreement, and paid the non-refundable fee (Step 8).
-            This sends their private portal magic link for the 1-hour deep-dive preparation flow.
-          </p>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="text-sm">
-              <span className="text-[#94a3b8]">Client:</span> {loadedSub.name} <span className="text-[#64748b]">({loadedSub.email})</span>
-            </div>
+        <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-lg text-[#c5a46e]">Steps 8–9 — Engagement & Portal Access</h2>
+            <p className="text-sm text-[#94a3b8] mt-1">
+              Step 8: Mark agreement signed + payment received. Step 9: Grant portal access and email the magic link
+              (guided intake summary + 1-hour prep questions at /portal — not the public prep form).
+            </p>
+          </div>
+          <div className="text-sm">
+            <span className="text-[#94a3b8]">Client:</span> {loadedSub.name}{' '}
+            <span className="text-[#64748b]">({loadedSub.email})</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {loadedSub.engagementCommittedAt ? (
+              <span className="text-xs px-2 py-1 rounded bg-amber-900/40 text-amber-300">
+                Step 8 complete — {new Date(loadedSub.engagementCommittedAt).toLocaleString()}
+              </span>
+            ) : (
+              <button
+                onClick={() => handleMarkStep8()}
+                disabled={busyId === loadedSub.id}
+                className="px-5 py-2 text-sm rounded-full border border-amber-500/40 text-amber-200 hover:bg-amber-900/20 disabled:opacity-50"
+              >
+                {busyId === loadedSub.id ? 'Saving…' : 'Mark Step 8 — Agreement & Payment Received'}
+              </button>
+            )}
             {loadedSub.portalAccessGrantedAt ? (
-              <div className="flex flex-wrap items-center gap-3">
+              <>
                 <span className="text-xs px-2 py-1 rounded bg-sky-900/40 text-sky-300">
-                  Granted {new Date(loadedSub.portalAccessGrantedAt).toLocaleString()}
+                  Portal granted {new Date(loadedSub.portalAccessGrantedAt).toLocaleString()}
                 </span>
                 <button
-                  onClick={handleGrantPortalAccess}
-                  disabled={isGrantingPortal}
+                  onClick={() => handleGrantPortalAccess()}
+                  disabled={isGrantingPortal || !loadedSub.engagementCommittedAt}
                   className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
                 >
                   {isGrantingPortal ? 'Sending…' : 'Resend Magic Link'}
                 </button>
-              </div>
+              </>
             ) : (
               <button
-                onClick={handleGrantPortalAccess}
-                disabled={isGrantingPortal}
+                onClick={() => handleGrantPortalAccess()}
+                disabled={isGrantingPortal || !loadedSub.engagementCommittedAt}
                 className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-60"
+                title={!loadedSub.engagementCommittedAt ? 'Complete Step 8 first' : undefined}
               >
                 {isGrantingPortal ? 'Granting & sending…' : 'Grant Portal Access & Send Magic Link'}
               </button>
             )}
           </div>
+          {!loadedSub.engagementCommittedAt && (
+            <p className="text-xs text-[#64748b]">
+              Grant is disabled until Step 8 is marked. Clients cannot self-request a magic link before you grant access.
+            </p>
+          )}
         </section>
       )}
 

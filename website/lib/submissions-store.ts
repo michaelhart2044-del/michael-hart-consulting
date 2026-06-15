@@ -1,18 +1,13 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { get, put, BlobNotFoundError } from '@vercel/blob';
 
 /**
  * Private, server-only store for consultation prep submissions.
  * Used exclusively by the /admin proposal generator (never exposed publicly).
  *
- * Security notes:
- * - All data stays on the server.
- * - File is written to a gitignored /data directory.
- * - In production on Vercel the filesystem is ephemeral; the in-memory cache
- *   still captures submissions since the current instance started.
- * - For durable cross-deploy storage, swap the disk functions for @vercel/kv
- *   (or Postgres/Redis) — the public API (save/getRecent etc.) stays identical.
- * - Never log full client data. Only IDs and minimal metadata are safe to log.
+ * Production: durable JSON in Vercel Blob (shared across all serverless instances).
+ * Local dev: falls back to data/prep-submissions.json when BLOB_READ_WRITE_TOKEN is unset.
  */
 
 export interface PrepSubmission {
@@ -26,12 +21,14 @@ export interface PrepSubmission {
   peopleInvolved: string;
   successLooksLike: string;
   additionalContext: string;
-  fullText: string; // clean, structured plain text (ready for SigVai / xAI)
-  sentAt?: string; // set when "Mark as Sent" is used
-  /** Step 9 — set when admin grants portal access after agreement + payment */
+  fullText: string;
+  sentAt?: string;
+  /** Step 8 — agreement signed + non-refundable fee received */
+  engagementCommittedAt?: string;
+  /** Step 9 — set when admin grants portal access after Step 8 */
   portalAccessGrantedAt?: string;
   preMeetingDiscovery?: {
-    [questionId: string]: string; // client-friendly answers from guided portal flow (e.g. closeCycle, processOwners, etc.)
+    [questionId: string]: string;
   } & {
     additionalNotes?: string;
   };
@@ -39,10 +36,12 @@ export interface PrepSubmission {
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const FILE_PATH = path.join(DATA_DIR, 'prep-submissions.json');
+const BLOB_PATHNAME = 'data/prep-submissions.json';
 const MAX_ENTRIES = 100;
 
-let memoryCache: PrepSubmission[] = [];
-let cacheLoaded = false;
+function useBlobStorage(): boolean {
+  return !!process.env.BLOB_READ_WRITE_TOKEN;
+}
 
 async function ensureDataDir() {
   try {
@@ -53,34 +52,71 @@ async function ensureDataDir() {
 }
 
 async function loadFromDisk(): Promise<PrepSubmission[]> {
-  if (cacheLoaded) return memoryCache;
   try {
     const raw = await fs.readFile(FILE_PATH, 'utf8');
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      memoryCache = parsed;
-    }
+    if (Array.isArray(parsed)) return parsed;
   } catch {
-    // File doesn't exist or is corrupt — start fresh (safe)
-    memoryCache = [];
+    // File doesn't exist or is corrupt — start fresh
   }
-  cacheLoaded = true;
-  return memoryCache;
+  return [];
+}
+
+async function loadFromBlob(): Promise<PrepSubmission[]> {
+  try {
+    const result = await get(BLOB_PATHNAME, { access: 'private' });
+    if (!result || result.statusCode !== 200 || !result.stream) return [];
+    const text = await new Response(result.stream).text();
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    if (err instanceof BlobNotFoundError) return [];
+    console.error('submissions-store blob read failed:', err);
+    return [];
+  }
+}
+
+async function loadAll(): Promise<PrepSubmission[]> {
+  if (useBlobStorage()) return loadFromBlob();
+  return loadFromDisk();
 }
 
 async function saveToDisk(list: PrepSubmission[]) {
   try {
     await ensureDataDir();
-    // Keep only the newest MAX_ENTRIES
-    const trimmed = [...list]
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      .slice(0, MAX_ENTRIES);
+    const trimmed = trimList(list);
     await fs.writeFile(FILE_PATH, JSON.stringify(trimmed, null, 2), 'utf8');
-    memoryCache = trimmed;
   } catch (err) {
-    // In serverless / ephemeral FS this will fail gracefully after deploy.
-    // Memory cache still holds the current instance's data.
     console.error('submissions-store disk write failed (non-fatal):', err);
+  }
+}
+
+async function saveToBlob(list: PrepSubmission[]) {
+  const trimmed = trimList(list);
+  try {
+    await put(BLOB_PATHNAME, JSON.stringify(trimmed, null, 2), {
+      access: 'private',
+      allowOverwrite: true,
+      addRandomSuffix: false,
+      contentType: 'application/json',
+    });
+  } catch (err) {
+    console.error('submissions-store blob write failed:', err);
+    throw err;
+  }
+}
+
+function trimList(list: PrepSubmission[]): PrepSubmission[] {
+  return [...list]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, MAX_ENTRIES);
+}
+
+async function persist(list: PrepSubmission[]) {
+  if (useBlobStorage()) {
+    await saveToBlob(list);
+  } else {
+    await saveToDisk(list);
   }
 }
 
@@ -96,52 +132,73 @@ export async function saveSubmission(data: Omit<PrepSubmission, 'id' | 'createdA
     ...data,
   };
 
-  const current = await loadFromDisk();
-  const updated = [submission, ...current];
-  await saveToDisk(updated);
-
+  const current = await loadAll();
+  await persist([submission, ...current]);
   return submission;
 }
 
 export async function getRecentSubmissions(limit = 20): Promise<PrepSubmission[]> {
-  const all = await loadFromDisk();
+  const all = await loadAll();
   return [...all]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, limit);
 }
 
 export async function getSubmissionById(id: string): Promise<PrepSubmission | null> {
-  const all = await loadFromDisk();
+  const all = await loadAll();
   return all.find((s) => s.id === id) ?? null;
 }
 
 export async function getSubmissionByEmail(email: string): Promise<PrepSubmission | null> {
   const normalized = email.trim().toLowerCase();
-  const all = await loadFromDisk();
+  const all = await loadAll();
   return all.find((s) => s.email.toLowerCase() === normalized) ?? null;
+}
+
+export function hasEngagementCommitment(submission: PrepSubmission): boolean {
+  return !!submission.engagementCommittedAt;
 }
 
 export function hasPortalAccess(submission: PrepSubmission): boolean {
   return !!submission.portalAccessGrantedAt;
 }
 
-/** Step 9 — record that the client may access the private engagement portal. */
-export async function grantPortalAccess(id: string): Promise<PrepSubmission | null> {
-  const all = await loadFromDisk();
+/** Step 8 — record agreement signed + payment received (admin simulation). */
+export async function markEngagementCommitted(id: string): Promise<PrepSubmission | null> {
+  const all = await loadAll();
   const idx = all.findIndex((s) => s.id === id);
   if (idx === -1) return null;
 
   const now = new Date().toISOString();
   all[idx] = {
     ...all[idx],
+    engagementCommittedAt: all[idx].engagementCommittedAt || now,
+  };
+  await persist(all);
+  return all[idx];
+}
+
+/** Step 9 — record that the client may access the private engagement portal. */
+export async function grantPortalAccess(id: string): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  if (!hasEngagementCommitment(all[idx])) {
+    return null;
+  }
+
+  const now = new Date().toISOString();
+  all[idx] = {
+    ...all[idx],
     portalAccessGrantedAt: all[idx].portalAccessGrantedAt || now,
   };
-  await saveToDisk(all);
+  await persist(all);
   return all[idx];
 }
 
 export async function markSubmissionSent(id: string): Promise<boolean> {
-  const all = await loadFromDisk();
+  const all = await loadAll();
   const idx = all.findIndex((s) => s.id === id);
   if (idx === -1) return false;
 
@@ -149,30 +206,25 @@ export async function markSubmissionSent(id: string): Promise<boolean> {
     ...all[idx],
     sentAt: new Date().toISOString(),
   };
-  await saveToDisk(all);
+  await persist(all);
   return true;
 }
 
-/** Optional helper if we later want to attach a generated proposal draft to the record */
 export async function saveProposalDraft(id: string, draft: string): Promise<boolean> {
-  const all = await loadFromDisk();
+  const all = await loadAll();
   const idx = all.findIndex((s) => s.id === id);
   if (idx === -1) return false;
 
-  // We store the draft on the submission for simplicity (no separate drafts table)
-  (all[idx] as any).proposalDraft = draft;
-  await saveToDisk(all);
+  (all[idx] as PrepSubmission & { proposalDraft?: string }).proposalDraft = draft;
+  await persist(all);
   return true;
 }
 
-/**
- * Update the pre-meeting discovery data for a submission.
- * Used by the client portal's guided first-time flow to collect additional
- * structured info (client-friendly questions, no internal terms like DMAIC).
- * This enriches the data for SigVai/DMAIC generation after the 1-hour meeting.
- */
-export async function updatePreMeetingDiscovery(id: string, discovery: { [questionId: string]: string } & { additionalNotes?: string }): Promise<boolean> {
-  const all = await loadFromDisk();
+export async function updatePreMeetingDiscovery(
+  id: string,
+  discovery: { [questionId: string]: string } & { additionalNotes?: string },
+): Promise<boolean> {
+  const all = await loadAll();
   const idx = all.findIndex((s) => s.id === id);
   if (idx === -1) return false;
 
@@ -180,6 +232,6 @@ export async function updatePreMeetingDiscovery(id: string, discovery: { [questi
     ...all[idx],
     preMeetingDiscovery: discovery,
   };
-  await saveToDisk(all);
+  await persist(all);
   return true;
 }
