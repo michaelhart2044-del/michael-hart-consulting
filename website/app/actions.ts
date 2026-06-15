@@ -8,6 +8,7 @@ import { getResendFrom } from '@/lib/resend-email';
 import { headers } from 'next/headers';
 import {
   saveSubmission,
+  markConsultationBooked,
   getRecentSubmissions,
   getSubmissionById,
   getSubmissionByEmail,
@@ -178,9 +179,50 @@ export async function sendContactEmail(formData: FormData) {
   }
 }
 
+function buildPrepOwnerEmailHtml(sub: {
+  name: string;
+  email: string;
+  industry: string;
+  mainChallenge: string;
+  additionalChallenges: string[];
+  peopleInvolved: string;
+  successLooksLike: string;
+  additionalContext: string;
+}, booked: boolean): string {
+  const name = escapeHtml(sub.name);
+  const email = escapeHtml(sub.email);
+  const safeIndustry = escapeHtml(sub.industry);
+  const challengeDisplay = escapeHtml(sub.mainChallenge);
+  const safePeople = escapeHtml(sub.peopleInvolved);
+  const safeSuccess = escapeHtml(sub.successLooksLike).replace(/\n/g, '<br>');
+  const safeContext = escapeHtml(sub.additionalContext).replace(/\n/g, '<br>');
+  const safeAdditional = sub.additionalChallenges.map((c) => escapeHtml(c));
+
+  return `
+    <p><strong>Name:</strong> ${name}</p>
+    <p><strong>Email:</strong> ${email}</p>
+    <p><strong>Industry / Business Type:</strong> ${safeIndustry || 'Not specified'}</p>
+    <p><strong>Main Challenge:</strong> ${challengeDisplay || 'Not specified'}</p>
+    ${safeAdditional.length > 0 ? `
+      <p><strong>Additional challenges:</strong></p>
+      <ul style="margin:4px 0 12px 16px; padding:0; list-style:none;">
+        ${safeAdditional.map((c) => `<li style="margin:2px 0;">• ${c}</li>`).join('')}
+      </ul>
+    ` : ''}
+    <p><strong>People involved in month-end / reporting:</strong> ${safePeople || 'Not specified'}</p>
+    <p><strong>What success looks like (30–90 days):</strong><br>${safeSuccess || '<em>Not specified</em>'}</p>
+    ${safeContext ? `<p><strong>Deadlines, stakeholders or upcoming changes:</strong><br>${safeContext}</p>` : ''}
+    <p style="margin-top:16px;font-size:12px;color:#666;">Submitted via the prep form on ${site.name}.</p>
+    ${booked
+      ? '<p style="font-size:12px;color:#888;"><em>Consultation is booked — you will also receive a Calendly notification with the meeting time and Teams link.</em></p>'
+      : '<p style="font-size:12px;color:#888;"><em>Booking not completed yet — visible in /admin only until the client schedules.</em></p>'}
+    <p><small>Answers also attached as prep-answers.txt for easy import into SigVai / xAI.</small></p>
+  `;
+}
+
 /**
  * Server action for the prep form on /prepare-analysis (Step 1 — Continue).
- * Emails Michael + saves to admin store. Client confirmation is sent by Calendly after they book.
+ * Saves to admin store only. Michael is emailed after the client completes Calendly (Step 2).
  */
 export async function sendAnalysisPrep(formData: FormData) {
   // Honeypot (same field name as contact form)
@@ -222,25 +264,14 @@ export async function sendAnalysisPrep(formData: FormData) {
     return { success: true };
   }
 
-  const name = escapeHtml(rawName.trim());
-  const email = escapeHtml(rawEmail.trim());
-  const safeIndustry = escapeHtml(industry);
-  let challengeDisplay = escapeHtml(mainChallenge);
-  if (mainChallenge === 'Other' && mainChallengeOther.trim()) {
-    challengeDisplay += ` — ${escapeHtml(mainChallengeOther)}`;
+  let mainChallengeDisplay = mainChallenge || 'Not specified';
+  if (mainChallenge === 'Other (please describe)' && mainChallengeOther.trim()) {
+    mainChallengeDisplay = `${mainChallenge} — ${mainChallengeOther.trim()}`;
   }
-  const safePeople = escapeHtml(peopleInvolved);
-  const safeSuccess = escapeHtml(successLooksLike).replace(/\n/g, '<br>');
-  const safeContext = escapeHtml(additionalContext).replace(/\n/g, '<br>');
 
-  // RAW version for attachment + private store (clean, natural text for SigVai / xAI — no HTML escaping)
   let rawAttach = `Prep Answers for ${rawName.trim()} <${rawEmail.trim()}>\n\n`;
   rawAttach += `Industry / Business Type: ${industry || 'Not specified'}\n`;
-  rawAttach += `Main Challenge: ${mainChallenge || 'Not specified'}`;
-  if (mainChallenge === 'Other' && mainChallengeOther.trim()) {
-    rawAttach += ` — ${mainChallengeOther.trim()}`;
-  }
-  rawAttach += `\n`;
+  rawAttach += `Main Challenge: ${mainChallengeDisplay}\n`;
   if (additionalChallengesList.length > 0) {
     rawAttach += `Additional challenges:\n${additionalChallengesList.map((c: string) => `- ${c}`).join('\n')}\n`;
   }
@@ -248,67 +279,66 @@ export async function sendAnalysisPrep(formData: FormData) {
   rawAttach += `What success looks like (30–90 days): ${successLooksLike || 'Not specified'}\n`;
   rawAttach += `Additional context / deadlines: ${additionalContext || 'Not specified'}\n`;
 
-  // Sanitized version only for the HTML email body (owner notification)
-  const safeAdditional = additionalChallengesList.map((c: string) => escapeHtml(c));
+  try {
+    const submission = await saveSubmission({
+      name: rawName.trim(),
+      email: rawEmail.trim(),
+      industry: industry || 'Not specified',
+      mainChallenge: mainChallengeDisplay,
+      additionalChallenges: additionalChallengesList,
+      peopleInvolved: peopleInvolved || '',
+      successLooksLike: successLooksLike || '',
+      additionalContext: additionalContext || '',
+      fullText: rawAttach,
+    });
+    return { success: true, submissionId: submission.id };
+  } catch (storeErr) {
+    console.error('Failed to persist prep submission:', storeErr);
+    return { success: false, error: 'Failed to save your details. Please try again or email us directly.' };
+  }
+}
+
+/** Step 2 — client finished Calendly: notify Michael with prep attachment + mark booked in admin. */
+export async function completePrepBooking(submissionId: string) {
+  if (!submissionId?.trim()) {
+    return { success: false, error: 'Missing submission reference.' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  if (sub.calendlyBookedAt) {
+    return { success: true, alreadyBooked: true };
+  }
+
+  const updated = await markConsultationBooked(submissionId);
+  if (!updated) {
+    return { success: false, error: 'Failed to record booking.' };
+  }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
-
   try {
     await resend.emails.send({
       from: getResendFrom('Consultation Prep'),
       to: site.email,
-      subject: `Prep received (booking pending) — ${rawName.trim().slice(0, 60)}`,
-      replyTo: rawEmail,
-      html: `
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Industry / Business Type:</strong> ${safeIndustry || 'Not specified'}</p>
-        <p><strong>Main Challenge:</strong> ${challengeDisplay || 'Not specified'}</p>
-        ${safeAdditional.length > 0 ? `
-          <p><strong>Additional challenges:</strong></p>
-          <ul style="margin:4px 0 12px 16px; padding:0; list-style:none;">
-            ${safeAdditional.map((c: string) => `<li style="margin:2px 0;">• ${c}</li>`).join('')}
-          </ul>
-        ` : ''}
-        <p><strong>People involved in month-end / reporting:</strong> ${safePeople || 'Not specified'}</p>
-        <p><strong>What success looks like (30–90 days):</strong><br>${safeSuccess || '<em>Not specified</em>'}</p>
-        ${safeContext ? `<p><strong>Deadlines, stakeholders or upcoming changes:</strong><br>${safeContext}</p>` : ''}
-        <p style="margin-top:16px;font-size:12px;color:#666;">Submitted via the prep form on ${site.name}.</p>
-        <p style="font-size:12px;color:#888;"><em>Booking is not confirmed yet — the client still needs to pick a time in the Calendly step. You will receive a separate Calendly notification once they schedule.</em></p>
-        <p><small>Answers also attached as prep-answers.txt for easy import into SigVai / xAI.</small></p>
-      `,
+      subject: `Initial Consultation Booked — ${updated.name.slice(0, 60)}`,
+      replyTo: updated.email,
+      html: buildPrepOwnerEmailHtml(updated, true),
       attachments: [
         {
           filename: 'prep-answers.txt',
-          content: Buffer.from(rawAttach).toString('base64'),
+          content: Buffer.from(updated.fullText).toString('base64'),
         },
       ],
     });
-
-    // Persist to private admin store (only after successful owner email)
-    // We save RAW fields + the clean rawAttach so the /admin tool has perfect data.
-    try {
-      await saveSubmission({
-        name: rawName.trim(),
-        email: rawEmail.trim(),
-        industry: industry || 'Not specified',
-        mainChallenge: challengeDisplay || 'Not specified',
-        additionalChallenges: additionalChallengesList,
-        peopleInvolved: peopleInvolved || '',
-        successLooksLike: successLooksLike || '',
-        additionalContext: additionalContext || '',
-        fullText: rawAttach,
-      });
-    } catch (storeErr) {
-      // Never let storage failure affect the user or email delivery
-      console.error('Non-fatal: failed to persist prep submission for admin tool', storeErr);
-    }
-
-    return { success: true };
   } catch (error) {
-    console.error('Resend error (prep):', error);
-    return { success: false, error: 'Failed to send your details. Please try again or email us directly.' };
+    console.error('Prep booking notification failed:', error);
+    return { success: false, error: 'Booking recorded but notification failed.' };
   }
+
+  return { success: true, calendlyBookedAt: updated.calendlyBookedAt };
 }
 
 /* ============================================================
@@ -386,6 +416,7 @@ export async function getRecentPrepsForAdmin() {
       portalAccessGrantedAt: s.portalAccessGrantedAt,
       mustChangePassword: s.mustChangePassword,
       portalRevokedAt: s.portalRevokedAt,
+      calendlyBookedAt: s.calendlyBookedAt,
     }));
     return { success: true, items: safe };
   } catch (e) {

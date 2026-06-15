@@ -30,6 +30,7 @@ interface RecentItem {
   portalAccessGrantedAt?: string;
   mustChangePassword?: boolean;
   portalRevokedAt?: string;
+  calendlyBookedAt?: string;
 }
 
 interface Generated {
@@ -523,6 +524,12 @@ ${site.phone}`;
               </div>
               <div className="text-[11px] text-[#64748b] flex flex-wrap items-center gap-2">
                 {new Date(item.createdAt).toLocaleString()}
+                {!item.calendlyBookedAt && (
+                  <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">BOOKING PENDING</span>
+                )}
+                {item.calendlyBookedAt && (
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">CONSULT BOOKED</span>
+                )}
                 {item.sentAt && <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">SENT</span>}
                 {item.engagementCommittedAt && <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">STEP 8</span>}
                 {item.portalAccessGrantedAt && item.mustChangePassword !== false && (

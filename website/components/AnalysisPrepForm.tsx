@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { sendAnalysisPrep } from '@/app/actions';
+import { sendAnalysisPrep, completePrepBooking } from '@/app/actions';
 import { site } from '@/lib/site';
 import CalendlyWidget from './CalendlyWidget';
 
@@ -46,6 +46,7 @@ export default function AnalysisPrepForm() {
   const [submittedSummary, setSubmittedSummary] = useState('');
   const [showCalendly, setShowCalendly] = useState(false);
   const [bookingDone, setBookingDone] = useState(false);
+  const [submissionId, setSubmissionId] = useState('');
 
   const getUsedNonOtherChallenges = (excludeIndex?: number): Set<string> => {
     const used = new Set<string>();
@@ -98,17 +99,20 @@ export default function AnalysisPrepForm() {
     setAdditionalChallenges(newList);
   };
 
-  // Listen for Calendly booking complete to auto thank you and close the embed
+  // Listen for Calendly booking complete — notify Michael and show thank-you
   useEffect(() => {
     const handler = (e: MessageEvent) => {
-      if (e.data.event === 'calendly.event_scheduled') {
+      if (e.data.event === 'calendly.event_scheduled' && submissionId) {
         setShowCalendly(false);
         setBookingDone(true);
+        completePrepBooking(submissionId).catch((err) => {
+          console.error('Failed to complete prep booking notification:', err);
+        });
       }
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, []);
+  }, [submissionId]);
 
   async function handleSubmit(formData: FormData) {
     setIsSubmitting(true);
@@ -161,6 +165,7 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
     const result = await sendAnalysisPrep(formData);
 
     if (result.success) {
+      if (result.submissionId) setSubmissionId(result.submissionId);
       setIsSuccess(true);
     } else {
       setError(result.error || 'Something went wrong. Please try again or email us directly.');

@@ -22,6 +22,8 @@ export interface PrepSubmission {
   successLooksLike: string;
   additionalContext: string;
   fullText: string;
+  /** Set when the client completes the Calendly booking step */
+  calendlyBookedAt?: string;
   sentAt?: string;
   /** Step 8 — agreement signed + non-refundable fee received */
   engagementCommittedAt?: string;
@@ -150,6 +152,21 @@ export async function getRecentSubmissions(limit = 20): Promise<PrepSubmission[]
   return [...all]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, limit);
+}
+
+/** Record that the client finished the Calendly booking step. */
+export async function markConsultationBooked(id: string): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  const now = new Date().toISOString();
+  all[idx] = {
+    ...all[idx],
+    calendlyBookedAt: all[idx].calendlyBookedAt || now,
+  };
+  await persist(all);
+  return all[idx];
 }
 
 export async function getSubmissionById(id: string): Promise<PrepSubmission | null> {
