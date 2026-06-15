@@ -34,6 +34,11 @@ export default function Footer() {
                     Client Portal
                   </Link>
                 </div>
+                <div>
+                  <Link href="/admin/login" className="hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded">
+                    Staff Dashboard
+                  </Link>
+                </div>
               </div>
             </div>
 

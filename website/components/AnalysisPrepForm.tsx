@@ -180,8 +180,7 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
         <div className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center">
           <p className="text-green-400 text-lg font-medium">You&apos;re booked — thank you!</p>
           <p className="text-muted mt-2 text-sm max-w-md mx-auto">
-            Check your inbox for the Calendly calendar invite with your meeting link and time.
-            Michael will review your prep answers before your call.
+            Your calendar invite is on its way — check your inbox and spam/junk folder for the Calendly email with your meeting time and Teams link.
           </p>
         </div>
       );
@@ -189,9 +188,9 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
 
     return (
       <div className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center">
-        <p className="text-lg font-medium text-green-300">Step 1 complete — your details are saved.</p>
+        <p className="text-lg font-medium text-green-300">Step 1 done.</p>
         <p className="text-muted mt-2 text-sm max-w-md mx-auto">
-          Step 2: pick a time below. You&apos;ll receive one calendar confirmation email after you schedule — not before.
+          Step 2: pick a time below. Your confirmation email arrives only after you schedule.
         </p>
 
         {!showCalendly && (

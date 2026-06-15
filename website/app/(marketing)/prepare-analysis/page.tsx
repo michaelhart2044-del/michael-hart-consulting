@@ -37,7 +37,7 @@ export default function PrepareAnalysis() {
             Prepare for Your Initial Consultation
           </h1>
           <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed">
-            Fill out the form below first to capture details for your consultation. Then continue to book your slot.
+            Two steps: share your details, then pick a time. Takes about 3 minutes.
           </p>
         </div>
       </div>
@@ -47,8 +47,8 @@ export default function PrepareAnalysis() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl">
             <div className="mb-6">
-              <h2 className="text-2xl font-semibold tracking-tight">Help us prepare</h2>
-              <p className="mt-2 text-sm text-muted">Step 1: share your details. Step 2: pick a time — your calendar invite arrives after you schedule.</p>
+              <h2 className="text-2xl font-semibold tracking-tight">Step 1 — Your details</h2>
+              <p className="mt-2 text-sm text-muted">Helps Michael prepare for your 30-minute consultation.</p>
             </div>
             <AnalysisPrepForm />
           </div>
