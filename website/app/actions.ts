@@ -179,9 +179,8 @@ export async function sendContactEmail(formData: FormData) {
 }
 
 /**
- * Server action for the optional prep form on /prepare-analysis.
- * Collects the simplified intake fields and emails them to Michael (plus confirmation to client).
- * Reuses the exact same Resend + honeypot + sanitize patterns as the contact form.
+ * Server action for the prep form on /prepare-analysis (Step 1 — Continue).
+ * Emails Michael + saves to admin store. Client confirmation is sent by Calendly after they book.
  */
 export async function sendAnalysisPrep(formData: FormData) {
   // Honeypot (same field name as contact form)
@@ -258,7 +257,7 @@ export async function sendAnalysisPrep(formData: FormData) {
     await resend.emails.send({
       from: getResendFrom('Consultation Prep'),
       to: site.email,
-      subject: `Initial Consultation Prep — ${rawName.trim().slice(0, 60)}`,
+      subject: `Prep received (booking pending) — ${rawName.trim().slice(0, 60)}`,
       replyTo: rawEmail,
       html: `
         <p><strong>Name:</strong> ${name}</p>
@@ -275,6 +274,7 @@ export async function sendAnalysisPrep(formData: FormData) {
         <p><strong>What success looks like (30–90 days):</strong><br>${safeSuccess || '<em>Not specified</em>'}</p>
         ${safeContext ? `<p><strong>Deadlines, stakeholders or upcoming changes:</strong><br>${safeContext}</p>` : ''}
         <p style="margin-top:16px;font-size:12px;color:#666;">Submitted via the prep form on ${site.name}.</p>
+        <p style="font-size:12px;color:#888;"><em>Booking is not confirmed yet — the client still needs to pick a time in the Calendly step. You will receive a separate Calendly notification once they schedule.</em></p>
         <p><small>Answers also attached as prep-answers.txt for easy import into SigVai / xAI.</small></p>
       `,
       attachments: [
@@ -302,23 +302,6 @@ export async function sendAnalysisPrep(formData: FormData) {
     } catch (storeErr) {
       // Never let storage failure affect the user or email delivery
       console.error('Non-fatal: failed to persist prep submission for admin tool', storeErr);
-    }
-
-    // Auto-reply (independent)
-    try {
-      await resend.emails.send({
-        from: getResendFrom(),
-        to: rawEmail,
-        subject: `Thank you — details for your initial consultation`,
-        html: `
-          <p>Dear ${name},</p>
-          <p>Thank you — we received your details for the initial consultation. Michael has them and will review before your call.</p>
-          <p>Ready to book? <a href="${site.calendlyUrl}">${site.calendlyUrl}</a></p>
-          <p>Best regards,<br />${site.name}<br />${site.phone}</p>
-        `,
-      });
-    } catch (autoReplyError) {
-      console.error('Prep auto-reply failed (owner notification succeeded):', autoReplyError);
     }
 
     return { success: true };

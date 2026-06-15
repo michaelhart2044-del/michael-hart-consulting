@@ -173,22 +173,28 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
     if (bookingDone) {
       return (
         <div className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center">
-          <p className="text-green-400 text-lg font-medium">Thank you — your consultation has been booked.</p>
-          <p className="text-muted mt-2">Michael will review your details and reach out to confirm.</p>
+          <p className="text-green-400 text-lg font-medium">You&apos;re booked — thank you!</p>
+          <p className="text-muted mt-2 text-sm max-w-md mx-auto">
+            Check your inbox for the Calendly calendar invite with your meeting link and time.
+            Michael will review your prep answers before your call.
+          </p>
         </div>
       );
     }
 
     return (
       <div className="bg-green-900/30 border border-green-700 rounded-2xl p-8 text-center">
-        <p className="text-lg">Please continue to finalize booking your consultation.</p>
+        <p className="text-lg font-medium text-green-300">Step 1 complete — your details are saved.</p>
+        <p className="text-muted mt-2 text-sm max-w-md mx-auto">
+          Step 2: pick a time below. You&apos;ll receive one calendar confirmation email after you schedule — not before.
+        </p>
 
         {!showCalendly && (
           <button
             onClick={() => setShowCalendly(true)}
             className="mt-6 inline-block w-full md:w-auto px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985]"
           >
-            Finalize Booking
+            Pick a Time & Book
           </button>
         )}
 
@@ -395,7 +401,7 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
         disabled={isSubmitting}
         className="w-full md:w-auto px-5 py-2 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full transition-all active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isSubmitting ? 'Sending...' : 'Continue'}
+        {isSubmitting ? 'Saving...' : 'Continue to Booking'}
       </button>
     </form>
   );

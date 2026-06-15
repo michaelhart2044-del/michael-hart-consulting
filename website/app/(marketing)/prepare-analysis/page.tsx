@@ -48,7 +48,7 @@ export default function PrepareAnalysis() {
           <div className="max-w-2xl">
             <div className="mb-6">
               <h2 className="text-2xl font-semibold tracking-tight">Help us prepare</h2>
-              <p className="mt-2 text-sm text-muted">Share a few details below. Then continue to book.</p>
+              <p className="mt-2 text-sm text-muted">Step 1: share your details. Step 2: pick a time — your calendar invite arrives after you schedule.</p>
             </div>
             <AnalysisPrepForm />
           </div>
