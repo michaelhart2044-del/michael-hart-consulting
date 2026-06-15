@@ -50,9 +50,9 @@ export default function About() {
             <div className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 border border-white/10 overflow-hidden">
               <Image 
                 src="/mh-logo.png" 
-                alt="Michael Hart Consulting Group LLC logo" 
-                width={96} 
-                height={96} 
+                alt="Michael Hart Consulting" 
+                width={80} 
+                height={80} 
                 className="w-full h-full object-contain" 
               />
             </div>

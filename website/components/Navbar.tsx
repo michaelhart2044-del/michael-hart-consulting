@@ -105,10 +105,10 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
         <Link href="/" className="flex items-center gap-3 group">
           <Image
             src="/mh-logo.png"
-            alt="MH Logo"
-            width={48}
-            height={48}
-            className="h-12 w-12 object-contain"
+            alt="Michael Hart Consulting"
+            width={40}
+            height={40}
+            className="h-10 w-auto object-contain"
           />
           <span className="font-semibold text-accent text-base md:text-lg tracking-[-0.3px] group-hover:text-accent-hover transition-colors whitespace-nowrap">
             <span className="md:hidden">MH Consulting</span>
