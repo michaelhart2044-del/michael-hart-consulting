@@ -10,6 +10,8 @@ import {
   markEngagementCommittedForAdmin,
   grantPortalAccessForAdmin,
   resendPortalAccessForAdmin,
+  revokePortalAccessForAdmin,
+  deleteClientForAdmin,
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
@@ -26,6 +28,7 @@ interface RecentItem {
   engagementCommittedAt?: string;
   portalAccessGrantedAt?: string;
   mustChangePassword?: boolean;
+  portalRevokedAt?: string;
 }
 
 interface Generated {
@@ -350,6 +353,66 @@ ${site.phone}`;
     setTimeout(() => setStatus(''), 5000);
   }
 
+  async function handleRevokePortalAccess(submissionId?: string) {
+    const id = submissionId || loadedSub?.id;
+    if (!id) return;
+
+    const name = loadedSub?.id === id ? loadedSub.name : recent.find((r) => r.id === id)?.name || 'this client';
+    if (!window.confirm(`Revoke portal access for ${name}?\n\nThey will immediately lose sign-in access. Their intake record is kept so you can re-grant access later.`)) {
+      return;
+    }
+
+    setBusyId(id);
+    setStatus('');
+    const res = await revokePortalAccessForAdmin(id);
+    if (res.success) {
+      setStatus(res.message || 'Portal access revoked.');
+      if (loadedSub?.id === id) {
+        setLoadedSub({
+          ...loadedSub,
+          portalAccessGrantedAt: undefined,
+          portalPasswordHash: undefined,
+          mustChangePassword: undefined,
+          portalRevokedAt: res.portalRevokedAt || new Date().toISOString(),
+        });
+      }
+      await refreshRecent();
+    } else {
+      setStatus(res.error || 'Failed to revoke portal access');
+    }
+    setBusyId(null);
+    setTimeout(() => setStatus(''), 6000);
+  }
+
+  async function handleDeleteClient(submissionId?: string) {
+    const id = submissionId || loadedSub?.id;
+    if (!id) return;
+
+    const target = loadedSub?.id === id ? loadedSub : recent.find((r) => r.id === id);
+    const label = target ? `${target.name} (${target.email})` : 'this client';
+    if (!window.confirm(`Permanently delete all records for ${label}?\n\nThis removes their intake, portal history, and proposal drafts. This cannot be undone.`)) {
+      return;
+    }
+
+    setBusyId(id);
+    setStatus('');
+    const res = await deleteClientForAdmin(id);
+    if (res.success) {
+      setStatus(res.message || 'Client record deleted.');
+      if (loadedSub?.id === id) {
+        setLoadedSub(null);
+        setProposal(null);
+        setOutputText('');
+        setTranscript('');
+      }
+      await refreshRecent();
+    } else {
+      setStatus(res.error || 'Failed to delete client');
+    }
+    setBusyId(null);
+    setTimeout(() => setStatus(''), 6000);
+  }
+
   async function handleMarkSent() {
     if (!loadedSub) {
       setStatus('Load a submission first');
@@ -467,6 +530,9 @@ ${site.phone}`;
                 {item.portalAccessGrantedAt && item.mustChangePassword === false && (
                   <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-300 text-[10px]">PORTAL ACTIVE</span>
                 )}
+                {item.portalRevokedAt && !item.portalAccessGrantedAt && (
+                  <span className="px-1.5 py-0.5 rounded bg-red-900/40 text-red-300 text-[10px]">PORTAL REVOKED</span>
+                )}
               </div>
               <div className="flex flex-wrap gap-2 mt-1">
                 <button
@@ -490,18 +556,38 @@ ${site.phone}`;
                     disabled={busyId === item.id || isGrantingPortal}
                     className="text-xs px-3 py-1.5 rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium disabled:opacity-50"
                   >
-                    {busyId === item.id && isGrantingPortal ? 'Sending…' : 'Grant Portal Access'}
+                    {busyId === item.id && isGrantingPortal
+                      ? 'Sending…'
+                      : item.portalRevokedAt
+                        ? 'Re-grant Portal Access'
+                        : 'Grant Portal Access'}
                   </button>
                 )}
                 {item.portalAccessGrantedAt && (
-                  <button
-                    onClick={() => handleResendPortalAccess(item.id)}
-                    disabled={busyId === item.id || isGrantingPortal}
-                    className="text-xs px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
-                  >
-                    {busyId === item.id && isGrantingPortal ? 'Sending…' : 'Resend Portal Access'}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handleResendPortalAccess(item.id)}
+                      disabled={busyId === item.id || isGrantingPortal}
+                      className="text-xs px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
+                    >
+                      {busyId === item.id && isGrantingPortal ? 'Sending…' : 'Resend Portal Access'}
+                    </button>
+                    <button
+                      onClick={() => handleRevokePortalAccess(item.id)}
+                      disabled={busyId === item.id}
+                      className="text-xs px-3 py-1.5 rounded-full border border-red-500/40 text-red-200 hover:bg-red-900/20 disabled:opacity-50"
+                    >
+                      {busyId === item.id ? 'Revoking…' : 'Revoke Access'}
+                    </button>
+                  </>
                 )}
+                <button
+                  onClick={() => handleDeleteClient(item.id)}
+                  disabled={busyId === item.id}
+                  className="text-xs px-3 py-1.5 rounded-full border border-red-500/30 text-red-300/80 hover:bg-red-900/10 disabled:opacity-50"
+                >
+                  {busyId === item.id ? 'Deleting…' : 'Delete'}
+                </button>
               </div>
             </div>
           ))}
@@ -546,23 +632,41 @@ ${site.phone}`;
                 Portal active since {new Date(loadedSub.portalAccessGrantedAt).toLocaleString()}
               </span>
             )}
+            {loadedSub.portalRevokedAt && !loadedSub.portalAccessGrantedAt && (
+              <span className="text-xs px-2 py-1 rounded bg-red-900/40 text-red-300">
+                Portal revoked {new Date(loadedSub.portalRevokedAt).toLocaleString()}
+              </span>
+            )}
             {loadedSub.engagementCommittedAt && !loadedSub.portalAccessGrantedAt && (
               <button
                 onClick={() => handleGrantPortalAccess()}
                 disabled={isGrantingPortal}
                 className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-60"
               >
-                {isGrantingPortal ? 'Sending…' : 'Grant Portal Access'}
+                {isGrantingPortal
+                  ? 'Sending…'
+                  : loadedSub.portalRevokedAt
+                    ? 'Re-grant Portal Access'
+                    : 'Grant Portal Access'}
               </button>
             )}
             {loadedSub.portalAccessGrantedAt && (
-              <button
-                onClick={() => handleResendPortalAccess()}
-                disabled={busyId === loadedSub.id || isGrantingPortal}
-                className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
-              >
-                {busyId === loadedSub.id && isGrantingPortal ? 'Sending…' : 'Resend Portal Access'}
-              </button>
+              <>
+                <button
+                  onClick={() => handleResendPortalAccess()}
+                  disabled={busyId === loadedSub.id || isGrantingPortal}
+                  className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
+                >
+                  {busyId === loadedSub.id && isGrantingPortal ? 'Sending…' : 'Resend Portal Access'}
+                </button>
+                <button
+                  onClick={() => handleRevokePortalAccess()}
+                  disabled={busyId === loadedSub.id}
+                  className="px-5 py-2 text-sm rounded-full border border-red-500/40 text-red-200 hover:bg-red-900/20 disabled:opacity-50"
+                >
+                  {busyId === loadedSub.id ? 'Revoking…' : 'Revoke Portal Access'}
+                </button>
+              </>
             )}
           </div>
           {!loadedSub.engagementCommittedAt && (
@@ -570,6 +674,20 @@ ${site.phone}`;
               Portal access is disabled until Step 8 is marked. Clients receive a temporary password by email after you grant access.
             </p>
           )}
+          <div className="pt-4 border-t border-white/10 space-y-2">
+            <p className="text-xs font-medium text-[#94a3b8]">Client management</p>
+            <p className="text-xs text-[#64748b]">
+              <strong>Revoke</strong> blocks sign-in but keeps their intake on file (use when a client disengages, or to reset a test).
+              <strong className="ml-1">Delete</strong> permanently removes all records.
+            </p>
+            <button
+              onClick={() => handleDeleteClient()}
+              disabled={busyId === loadedSub.id}
+              className="px-5 py-2 text-sm rounded-full border border-red-500/30 text-red-300 hover:bg-red-900/10 disabled:opacity-50"
+            >
+              {busyId === loadedSub.id ? 'Deleting…' : 'Delete Client Record'}
+            </button>
+          </div>
         </section>
       )}
 

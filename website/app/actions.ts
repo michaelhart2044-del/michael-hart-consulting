@@ -11,10 +11,12 @@ import {
   getSubmissionById,
   getSubmissionByEmail,
   grantPortalAccessWithTempPassword,
+  deleteSubmission,
   hasEngagementCommitment,
   hasPortalAccess,
   markEngagementCommitted,
   markSubmissionSent,
+  revokePortalAccess,
   saveProposalDraft,
   setClientPasswordHash,
   updatePreMeetingDiscovery,
@@ -398,6 +400,7 @@ export async function getRecentPrepsForAdmin() {
       engagementCommittedAt: s.engagementCommittedAt,
       portalAccessGrantedAt: s.portalAccessGrantedAt,
       mustChangePassword: s.mustChangePassword,
+      portalRevokedAt: s.portalRevokedAt,
     }));
     return { success: true, items: safe };
   } catch (e) {
@@ -579,6 +582,59 @@ export async function resendPortalAccessForAdmin(submissionId: string): Promise<
   return grantPortalAccessAndEmail(submissionId);
 }
 
+/** Admin-only: revoke portal access when a client disengages or for a clean re-test. */
+export async function revokePortalAccessForAdmin(submissionId: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  if (!hasPortalAccess(sub)) {
+    return { success: false, error: 'This client does not have active portal access.' };
+  }
+
+  const updated = await revokePortalAccess(submissionId);
+  if (!updated) {
+    return { success: false, error: 'Failed to revoke portal access.' };
+  }
+
+  revalidatePath('/portal');
+  revalidatePath('/portal/login');
+  return {
+    success: true,
+    portalRevokedAt: updated.portalRevokedAt,
+    message: `Portal access revoked for ${updated.name}. They can no longer sign in. Grant access again anytime to re-onboard.`,
+  };
+}
+
+/** Admin-only: permanently delete a client record (intake + portal data). */
+export async function deleteClientForAdmin(submissionId: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  const ok = await deleteSubmission(submissionId);
+  if (!ok) {
+    return { success: false, error: 'Failed to delete client record.' };
+  }
+
+  revalidatePath('/portal');
+  revalidatePath('/portal/login');
+  return {
+    success: true,
+    message: `Deleted all records for ${sub.name} (${sub.email}).`,
+  };
+}
+
 /** Client password sign-in — requires admin-granted portal access. */
 export async function clientSignInWithPassword(formData: FormData) {
   const honeypot = formData.get('company_website') as string;
@@ -713,7 +769,13 @@ export async function getClientEngagementData() {
   }
 
   if (!canClientSignIn(sub)) {
-    return { success: false, error: 'Portal access not activated.' };
+    await clearClientCookie();
+    return {
+      success: false,
+      error: sub.portalRevokedAt
+        ? 'Your portal access is no longer active. Please contact Michael if you believe this is an error.'
+        : 'Portal access not activated.',
+    };
   }
 
   return {

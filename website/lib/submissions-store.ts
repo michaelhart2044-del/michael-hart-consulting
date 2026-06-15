@@ -33,6 +33,8 @@ export interface PrepSubmission {
   portalPasswordHash?: string;
   /** True until the client sets a permanent password after first sign-in */
   mustChangePassword?: boolean;
+  /** Set when admin revokes portal access (client disengaged) */
+  portalRevokedAt?: string;
   preMeetingDiscovery?: {
     [questionId: string]: string;
   } & {
@@ -236,12 +238,38 @@ export async function grantPortalAccessWithTempPassword(
   const now = new Date().toISOString();
   all[idx] = {
     ...all[idx],
-    portalAccessGrantedAt: all[idx].portalAccessGrantedAt || now,
+    portalAccessGrantedAt: now,
     portalPasswordHash: passwordHash,
     mustChangePassword: true,
+    portalRevokedAt: undefined,
   };
   await persist(all);
   return all[idx];
+}
+
+/** Admin — remove portal access. Keeps intake/proposal history for your records. */
+export async function revokePortalAccess(id: string): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  const now = new Date().toISOString();
+  const { portalAccessGrantedAt: _g, portalPasswordHash: _p, mustChangePassword: _m, emailConfirmedAt: _e, ...rest } = all[idx];
+  all[idx] = {
+    ...rest,
+    portalRevokedAt: now,
+  };
+  await persist(all);
+  return all[idx];
+}
+
+/** Admin — permanently remove a client submission record. */
+export async function deleteSubmission(id: string): Promise<boolean> {
+  const all = await loadAll();
+  const next = all.filter((s) => s.id !== id);
+  if (next.length === all.length) return false;
+  await persist(next);
+  return true;
 }
 
 export async function markSubmissionSent(id: string): Promise<boolean> {
