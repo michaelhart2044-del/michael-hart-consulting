@@ -128,7 +128,10 @@ export async function sendContactEmail(formData: FormData) {
     // Send professional auto-reply to the submitter (independently, so failure doesn't affect owner notification)
     try {
       await resend.emails.send({
-        from: `${site.name} <${site.email}>`,
+        // Use a verified fallback from address for reliable delivery during testing / if domain verification is not complete.
+      // Once your domain is verified in Resend, set RESEND_FROM on Vercel (e.g. "Michael Hart Consulting <michael@michaelhartconsulting.com>") to override.
+      // For now we fall back to onboarding@resend.dev so emails are more likely to arrive while you complete domain verification.
+      from: process.env.RESEND_FROM || `${site.name} <onboarding@resend.dev>`,
         to: rawEmail,
         subject: `Thank you for contacting ${site.name}`,
         html: `
@@ -280,7 +283,10 @@ export async function sendAnalysisPrep(formData: FormData) {
     // Auto-reply (independent)
     try {
       await resend.emails.send({
-        from: `${site.name} <${site.email}>`,
+        // Use a verified fallback from address for reliable delivery during testing / if domain verification is not complete.
+      // Once your domain is verified in Resend, set RESEND_FROM on Vercel (e.g. "Michael Hart Consulting <michael@michaelhartconsulting.com>") to override.
+      // For now we fall back to onboarding@resend.dev so emails are more likely to arrive while you complete domain verification.
+      from: process.env.RESEND_FROM || `${site.name} <onboarding@resend.dev>`,
         to: rawEmail,
         subject: `Thank you — details for your initial consultation`,
         html: `
@@ -467,7 +473,10 @@ export async function sendClientMagicLink(formData: FormData) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     await resend.emails.send({
-      from: `${site.name} <${site.email}>`,
+      // Use a verified fallback from address for reliable delivery during testing / if domain verification is not complete.
+      // Once your domain is verified in Resend, set RESEND_FROM on Vercel (e.g. "Michael Hart Consulting <michael@michaelhartconsulting.com>") to override.
+      // For now we fall back to onboarding@resend.dev so emails are more likely to arrive while you complete domain verification.
+      from: process.env.RESEND_FROM || `${site.name} <onboarding@resend.dev>`,
       to: email,
       subject: `Access your private engagement portal - ${site.name}`,
       html: `
