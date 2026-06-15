@@ -93,10 +93,10 @@ export default async function ClientPortal() {
             <section className="border border-white/10 bg-[#0f172a] p-6 rounded-2xl">
               <h2 className="font-semibold mb-2">Next Step: Schedule Your 1-Hour Comprehensive Team Meeting</h2>
               <p className="text-sm text-[#94a3b8] mb-4">
-                This focused session will cover live validation and the key areas for your engagement roadmap.
+                This will be a focused 60-minute deep-dive session where we review everything and build your roadmap together.
               </p>
               <a
-                href={site.calendlyUrl}
+                href="https://calendly.com/michael-michaelhartconsulting/comprehensive-process-review-roadmap"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block px-6 py-3 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-sm rounded-full"

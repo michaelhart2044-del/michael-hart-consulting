@@ -78,9 +78,9 @@ export default function Home() {
           <Image 
             src="/mh-logo.png" 
             alt="" 
-            width={180} 
-            height={180} 
-            className="w-40 h-40" 
+            width={160} 
+            height={160} 
+            className="w-36 h-36 object-contain" 
           />
         </div>
       </div>

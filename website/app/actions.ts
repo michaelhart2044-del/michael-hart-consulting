@@ -128,7 +128,10 @@ export async function sendContactEmail(formData: FormData) {
     // Send professional auto-reply to the submitter (independently, so failure doesn't affect owner notification)
     try {
       await resend.emails.send({
-        from: `${site.name} <${site.email}>`,
+        // Use a verified fallback from address for reliable delivery during testing / if domain verification is not complete.
+      // Once your domain is verified in Resend, set RESEND_FROM on Vercel (e.g. "Michael Hart Consulting <michael@michaelhartconsulting.com>") to override.
+      // For now we fall back to onboarding@resend.dev so emails are more likely to arrive while you complete domain verification.
+      from: process.env.RESEND_FROM || `${site.name} <onboarding@resend.dev>`,
         to: rawEmail,
         subject: `Thank you for contacting ${site.name}`,
         html: `
@@ -280,7 +283,10 @@ export async function sendAnalysisPrep(formData: FormData) {
     // Auto-reply (independent)
     try {
       await resend.emails.send({
-        from: `${site.name} <${site.email}>`,
+        // Use a verified fallback from address for reliable delivery during testing / if domain verification is not complete.
+      // Once your domain is verified in Resend, set RESEND_FROM on Vercel (e.g. "Michael Hart Consulting <michael@michaelhartconsulting.com>") to override.
+      // For now we fall back to onboarding@resend.dev so emails are more likely to arrive while you complete domain verification.
+      from: process.env.RESEND_FROM || `${site.name} <onboarding@resend.dev>`,
         to: rawEmail,
         subject: `Thank you — details for your initial consultation`,
         html: `
@@ -465,9 +471,37 @@ export async function sendClientMagicLink(formData: FormData) {
 
   // Real path: send email (for when you test on live site)
   const resend = new Resend(process.env.RESEND_API_KEY);
+
+  // =====================================================================
+  // REMINDER — ONCE RESEND DOMAIN VERIFICATION IS FULLY ACTIVE:
+  // 1. Set this env var on Vercel (Production + Preview):
+  //      RESEND_FROM="Michael Hart Consulting <michael@michaelhartconsulting.com>"
+  // 2. Redeploy (or wait for the auto-deploy from this push).
+  // 3. On the LIVE site ONLY:
+  //    - Submit https://www.michaelhartconsulting.com/prepare-analysis
+  //      with a test email (this creates the submission record on the live store).
+  //    - Go to live /portal/login with the EXACT same email.
+  //    - Click the normal "Send secure access link" button
+  //      (the red TEST MODE button has been completely removed — this is now the only/clean production path).
+  //    - Check inbox (and spam) for the magic link email.
+  //      It will now come from your verified custom from address.
+  //    - Click the link in the email → you should land in the guided /portal
+  //      experience (your prep summary + the additional pre-meeting questions form).
+  //    - Fill and save the questions → you should see the "answers saved"
+  //      message + the book-meeting button (already updated to your new 60-min
+  //      Calendly link + the exact wording you requested).
+  //    - Go to live /admin, log in, and Load that submission — you should see
+  //      the preMeetingDiscovery data attached and ready for SigVai.
+  // 4. This is the real production magic-link flow for clients after they
+  //    complete the initial 30-min consultation + sign the agreement + pay the fee.
+  // The loud local-test banners below are only for any future local debugging.
+  // =====================================================================
   try {
     await resend.emails.send({
-      from: `${site.name} <${site.email}>`,
+      // Use a verified fallback from address for reliable delivery during testing / if domain verification is not complete.
+      // Once your domain is verified in Resend, set RESEND_FROM on Vercel (e.g. "Michael Hart Consulting <michael@michaelhartconsulting.com>") to override.
+      // For now we fall back to onboarding@resend.dev so emails are more likely to arrive while you complete domain verification.
+      from: process.env.RESEND_FROM || `${site.name} <onboarding@resend.dev>`,
       to: email,
       subject: `Access your private engagement portal - ${site.name}`,
       html: `
@@ -544,27 +578,4 @@ export async function getClientEngagementData() {
   }
 
   return { success: true, submission: sub };
-}
-
-/**
- * TEMPORARY TEST-MODE BYPASS for local development only.
- * Directly logs the user in (sets the client cookie) using an existing submission email
- * and returns success so the frontend can redirect to /portal.
- * This bypasses the magic link email entirely so Michael can instantly test the
- * guided first-time experience (initial data summary + pre-meeting questions + book button).
- */
-export async function testDirectClientLogin(email: string) {
-  const cleanEmail = (email || '').trim().toLowerCase();
-  if (!cleanEmail) {
-    return { success: false, error: 'Email is required.' };
-  }
-
-  const submissions = await getRecentSubmissions(100);
-  const has = submissions.some(s => s.email.toLowerCase() === cleanEmail);
-  if (!has) {
-    return { success: false, error: `No prep submission found for ${cleanEmail}. Submit /prepare-analysis first.` };
-  }
-
-  await setClientCookie(cleanEmail);
-  return { success: true };
 }
