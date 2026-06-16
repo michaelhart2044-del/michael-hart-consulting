@@ -522,7 +522,7 @@ ${site.phone}`;
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-[-1px]">Proposal Generator</h1>
+          <h1 className="text-3xl font-semibold tracking-[-1px]">New Proposal</h1>
           <p className="text-sm text-[#94a3b8] mt-1">Private • Data never leaves this secure area</p>
         </div>
         <button

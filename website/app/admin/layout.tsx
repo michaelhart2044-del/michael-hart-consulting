@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Internal Proposal Generator',
+  title: 'Internal — New Proposal',
   description: 'Private tool — Michael Hart Consulting',
   robots: {
     index: false,
@@ -34,7 +34,7 @@ export default function AdminLayout({
             </div>
           </div>
           <div className="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#94a3b8]">
-            Proposal Generator
+            New Proposal
           </div>
         </div>
       </header>
