@@ -27,6 +27,9 @@ import {
   setClientPasswordHash,
   updatePreMeetingDiscovery,
 } from '@/lib/submissions-store';
+import { getLatestCalendlyWebhookLog } from '@/lib/calendly-webhook-log';
+import { processCalendlyWebhookBody } from '@/lib/calendly-webhook-handler';
+import type { CalendlyMeetingKind } from '@/lib/calendly-config';
 import { createAdminSession, verifyAdminSession, setAdminCookie, clearAdminCookie, getAdminSessionToken } from '@/lib/admin-auth';
 import { generateProposal, GeneratorInput } from '@/lib/proposal-generator';
 import {
@@ -466,10 +469,83 @@ export async function getRecentPrepsForAdmin() {
       mustChangePassword: s.mustChangePassword,
       portalRevokedAt: s.portalRevokedAt,
       calendlyBookedAt: s.calendlyBookedAt,
+      comprehensiveBookedAt: s.comprehensiveBookedAt,
+      calendly30CanceledAt: s.calendly30CanceledAt,
+      comprehensiveCanceledAt: s.comprehensiveCanceledAt,
     }));
     return { success: true, items: safe };
   } catch (e) {
     return { success: false, error: 'Failed to load submissions', items: [] };
+  }
+}
+
+function getCalendlyWebhookPublicUrl(): string {
+  const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.michaelhartconsulting.com';
+  return `${base.replace(/\/$/, '')}/api/webhooks/calendly`;
+}
+
+export async function getCalendlyIntegrationStatusForAdmin() {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const latest = await getLatestCalendlyWebhookLog();
+  const hasSuccess =
+    latest?.outcome === 'updated' || latest?.outcome === 'test';
+
+  return {
+    success: true,
+    webhookUrl: getCalendlyWebhookPublicUrl(),
+    signingKeyConfigured: !!process.env.CALENDLY_WEBHOOK_SIGNING_KEY,
+    testSecretConfigured: !!process.env.CALENDLY_WEBHOOK_TEST_SECRET,
+    connected: hasSuccess,
+    lastReceived: latest?.receivedAt ?? null,
+    lastEvent: latest?.event ?? null,
+    lastOutcome: latest?.outcome ?? null,
+    lastEmail: latest?.email ?? null,
+    lastDetail: latest?.detail ?? null,
+  };
+}
+
+export async function simulateCalendlyWebhookForAdmin(
+  submissionId: string,
+  kind: CalendlyMeetingKind,
+  event: 'invitee.created' | 'invitee.canceled',
+) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  const testBody = {
+    mh_test: true,
+    event,
+    kind,
+    email: sub.email,
+    submissionId: sub.id,
+  };
+  const raw = JSON.stringify(testBody);
+
+  try {
+    const result = await processCalendlyWebhookBody(raw, testBody, { isTest: true });
+    const updated = await getSubmissionById(sub.id);
+    return {
+      success: result.status < 400,
+      outcome: result.body.outcome,
+      detail: result.body.detail,
+      submission: updated,
+      message:
+        result.status < 400
+          ? `Simulator: ${event} (${kind}) → ${result.body.outcome}`
+          : `Simulator failed: ${result.body.detail || result.body.outcome}`,
+    };
+  } catch (e) {
+    console.error('Calendly webhook simulator failed:', e);
+    return { success: false, error: 'Simulator failed.' };
   }
 }
 

@@ -85,7 +85,7 @@ function buildDmaicBundle(
     '--- PHASE 4: PORTAL PREP + 1-HR BOOKING ---',
     'Portal prep answers:',
     formatPortalPrep(submission.preMeetingDiscovery),
-    `1-hr comprehensive meeting booked: PENDING — auto-tracking coming in a later step`,
+    `1-hr comprehensive meeting booked: ${formatBundleTimestamp(submission.comprehensiveBookedAt)}`,
     '',
     '--- PHASE 5: 60-MIN DEEP DIVE ---',
     'Transcript:',
@@ -150,6 +150,7 @@ function getMissingForFullBundle({
   hasProposalSent,
   hasAccepted,
   hasPortalPrep,
+  has60Booked,
   has60Transcript,
   portalAccessGranted,
 }: {
@@ -160,6 +161,7 @@ function getMissingForFullBundle({
   hasProposalSent: boolean;
   hasAccepted: boolean;
   hasPortalPrep: boolean;
+  has60Booked: boolean;
   has60Transcript: boolean;
   portalAccessGranted: boolean;
 }): string[] {
@@ -178,7 +180,7 @@ function getMissingForFullBundle({
         : 'Portal prep not started (invite client first)',
     );
   }
-  missing.push('1-hour comprehensive meeting booking (tracked manually for now)');
+  if (!has60Booked) missing.push('1-hour comprehensive meeting not booked');
   if (!has60Transcript) missing.push('60-minute deep-dive transcript not pasted');
 
   return missing;
@@ -236,6 +238,7 @@ export default function ClientEvidenceTimeline({
   const hasProposalDraft = !!(submission.proposalDraft && submission.proposalDraft.trim().length > 20);
   const hasAccepted = !!submission.engagementCommittedAt;
   const hasPortalPrep = !!submission.preMeetingDiscovery && Object.keys(submission.preMeetingDiscovery).length > 0;
+  const has60Booked = !!submission.comprehensiveBookedAt;
   const has60Transcript = consult60Transcript.trim().length > 20;
 
   const layer1Status: StepStatus = hasIntake ? 'complete' : 'empty';
@@ -250,9 +253,14 @@ export default function ClientEvidenceTimeline({
         ? 'pending'
         : 'empty';
 
-  const layer4Status: StepStatus = hasPortalPrep ? 'pending' : 'empty';
+  const layer4Status: StepStatus =
+    hasPortalPrep && has60Booked
+      ? 'complete'
+      : hasPortalPrep || has60Booked || !!submission.portalAccessGrantedAt
+        ? 'pending'
+        : 'empty';
 
-  const layer5Status: StepStatus = has60Transcript ? 'complete' : hasPortalPrep ? 'pending' : 'empty';
+  const layer5Status: StepStatus = has60Transcript ? 'complete' : has60Booked || hasPortalPrep ? 'pending' : 'empty';
 
   const completedLayers = [layer1Status, layer2Status, layer3Status, layer4Status, layer5Status].filter(
     (s) => s === 'complete',
@@ -266,12 +274,12 @@ export default function ClientEvidenceTimeline({
     hasProposalSent,
     hasAccepted,
     hasPortalPrep,
+    has60Booked,
     has60Transcript,
     portalAccessGranted: !!submission.portalAccessGrantedAt,
   });
 
-  const readyForBundle =
-    missingItems.length === 1 && missingItems[0] === '1-hour comprehensive meeting booking (tracked manually for now)';
+  const readyForBundle = missingItems.length === 0;
 
   async function handleResetTimeline() {
     onConsult30TranscriptChange('');
@@ -328,9 +336,7 @@ export default function ClientEvidenceTimeline({
             What&apos;s Missing for Full Bundle?
           </div>
           {readyForBundle ? (
-            <p className="text-sm text-emerald-300 mt-2">
-              All captured evidence is ready. Only the 1-hour meeting booking is tracked manually for now.
-            </p>
+            <p className="text-sm text-emerald-300 mt-2">All captured evidence is ready for the full DMAIC bundle.</p>
           ) : (
             <ul className="mt-2 space-y-1 text-sm text-[#cbd5e1] list-disc list-inside">
               {missingItems.map((item) => (
@@ -381,8 +387,13 @@ export default function ClientEvidenceTimeline({
         >
           <SubStep
             label="30-min Calendly booked"
-            status={has30Booked ? 'complete' : 'empty'}
+            status={has30Booked ? 'complete' : submission.calendly30CanceledAt ? 'pending' : 'empty'}
             timestamp={formatTimestamp(submission.calendlyBookedAt)}
+            detail={
+              !has30Booked && submission.calendly30CanceledAt
+                ? `Canceled ${formatTimestamp(submission.calendly30CanceledAt)}`
+                : undefined
+            }
           />
           <div className="pt-3 pb-1">
             <div className="flex items-center gap-3 mb-2">
@@ -446,8 +457,17 @@ export default function ClientEvidenceTimeline({
           />
           <SubStep
             label="1-hour comprehensive meeting booked"
-            status="empty"
-            detail="Auto-tracking coming in a later step — book via portal Calendly for now"
+            status={has60Booked ? 'complete' : submission.comprehensiveCanceledAt ? 'pending' : 'empty'}
+            timestamp={formatTimestamp(submission.comprehensiveBookedAt)}
+            detail={
+              !has60Booked && submission.comprehensiveCanceledAt
+                ? `Canceled ${formatTimestamp(submission.comprehensiveCanceledAt)}`
+                : !has60Booked && submission.portalAccessGrantedAt
+                  ? 'Book via portal Calendly — updates automatically via webhook'
+                  : !has60Booked
+                    ? 'Grant portal access first'
+                    : undefined
+            }
           />
         </LayerCard>
 

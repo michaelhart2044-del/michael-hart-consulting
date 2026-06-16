@@ -19,6 +19,7 @@ import {
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
 import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
+import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
 import { site } from '@/lib/site';
 
 interface RecentItem {
@@ -34,6 +35,9 @@ interface RecentItem {
   mustChangePassword?: boolean;
   portalRevokedAt?: string;
   calendlyBookedAt?: string;
+  comprehensiveBookedAt?: string;
+  calendly30CanceledAt?: string;
+  comprehensiveCanceledAt?: string;
 }
 
 interface Generated {
@@ -535,6 +539,16 @@ ${site.phone}`;
         </div>
       )}
 
+      <CalendlyIntegrationPanel
+        loadedSub={loadedSub}
+        onSubmissionUpdated={(sub) => setLoadedSub(sub)}
+        onMessage={(message) => {
+          setStatus(message);
+          window.setTimeout(() => setStatus(''), 5000);
+        }}
+        onRefreshRecent={refreshRecent}
+      />
+
       {/* Recent Prep Submissions */}
       <section className="border border-white/10 rounded-2xl bg-[#0f172a] p-6">
         <div className="flex items-center justify-between mb-4">
@@ -586,11 +600,20 @@ ${site.phone}`;
               </div>
               <div className="text-[11px] text-[#64748b] flex flex-wrap items-center gap-2">
                 {new Date(item.createdAt).toLocaleString()}
-                {!item.calendlyBookedAt && (
+                {!item.calendlyBookedAt && item.calendly30CanceledAt && (
+                  <span className="px-1.5 py-0.5 rounded bg-red-900/40 text-red-300 text-[10px]">BOOKING CANCELED</span>
+                )}
+                {!item.calendlyBookedAt && !item.calendly30CanceledAt && (
                   <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">BOOKING PENDING</span>
                 )}
                 {item.calendlyBookedAt && (
                   <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">CONSULT BOOKED</span>
+                )}
+                {item.comprehensiveBookedAt && (
+                  <span className="px-1.5 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[10px]">1-HR BOOKED</span>
+                )}
+                {!item.comprehensiveBookedAt && item.comprehensiveCanceledAt && (
+                  <span className="px-1.5 py-0.5 rounded bg-red-900/40 text-red-300 text-[10px]">1-HR CANCELED</span>
                 )}
                 {item.sentAt && <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">SENT</span>}
                 {item.engagementCommittedAt && <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">STEP 8</span>}
