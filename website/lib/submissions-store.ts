@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { get, put, BlobNotFoundError } from '@vercel/blob';
+import type { CalendlyMeetingKind } from '@/lib/calendly-config';
 
 /**
  * Private, server-only store for consultation prep submissions.
@@ -9,6 +10,15 @@ import { get, put, BlobNotFoundError } from '@vercel/blob';
  * Production: durable JSON in Vercel Blob (shared across all serverless instances).
  * Local dev: falls back to data/prep-submissions.json when BLOB_READ_WRITE_TOKEN is unset.
  */
+
+export type CalendlyClientEventAction = '30-created' | '30-canceled' | '60-created' | '60-canceled';
+
+export interface CalendlyClientEvent {
+  at: string;
+  action: CalendlyClientEventAction;
+  inviteeUri?: string;
+  eventSlug?: string;
+}
 
 export interface PrepSubmission {
   id: string;
@@ -22,8 +32,18 @@ export interface PrepSubmission {
   successLooksLike: string;
   additionalContext: string;
   fullText: string;
-  /** Set when the client completes the Calendly booking step */
+  /** 30-min initial consult booked (Calendly webhook or browser callback) */
   calendlyBookedAt?: string;
+  /** 1-hr comprehensive meeting booked (portal Calendly webhook) */
+  comprehensiveBookedAt?: string;
+  /** Set when the 30-min booking is canceled */
+  calendly30CanceledAt?: string;
+  /** Set when the 1-hr booking is canceled */
+  comprehensiveCanceledAt?: string;
+  /** Per-client Calendly audit trail (newest first, max 20) */
+  calendlyEvents?: CalendlyClientEvent[];
+  /** Admin-saved proposal draft */
+  proposalDraft?: string;
   sentAt?: string;
   /** Step 8 — agreement signed + non-refundable fee received */
   engagementCommittedAt?: string;
@@ -52,6 +72,7 @@ const DATA_DIR = path.join(process.cwd(), 'data');
 const FILE_PATH = path.join(DATA_DIR, 'prep-submissions.json');
 const BLOB_PATHNAME = 'data/prep-submissions.json';
 const MAX_ENTRIES = 100;
+const MAX_CALENDLY_EVENTS_PER_CLIENT = 20;
 
 function useBlobStorage(): boolean {
   return !!process.env.BLOB_READ_WRITE_TOKEN;
@@ -158,8 +179,83 @@ export async function getRecentSubmissions(limit = 20): Promise<PrepSubmission[]
     .slice(0, limit);
 }
 
-/** Record that the client finished the Calendly booking step. */
-export async function markConsultationBooked(id: string): Promise<PrepSubmission | null> {
+function calendlyActionForKind(
+  kind: CalendlyMeetingKind,
+  created: boolean,
+): CalendlyClientEventAction {
+  if (kind === 'consult30') return created ? '30-created' : '30-canceled';
+  return created ? '60-created' : '60-canceled';
+}
+
+function appendClientCalendlyEvent(
+  submission: PrepSubmission,
+  action: CalendlyClientEventAction,
+  meta?: { inviteeUri?: string; eventSlug?: string },
+): CalendlyClientEvent[] {
+  const entry: CalendlyClientEvent = {
+    at: new Date().toISOString(),
+    action,
+    inviteeUri: meta?.inviteeUri,
+    eventSlug: meta?.eventSlug,
+  };
+  return [entry, ...(submission.calendlyEvents || [])].slice(0, MAX_CALENDLY_EVENTS_PER_CLIENT);
+}
+
+/** Record that the client finished the 30-min Calendly booking step. */
+export async function markConsultationBooked(
+  id: string,
+  meta?: { inviteeUri?: string; eventSlug?: string; source?: 'browser' | 'webhook' | 'admin' },
+): Promise<{ submission: PrepSubmission; newlyBooked: boolean } | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  const now = new Date().toISOString();
+  const wasBooked = !!all[idx].calendlyBookedAt;
+  const newlyBooked = !wasBooked;
+
+  all[idx] = {
+    ...all[idx],
+    calendlyBookedAt: all[idx].calendlyBookedAt || now,
+    calendly30CanceledAt: undefined,
+    calendlyEvents: newlyBooked
+      ? appendClientCalendlyEvent(all[idx], '30-created', meta)
+      : all[idx].calendlyEvents,
+  };
+  await persist(all);
+  return { submission: all[idx], newlyBooked };
+}
+
+/** Record 1-hr comprehensive meeting booked via Calendly webhook. */
+export async function markComprehensiveBooked(
+  id: string,
+  meta?: { inviteeUri?: string; eventSlug?: string },
+): Promise<{ submission: PrepSubmission; newlyBooked: boolean } | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  const now = new Date().toISOString();
+  const wasBooked = !!all[idx].comprehensiveBookedAt;
+  const newlyBooked = !wasBooked;
+
+  all[idx] = {
+    ...all[idx],
+    comprehensiveBookedAt: all[idx].comprehensiveBookedAt || now,
+    comprehensiveCanceledAt: undefined,
+    calendlyEvents: newlyBooked
+      ? appendClientCalendlyEvent(all[idx], '60-created', meta)
+      : all[idx].calendlyEvents,
+  };
+  await persist(all);
+  return { submission: all[idx], newlyBooked };
+}
+
+/** Clear 30-min booking on Calendly cancel. */
+export async function markConsultationCanceled(
+  id: string,
+  meta?: { inviteeUri?: string; eventSlug?: string },
+): Promise<PrepSubmission | null> {
   const all = await loadAll();
   const idx = all.findIndex((s) => s.id === id);
   if (idx === -1) return null;
@@ -167,10 +263,66 @@ export async function markConsultationBooked(id: string): Promise<PrepSubmission
   const now = new Date().toISOString();
   all[idx] = {
     ...all[idx],
-    calendlyBookedAt: all[idx].calendlyBookedAt || now,
+    calendlyBookedAt: undefined,
+    calendly30CanceledAt: now,
+    calendlyEvents: appendClientCalendlyEvent(all[idx], '30-canceled', meta),
   };
   await persist(all);
   return all[idx];
+}
+
+/** Clear 1-hr booking on Calendly cancel. */
+export async function markComprehensiveCanceled(
+  id: string,
+  meta?: { inviteeUri?: string; eventSlug?: string },
+): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  const now = new Date().toISOString();
+  all[idx] = {
+    ...all[idx],
+    comprehensiveBookedAt: undefined,
+    comprehensiveCanceledAt: now,
+    calendlyEvents: appendClientCalendlyEvent(all[idx], '60-canceled', meta),
+  };
+  await persist(all);
+  return all[idx];
+}
+
+export async function applyCalendlyWebhookToSubmission(
+  id: string,
+  kind: CalendlyMeetingKind,
+  event: 'invitee.created' | 'invitee.canceled',
+  meta?: { inviteeUri?: string; eventSlug?: string },
+): Promise<
+  | { submission: PrepSubmission; newlyBooked: boolean; action: CalendlyClientEventAction }
+  | null
+> {
+  if (event === 'invitee.created') {
+    const result =
+      kind === 'consult30'
+        ? await markConsultationBooked(id, meta)
+        : await markComprehensiveBooked(id, meta);
+    if (!result) return null;
+    return {
+      submission: result.submission,
+      newlyBooked: result.newlyBooked,
+      action: calendlyActionForKind(kind, true),
+    };
+  }
+
+  const submission =
+    kind === 'consult30'
+      ? await markConsultationCanceled(id, meta)
+      : await markComprehensiveCanceled(id, meta);
+  if (!submission) return null;
+  return {
+    submission,
+    newlyBooked: false,
+    action: calendlyActionForKind(kind, false),
+  };
 }
 
 export async function getSubmissionById(id: string): Promise<PrepSubmission | null> {
@@ -220,6 +372,45 @@ export async function getLatestUnbookedSubmissionByEmail(
   const unbooked = matches.filter((s) => !s.calendlyBookedAt);
   if (unbooked.length === 0) return null;
   return [...unbooked].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+}
+
+/** Newest record with an active 30-min booking (for cancel matching). */
+export async function getLatestConsult30BookedSubmissionByEmail(
+  email: string,
+): Promise<PrepSubmission | null> {
+  const matches = await getSubmissionsByEmail(email);
+  const booked = matches.filter((s) => !!s.calendlyBookedAt);
+  if (booked.length === 0) return null;
+  return [...booked].sort((a, b) =>
+    (b.calendlyBookedAt || '').localeCompare(a.calendlyBookedAt || ''),
+  )[0];
+}
+
+/** Best portal / Step 8 record for 1-hr comprehensive booking webhooks. */
+export async function getSubmissionForComprehensiveBooking(
+  email: string,
+): Promise<PrepSubmission | null> {
+  const matches = await getSubmissionsByEmail(email);
+  if (matches.length === 0) return null;
+
+  const eligible = matches.filter(
+    (s) => !!s.engagementCommittedAt || !!s.portalAccessGrantedAt,
+  );
+  if (eligible.length === 0) return null;
+  if (eligible.length === 1) return eligible[0];
+  return pickBestSubmissionForEmail(eligible);
+}
+
+/** Newest record with an active 1-hr booking (for cancel matching). */
+export async function getLatestComprehensiveBookedSubmissionByEmail(
+  email: string,
+): Promise<PrepSubmission | null> {
+  const matches = await getSubmissionsByEmail(email);
+  const booked = matches.filter((s) => !!s.comprehensiveBookedAt);
+  if (booked.length === 0) return null;
+  return [...booked].sort((a, b) =>
+    (b.comprehensiveBookedAt || '').localeCompare(a.comprehensiveBookedAt || ''),
+  )[0];
 }
 
 export function hasEngagementCommitment(submission: PrepSubmission): boolean {
@@ -361,7 +552,7 @@ export async function saveProposalDraft(id: string, draft: string): Promise<bool
   const idx = all.findIndex((s) => s.id === id);
   if (idx === -1) return false;
 
-  (all[idx] as PrepSubmission & { proposalDraft?: string }).proposalDraft = draft;
+  all[idx] = { ...all[idx], proposalDraft: draft };
   await persist(all);
   return true;
 }

@@ -23,6 +23,7 @@ import {
   revokePortalAccess,
   saveProposalDraft,
   saveConsultTranscripts,
+  type PrepSubmission,
   setClientPasswordHash,
   updatePreMeetingDiscovery,
 } from '@/lib/submissions-store';
@@ -300,29 +301,10 @@ export async function sendAnalysisPrep(formData: FormData) {
   }
 }
 
-async function notifyMichaelConsultBooked(updated: Awaited<ReturnType<typeof markConsultationBooked>>) {
+async function notifyMichaelConsultBookedAction(updated: PrepSubmission | null | undefined) {
   if (!updated) return { success: false, error: 'No submission to notify.' };
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  try {
-    await resend.emails.send({
-      from: getResendFrom('Consultation Prep'),
-      to: site.email,
-      subject: `Initial Consultation Booked — ${updated.name.slice(0, 60)}`,
-      replyTo: updated.email,
-      html: buildPrepOwnerEmailHtml(updated, true),
-      attachments: [
-        {
-          filename: 'prep-answers.txt',
-          content: Buffer.from(updated.fullText).toString('base64'),
-        },
-      ],
-    });
-    return { success: true };
-  } catch (error) {
-    console.error('Prep booking notification failed:', error);
-    return { success: false, error: 'Booking recorded but notification failed.' };
-  }
+  const { notifyMichaelConsultBooked } = await import('@/lib/notify-consult-booked');
+  return notifyMichaelConsultBooked(updated);
 }
 
 /** Step 2 — client finished Calendly: notify Michael with prep attachment + mark booked in admin. */
@@ -340,14 +322,17 @@ export async function completePrepBooking(submissionId: string) {
     return { success: true, alreadyBooked: true, calendlyBookedAt: sub.calendlyBookedAt };
   }
 
-  const updated = await markConsultationBooked(submissionId);
-  if (!updated) {
+  const booked = await markConsultationBooked(submissionId, { source: 'browser' });
+  if (!booked) {
     return { success: false, error: 'Failed to record booking.' };
   }
 
-  const sent = await notifyMichaelConsultBooked(updated);
-  if (!sent.success) {
-    return { success: false, error: sent.error, calendlyBookedAt: updated.calendlyBookedAt };
+  const { submission: updated, newlyBooked } = booked;
+  if (newlyBooked) {
+    const sent = await notifyMichaelConsultBookedAction(updated);
+    if (!sent.success) {
+      return { success: false, error: sent.error, calendlyBookedAt: updated.calendlyBookedAt };
+    }
   }
 
   return { success: true, calendlyBookedAt: updated.calendlyBookedAt };
@@ -392,11 +377,12 @@ export async function markConsultBookedForAdmin(submissionId: string) {
     };
   }
 
-  const updated = await markConsultationBooked(submissionId);
-  if (!updated) {
+  const booked = await markConsultationBooked(submissionId, { source: 'admin' });
+  if (!booked) {
     return { success: false, error: 'Failed to record booking.' };
   }
 
+  const { submission: updated } = booked;
   return {
     success: true,
     calendlyBookedAt: updated.calendlyBookedAt,
