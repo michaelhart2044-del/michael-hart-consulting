@@ -16,8 +16,16 @@ const FOOTER_H = 72;
 
 const SECTION_HEADER = /^(DEFINE|RECOMMENDED APPROACH|CLIENT PITCH)\s*[—–-]/i;
 
-async function readBrandAsset(filename: string): Promise<Buffer> {
-  return fs.readFile(path.join(process.cwd(), 'public', 'brand', filename));
+/** Pacific time — matches primary business timezone. */
+function formatProposalTimestamp(date = new Date()): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
 }
 
 function contentWidth(doc: PDFKit.PDFDocument): number {
@@ -70,11 +78,7 @@ function drawPageHeader(doc: PDFKit.PDFDocument, clientName: string, logo: Buffe
     .font('Helvetica')
     .fontSize(9)
     .fillColor(MUTED)
-    .text(
-      new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      left,
-      doc.y + 2,
-    );
+    .text(formatProposalTimestamp(), left, doc.y + 2);
 
   doc
     .moveTo(left, doc.y + 10)
@@ -138,16 +142,10 @@ function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string): void
   }
 }
 
-function drawPageFooter(
-  doc: PDFKit.PDFDocument,
-  pageIndex: number,
-  pageCount: number,
-  signature: Buffer | null,
-): void {
+function drawPageFooter(doc: PDFKit.PDFDocument, pageIndex: number, pageCount: number): void {
   const left = doc.page.margins.left;
   const right = doc.page.width - doc.page.margins.right;
   const footerTop = doc.page.height - doc.page.margins.bottom - 52;
-  const isLast = pageIndex === pageCount - 1;
 
   doc
     .moveTo(left, footerTop)
@@ -175,22 +173,6 @@ function drawPageFooter(
       width: contentWidth(doc),
       align: 'left',
     });
-
-  if (isLast && signature) {
-    const sigWidth = 128;
-    const sigHeight = 40;
-    const x = right - sigWidth;
-    const y = footerTop - sigHeight - 14;
-
-    // Signature asset uses a dark background — place on brand navy panel.
-    doc.roundedRect(x - 8, y - 6, sigWidth + 16, sigHeight + 30, 5).fill(NAVY);
-    doc.image(signature, x, y, { width: sigWidth, height: sigHeight });
-    doc
-      .font('Helvetica')
-      .fontSize(7.5)
-      .fillColor(GOLD)
-      .text('Michael Hart, Founder', x - 8, y + sigHeight + 4, { width: sigWidth + 16, align: 'center' });
-  }
 }
 
 export async function generateProposalPdfBuffer(params: {
@@ -199,10 +181,7 @@ export async function generateProposalPdfBuffer(params: {
 }): Promise<Buffer> {
   const { clientName, proposalText } = params;
 
-  const [logo, signature] = await Promise.all([
-    fs.readFile(path.join(process.cwd(), 'public', 'mh-logo.png')),
-    readBrandAsset('signature-michael-hart.png').catch(() => null),
-  ]);
+  const logo = await fs.readFile(path.join(process.cwd(), 'public', 'mh-logo.png'));
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
@@ -228,7 +207,7 @@ export async function generateProposalPdfBuffer(params: {
     const pageCount = range.count;
     for (let i = 0; i < pageCount; i++) {
       doc.switchToPage(i);
-      drawPageFooter(doc, i, pageCount, signature);
+      drawPageFooter(doc, i, pageCount);
     }
 
     doc.end();
