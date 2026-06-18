@@ -47,15 +47,17 @@ export default function About() {
       <div className="max-w-5xl mx-auto px-6 pb-12">
         <div className="max-w-3xl border border-white/10 rounded-2xl p-8 bg-card">
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
-            <div className="flex-shrink-0 w-28 h-28 md:w-32 md:h-32 rounded-full border-2 border-accent/40 bg-white p-0.5 shadow-[0_0_0_1px_rgba(197,164,110,0.15)] overflow-hidden">
-              <Image
-                src="/headshot.png"
-                alt="Michael Hart, Founder and Principal"
-                width={128}
-                height={128}
-                className="w-full h-full rounded-full object-cover object-[center_15%]"
-                priority
-              />
+            <div className="flex-shrink-0 w-28 h-28 md:w-32 md:h-32 rounded-full p-[3px] bg-gradient-to-br from-accent via-accent-hover to-[#8f6f3d] shadow-[0_0_16px_rgba(197,164,110,0.35)]">
+              <div className="w-full h-full rounded-full overflow-hidden ring-1 ring-accent/20">
+                <Image
+                  src="/headshot.png"
+                  alt="Michael Hart, Founder and Principal"
+                  width={128}
+                  height={128}
+                  className="w-full h-full object-cover object-center"
+                  priority
+                />
+              </div>
             </div>
             <div className="flex-1">
               <div>
