@@ -23,8 +23,8 @@ const FONT_BOLD = 'Helvetica-Bold';
 
 /** Round dot — cover services (Windows-style bullet). */
 const MARKER_DOT = '\u2022';
-/** Small arrow — body lists (Windows-style arrow bullet). */
-const MARKER_ARROW = '\u25B8';
+/** Chevron — body lists; ASCII-safe (Unicode arrows show as % in PDF Helvetica). */
+const MARKER_ARROW = '>';
 
 const SECTION_HEADER = /^(DEFINE|RECOMMENDED APPROACH|CLIENT PITCH)\s*[—–-]/i;
 const BULLET_LINE = /^[-•*]\s+/;
