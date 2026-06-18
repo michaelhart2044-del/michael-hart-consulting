@@ -149,6 +149,7 @@ export default function About() {
             <div>
               <div className="font-medium text-foreground mb-2">Professional Development</div>
               <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Six Sigma Green Belt, Optum</li>
                 <li>Six Sigma Black Belt certification (in progress)</li>
                 <li>Advanced training in process optimization, automation, and ERP systems</li>
               </ul>
@@ -203,7 +204,7 @@ export default function About() {
             </p>
             <div className="mt-8">
               <Link
-                href="/contact#book"
+                href="/prepare-analysis"
                 className="inline-block px-10 py-4 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-lg rounded-full transition-all active:scale-[0.985]"
               >
                 Book a Consultation
