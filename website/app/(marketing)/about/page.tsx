@@ -106,7 +106,7 @@ export default function About() {
               <ul className="list-disc pl-5 space-y-1 text-sm">
                 <li>Design automated workflows using SQL, Power Query, and ERP tools to transform manual processes</li>
                 <li>Reduced reconciliation time significantly through SQL-powered automation and Power Query data refreshes</li>
-                <li>Lead Six Sigma Black Belt projects focused on automating cash reconciliation for enhanced accuracy and efficiency</li>
+                <li>Apply Six Sigma methods — Green Belt certified (Optum), Black Belt in progress — including automating cash reconciliation for enhanced accuracy and efficiency</li>
               </ul>
             </div>
 

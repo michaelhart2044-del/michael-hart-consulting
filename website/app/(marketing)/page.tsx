@@ -128,7 +128,7 @@ export default function Home() {
                   </svg>
                 ),
                 title: "Expertise in Automation & Controls",
-                desc: "Transforming manual, time-intensive processes into automated, scalable workflows using SQL, Power Query, Power BI, and modern ERP tools. Leading Six Sigma Black Belt projects to strengthen controls and elevate efficiency."
+                desc: "Transforming manual, time-intensive processes into automated, scalable workflows using SQL, Power Query, Power BI, and modern ERP tools. Six Sigma Green Belt–certified (Optum), with Black Belt certification in progress — applying structured improvement methods to strengthen controls and elevate efficiency."
               },
               {
                 icon: (
