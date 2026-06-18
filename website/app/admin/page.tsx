@@ -55,12 +55,22 @@ export default function AdminProposalGenerator() {
   const [proposal, setProposal] = useState<Generated | null>(null);
   const [outputText, setOutputText] = useState(''); // editable full text
   const [status, setStatus] = useState('');
+  const [statusIsError, setStatusIsError] = useState(false);
   const [isGrantingPortal, setIsGrantingPortal] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [consult30Transcript, setConsult30Transcript] = useState('');
   const [consult60Transcript, setConsult60Transcript] = useState('');
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
   const [isSendingProposal, setIsSendingProposal] = useState(false);
+
+  function showStatus(message: string, isError = false, ms = isError ? 12000 : 5000) {
+    setStatus(message);
+    setStatusIsError(isError);
+    setTimeout(() => {
+      setStatus('');
+      setStatusIsError(false);
+    }, ms);
+  }
 
   // Load recent on mount
   async function refreshRecent() {
@@ -450,13 +460,12 @@ Best regards,`;
     setIsSendingProposal(false);
 
     if (res.success) {
-      setStatus(res.message || 'Proposal sent.');
+      showStatus(res.message || 'Proposal sent.');
       setLoadedSub({ ...loadedSub, sentAt: res.sentAt || new Date().toISOString() });
       await refreshRecent();
     } else {
-      setStatus(res.error || 'Failed to send proposal');
+      showStatus(res.error || 'Failed to send proposal', true);
     }
-    setTimeout(() => setStatus(''), 5000);
   }
 
   async function handleMarkSent() {
@@ -535,7 +544,13 @@ Best regards,`;
       </div>
 
       {status && (
-        <div className="text-sm px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-[#c5a46e]">
+        <div
+          className={`text-sm px-4 py-2 rounded-lg border ${
+            statusIsError
+              ? 'bg-red-950/40 border-red-500/40 text-red-200'
+              : 'bg-white/5 border-white/10 text-[#c5a46e]'
+          }`}
+        >
           {status}
         </div>
       )}

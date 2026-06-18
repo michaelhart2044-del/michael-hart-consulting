@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Production configuration only.
-  // (Removed allowedDevOrigins — it was a local dev-only setting.)
+  // pdfkit loads Helvetica metrics from disk — must not be bundled for serverless.
+  serverExternalPackages: ["pdfkit"],
 };
 
 export default nextConfig;
