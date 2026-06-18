@@ -70,7 +70,7 @@ export default function Industries() {
             Book a no-obligation consultation to explore how we can support your organization.
           </p>
           <Link 
-            href="/contact#book" 
+            href="/prepare-analysis" 
             className="inline-block px-10 py-4 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium text-lg rounded-full transition-all active:scale-[0.985]"
           >
             Book a Consultation
