@@ -10,17 +10,29 @@ import { site } from '@/lib/site';
 
 const NAVY = colors.background;
 const GOLD = colors.accent;
+const GOLD_DARK = '#8f6f3d';
 const MUTED = colors.subtle;
 const BODY = '#1e293b';
 const FOOTER_H = 72;
 const MINI_HEADER_H = 42;
-const CLOSING_H = 58;
+const CLOSING_H = 72;
+const BODY_SIZE = 10.5;
+
+const FONT = 'Helvetica';
+const FONT_BOLD = 'Helvetica-Bold';
 
 const SECTION_HEADER = /^(DEFINE|RECOMMENDED APPROACH|CLIENT PITCH)\s*[—–-]/i;
+const BULLET_LINE = /^[-•*]\s+/;
+const NUMBERED_LINE = /^\d+\.\s+/;
+const SIGNOFF_LINE = /^[—–-]+\s*Michael Hart\s*\.?$/i;
 
 interface PdfLayoutContext {
   clientName: string;
   logo: Buffer;
+}
+
+function siteHost(): string {
+  return site.url.replace(/^https?:\/\//, '');
 }
 
 /** Pacific time — matches primary business timezone. */
@@ -49,6 +61,7 @@ export function sanitizeProposalForClient(text: string): string {
       if (/^===\s*SIGVAI/i.test(t)) return false;
       if (/^===\s*END SIGVAI/i.test(t)) return false;
       if (/SigVai\s*\/\s*xAI ready/i.test(t)) return false;
+      if (SIGNOFF_LINE.test(t)) return false;
       return true;
     })
     .join('\n')
@@ -64,62 +77,76 @@ function contentBottom(doc: PDFKit.PDFDocument): number {
   return doc.page.height - doc.page.margins.bottom - FOOTER_H;
 }
 
+function setBodyFont(doc: PDFKit.PDFDocument): void {
+  doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY);
+}
+
+function drawAlignedAsteriskList(
+  doc: PDFKit.PDFDocument,
+  items: string[],
+  startY: number,
+  fontSize: number,
+): void {
+  const left = doc.page.margins.left;
+  const width = contentWidth(doc);
+  const bulletCol = 12;
+  const textIndent = bulletCol + 6;
+
+  doc.font(FONT).fontSize(fontSize);
+  const textWidth = width - textIndent;
+  const blockWidth = Math.min(
+    width,
+    Math.max(...items.map((item) => doc.widthOfString(item) + textIndent)),
+  );
+  const blockLeft = left + (width - blockWidth) / 2;
+
+  let y = startY;
+  for (const item of items) {
+    doc.font(FONT_BOLD).fontSize(fontSize).fillColor(NAVY).text('*', blockLeft, y, {
+      width: bulletCol,
+      lineBreak: false,
+    });
+    doc.font(FONT).fontSize(fontSize).fillColor(BODY).text(item, blockLeft + textIndent, y, {
+      width: blockWidth - textIndent,
+      lineGap: 2,
+    });
+    y = doc.y + 4;
+  }
+  doc.y = y;
+}
+
 /** Page 1 — full branded cover (body starts on page 2). */
 function drawCoverPage(doc: PDFKit.PDFDocument, clientName: string, logo: Buffer): void {
   const left = doc.page.margins.left;
   const right = doc.page.width - doc.page.margins.right;
   const top = 80;
   const centerX = (left + right) / 2;
+  const width = contentWidth(doc);
 
   doc.image(logo, centerX - 36, top, { width: 72, height: 72 });
 
-  doc
-    .font('Times-Bold')
-    .fontSize(16)
-    .fillColor(NAVY)
-    .text(site.name, left, top + 88, { width: contentWidth(doc), align: 'center' });
+  doc.font(FONT_BOLD).fontSize(16).fillColor(NAVY).text(site.name, left, top + 88, { width, align: 'center' });
 
-  doc
-    .font('Helvetica')
-    .fontSize(9)
-    .fillColor(MUTED)
-    .text(site.tagline, left, doc.y + 6, { width: contentWidth(doc), align: 'center' });
+  doc.font(FONT).fontSize(9).fillColor(MUTED).text(site.tagline, left, doc.y + 6, { width, align: 'center' });
 
   const ruleY = doc.y + 22;
-  doc
-    .moveTo(left + 80, ruleY)
-    .lineTo(right - 80, ruleY)
-    .strokeColor(GOLD)
-    .lineWidth(1.5)
-    .stroke();
+  doc.moveTo(left + 80, ruleY).lineTo(right - 80, ruleY).strokeColor(GOLD).lineWidth(1.5).stroke();
+
+  doc.font(FONT_BOLD).fontSize(26).fillColor(NAVY).text('Initial Proposal', left, ruleY + 28, { width, align: 'center' });
+
+  doc.font(FONT).fontSize(12).fillColor(BODY).text(`Prepared for ${clientName}`, left, doc.y + 10, { width, align: 'center' });
+
+  doc.font(FONT).fontSize(10).fillColor(MUTED).text(formatProposalTimestamp(), left, doc.y + 8, { width, align: 'center' });
 
   doc
-    .font('Times-Bold')
-    .fontSize(26)
-    .fillColor(NAVY)
-    .text('Initial Proposal', left, ruleY + 28, { width: contentWidth(doc), align: 'center' });
-
-  doc
-    .font('Helvetica')
-    .fontSize(12)
-    .fillColor(BODY)
-    .text(`Prepared for ${clientName}`, left, doc.y + 10, { width: contentWidth(doc), align: 'center' });
-
-  doc
-    .font('Helvetica')
-    .fontSize(10)
-    .fillColor(MUTED)
-    .text(formatProposalTimestamp(), left, doc.y + 8, { width: contentWidth(doc), align: 'center' });
-
-  doc
-    .font('Helvetica-Oblique')
+    .font(FONT)
     .fontSize(9)
     .fillColor(MUTED)
     .text(
       `Prepared exclusively for ${clientName} — confidential. Not for distribution without written consent.`,
       left + 40,
       doc.y + 18,
-      { width: contentWidth(doc) - 80, align: 'center', lineGap: 2 },
+      { width: width - 80, align: 'center', lineGap: 2 },
     );
 
   const servicesY = doc.y + 36;
@@ -132,23 +159,18 @@ function drawCoverPage(doc: PDFKit.PDFDocument, clientName: string, logo: Buffer
     .stroke()
     .opacity(1);
 
-  const services = [
-    'Forensic Accounting & Litigation Support',
-    'Business Setup & Structuring',
-    'Mergers & Acquisitions Advisory',
-    'Financial Forecasting & Strategy',
-    'AI & Automation Solutions',
-  ];
-
-  doc
-    .font('Helvetica')
-    .fontSize(8.5)
-    .fillColor(MUTED)
-    .text(services.map((s) => `•  ${s}`).join('\n'), left, servicesY + 14, {
-      width: contentWidth(doc),
-      align: 'center',
-      lineGap: 3,
-    });
+  drawAlignedAsteriskList(
+    doc,
+    [
+      'Forensic Accounting & Litigation Support',
+      'Business Setup & Structuring',
+      'Mergers & Acquisitions Advisory',
+      'Financial Forecasting & Strategy',
+      'AI & Automation Solutions',
+    ],
+    servicesY + 14,
+    8.5,
+  );
 }
 
 /** Pages 2+ — compact running header. */
@@ -159,24 +181,13 @@ function drawMiniHeader(doc: PDFKit.PDFDocument, clientName: string, logo: Buffe
 
   doc.image(logo, left, top, { width: 22, height: 22 });
 
-  doc
-    .font('Helvetica')
-    .fontSize(8)
-    .fillColor(MUTED)
-    .text(`Initial Proposal  •  ${clientName}`, left + 30, top + 7, {
-      width: contentWidth(doc) - 30,
-      align: 'left',
-    });
+  doc.font(FONT).fontSize(8).fillColor(MUTED).text(`Initial Proposal  •  ${clientName}`, left + 30, top + 7, {
+    width: contentWidth(doc) - 30,
+    align: 'left',
+  });
 
   const ruleY = top + MINI_HEADER_H - 8;
-  doc
-    .moveTo(left, ruleY)
-    .lineTo(right, ruleY)
-    .strokeColor(GOLD)
-    .lineWidth(0.5)
-    .opacity(0.45)
-    .stroke()
-    .opacity(1);
+  doc.moveTo(left, ruleY).lineTo(right, ruleY).strokeColor(GOLD).lineWidth(0.5).opacity(0.45).stroke().opacity(1);
 
   doc.y = ruleY + 12;
 }
@@ -186,6 +197,33 @@ function ensureSpace(doc: PDFKit.PDFDocument, ctx: PdfLayoutContext, needed: num
     doc.addPage();
     drawMiniHeader(doc, ctx.clientName, ctx.logo);
   }
+}
+
+function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number): void {
+  const left = doc.page.margins.left;
+
+  doc.font(FONT_BOLD).fontSize(13).fillColor(NAVY).text(title, { width, lineGap: 1 });
+
+  const underlineY = doc.y + 5;
+  doc.moveTo(left, underlineY).lineTo(left + width, underlineY).strokeColor(GOLD_DARK).lineWidth(1.1).stroke();
+
+  doc.y = underlineY + 12;
+  setBodyFont(doc);
+}
+
+function drawBulletLine(doc: PDFKit.PDFDocument, trimmed: string, width: number): void {
+  const left = doc.page.margins.left;
+  const bulletCol = 12;
+  const textIndent = bulletCol + 8;
+  const content = trimmed.replace(BULLET_LINE, '');
+
+  const y = doc.y;
+  doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text('*', left, y, { width: bulletCol, lineBreak: false });
+  doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(content, left + textIndent, y, {
+    width: width - textIndent,
+    lineGap: 2.5,
+    paragraphGap: 2,
+  });
 }
 
 function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: PdfLayoutContext): void {
@@ -201,31 +239,32 @@ function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: 
       continue;
     }
 
-    if (SECTION_HEADER.test(trimmed)) {
-      ensureSpace(doc, ctx, 36);
-      doc.moveDown(0.6);
-      doc.font('Times-Bold').fontSize(12.5).fillColor(GOLD).text(trimmed, { width, lineGap: 1 });
-      doc.moveDown(0.25);
-      doc.font('Helvetica').fontSize(10.5).fillColor(BODY);
+    if (SIGNOFF_LINE.test(trimmed)) {
       continue;
     }
 
-    if (/^[-•]\s/.test(trimmed) || /^\d+\.\s/.test(trimmed)) {
+    if (SECTION_HEADER.test(trimmed)) {
+      ensureSpace(doc, ctx, 44);
+      doc.moveDown(0.5);
+      drawSectionHeader(doc, trimmed, width);
+      continue;
+    }
+
+    if (BULLET_LINE.test(trimmed)) {
       ensureSpace(doc, ctx, 16);
+      drawBulletLine(doc, trimmed, width);
+      continue;
+    }
+
+    if (NUMBERED_LINE.test(trimmed)) {
+      ensureSpace(doc, ctx, 16);
+      setBodyFont(doc);
       doc.text(trimmed, { width, indent: 12, lineGap: 2.5, paragraphGap: 2 });
       continue;
     }
 
-    if (trimmed.startsWith('—')) {
-      ensureSpace(doc, ctx, 16);
-      doc.font('Helvetica-Oblique').fontSize(10.5).fillColor(BODY);
-      doc.text(trimmed, { width, lineGap: 2 });
-      doc.font('Helvetica').fontSize(10.5);
-      continue;
-    }
-
     ensureSpace(doc, ctx, 16);
-    doc.font('Helvetica').fontSize(10.5).fillColor(BODY);
+    setBodyFont(doc);
     doc.text(trimmed, { width, align: 'left', lineGap: 2.5, paragraphGap: 3 });
   }
 }
@@ -238,19 +277,13 @@ function drawClosingBlock(doc: PDFKit.PDFDocument, ctx: PdfLayoutContext): void 
   const left = doc.page.margins.left;
   const width = contentWidth(doc);
 
-  doc
-    .moveTo(left, doc.y)
-    .lineTo(left + width * 0.35, doc.y)
-    .strokeColor(GOLD)
-    .lineWidth(0.75)
-    .opacity(0.55)
-    .stroke()
-    .opacity(1);
+  doc.moveTo(left, doc.y).lineTo(left + width * 0.35, doc.y).strokeColor(GOLD_DARK).lineWidth(0.75).stroke();
 
   doc.moveDown(0.8);
-  doc.font('Helvetica').fontSize(10.5).fillColor(NAVY).text('Michael Hart, Founder', { width });
-  doc.font('Helvetica').fontSize(10).fillColor(BODY).text(site.name, { width });
-  doc.font('Helvetica').fontSize(10).fillColor(MUTED).text(`${site.phone}  •  ${site.email}`, { width });
+  doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text('Michael Hart, Founder', { width });
+  doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(site.name, { width });
+  doc.font(FONT).fontSize(BODY_SIZE).fillColor(MUTED).text(`${site.phone}  •  ${site.email}`, { width });
+  doc.font(FONT).fontSize(BODY_SIZE).fillColor(MUTED).text(siteHost(), { width });
 }
 
 function drawPageFooter(doc: PDFKit.PDFDocument, pageIndex: number, pageCount: number): void {
@@ -259,40 +292,24 @@ function drawPageFooter(doc: PDFKit.PDFDocument, pageIndex: number, pageCount: n
   const footerTop = doc.page.height - doc.page.margins.bottom - 52;
 
   if (pageIndex === 0) {
-    doc
-      .font('Helvetica')
-      .fontSize(7.5)
-      .fillColor(MUTED)
-      .text(site.name, left, footerTop + 14, { width: contentWidth(doc), align: 'center' });
+    doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(site.name, left, footerTop + 14, {
+      width: contentWidth(doc),
+      align: 'center',
+    });
     return;
   }
 
-  doc
-    .moveTo(left, footerTop)
-    .lineTo(right, footerTop)
-    .strokeColor(GOLD)
-    .lineWidth(0.75)
-    .opacity(0.55)
-    .stroke()
-    .opacity(1);
+  doc.moveTo(left, footerTop).lineTo(right, footerTop).strokeColor(GOLD).lineWidth(0.75).opacity(0.55).stroke().opacity(1);
 
-  doc
-    .font('Helvetica')
-    .fontSize(8)
-    .fillColor(MUTED)
-    .text(`${site.phone}  •  ${site.email}  •  ${site.url.replace(/^https?:\/\//, '')}`, left, footerTop + 8, {
-      width: contentWidth(doc),
-      align: 'left',
-    });
+  doc.font(FONT).fontSize(8).fillColor(MUTED).text(`${site.phone}  •  ${site.email}  •  ${siteHost()}`, left, footerTop + 8, {
+    width: contentWidth(doc),
+    align: 'left',
+  });
 
-  doc
-    .font('Helvetica')
-    .fontSize(7.5)
-    .fillColor(MUTED)
-    .text(`${site.name}  •  Page ${pageIndex + 1} of ${pageCount}`, left, footerTop + 20, {
-      width: contentWidth(doc),
-      align: 'left',
-    });
+  doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(`${site.name}  •  Page ${pageIndex + 1} of ${pageCount}`, left, footerTop + 20, {
+    width: contentWidth(doc),
+    align: 'left',
+  });
 }
 
 export async function generateProposalPdfBuffer(params: {

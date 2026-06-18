@@ -142,7 +142,7 @@ export function generateProposal(input: GeneratorInput): GeneratedProposal {
   pitch += `4. You receive the DEFINE + roadmap + first delivered improvements within the agreed window.\n\n`;
 
   pitch += `I’m looking forward to helping you turn these challenges into a faster, cleaner, more strategic finance operation.\n\n`;
-  pitch += `— Michael Hart\n`;
+  pitch += `Michael Hart\n`;
 
   const fullProposal = `${define}\n\n${pitch}`;
 

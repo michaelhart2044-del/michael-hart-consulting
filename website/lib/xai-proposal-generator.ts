@@ -35,7 +35,7 @@ RECOMMENDED APPROACH must include:
 - Estimated ROI framing (conservative, illustrative — invite refinement with their data)
 - Recommended starting point: "Engagement Activation Retainer" (4–6 weeks): discovery, quick wins, 30–90 day roadmap, controls health check, 1–2 delivered improvements, executive summary
 - Clear next steps (artifacts to share, kickoff timing)
-- Sign off: — Michael Hart
+- Sign off: Michael Hart (no em dash or prefix)
 
 Rules:
 - Use ONLY facts from the provided intake and transcript. Do not invent client metrics.
