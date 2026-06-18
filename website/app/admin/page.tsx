@@ -232,6 +232,19 @@ export default function AdminProposalGenerator() {
     setTimeout(() => setStatus(''), 2200);
   }
 
+  function buildClientEmailBody(greeting: string): string {
+    return `Hi ${greeting},
+
+Thank you for our conversation. I've attached the initial proposal outlining our recommended path forward based on what you shared.
+
+Please review at your convenience and let me know if you have any questions — or if you'd like to schedule a brief follow-up to walk through scope and timing together.
+
+Best regards,
+Michael Hart
+Michael Hart Consulting Group LLC
+${site.phone}`;
+  }
+
   async function generateEmailDraft() {
     const text = outputText || (proposal ? proposal.fullProposal : '');
     if (!text) {
@@ -244,47 +257,8 @@ export default function AdminProposalGenerator() {
     const subject = `Initial Proposal — ${clientName}`;
     const greeting = loadedSub?.name?.split(' ')[0] || 'there';
 
-    const body = `Hi ${greeting},
-
-Thank you for the conversation. As discussed, here is the initial proposal based on the details you shared.
-
-${text}
-
-I'm happy to walk through any part of this on our follow-up call and tailor the scope or timeline.
-
-Best regards,
-Michael Hart
-Michael Hart Consulting Group LLC
-${site.phone}
-
----
-Prepared privately using internal tools.`;
-
-    // Full ready-to-send version for clipboard (user pastes into any email client)
-    const fullDraft = `Subject: ${subject}\n\n${body}`;
-
-    try {
-      await navigator.clipboard.writeText(fullDraft);
-      setStatus('Email draft copied!');
-    } catch {
-      setStatus('Clipboard unavailable — see console for full draft');
-      console.log('=== EMAIL DRAFT (copy manually) ===\n' + fullDraft);
-      setTimeout(() => setStatus(''), 4000);
-      return;
-    }
-
-    // Secondary: open mail client with a SHORT body (long bodies get truncated by most clients).
-    // User pastes the full version from clipboard into the email.
-    const shortBody = `Hi ${greeting},
-
-Thank you for the conversation. The full proposal is ready in your clipboard — please paste it below.
-
-Best regards,
-Michael Hart
-Michael Hart Consulting Group LLC
-${site.phone}`;
-
-    const mailto = `mailto:${encodeURIComponent(loadedSub?.email || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(shortBody)}`;
+    const emailBody = buildClientEmailBody(greeting);
+    const mailto = `mailto:${encodeURIComponent(loadedSub?.email || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
 
     // Open mailto (best-effort; some browsers block or truncate)
     try {
@@ -295,10 +269,11 @@ ${site.phone}`;
       link.click();
       document.body.removeChild(link);
     } catch {
-      // Silently ignore — clipboard success is the main win
+      setStatus('Could not open email client — copy the body manually if needed.');
     }
 
-    setTimeout(() => setStatus(''), 2600);
+    setStatus('Outlook opened — attach your proposal PDF, then send.');
+    setTimeout(() => setStatus(''), 4000);
   }
 
   async function handleSaveDraft() {
@@ -699,7 +674,7 @@ ${site.phone}`;
                   <pre className="whitespace-pre-wrap text-[#cbd5e1] text-[12.5px] leading-relaxed font-mono">{proposal.defineSection}</pre>
                 </div>
                 <div className="border border-white/10 rounded-xl p-4 bg-black/20">
-                  <div className="uppercase tracking-[1px] text-[10px] text-[#c5a46e] mb-2">CLIENT PITCH</div>
+                  <div className="uppercase tracking-[1px] text-[10px] text-[#c5a46e] mb-2">Recommended approach</div>
                   <pre className="whitespace-pre-wrap text-[#cbd5e1] text-[12.5px] leading-relaxed font-mono">{proposal.pitchSection}</pre>
                 </div>
               </div>
@@ -729,8 +704,8 @@ ${site.phone}`;
                 </button>
               </div>
               <p className="text-[11px] text-[#64748b]">
-                Email draft copies the full proposal to your clipboard and opens Outlook. Paste the proposal into the body, send from{' '}
-                <span className="text-[#94a3b8]">michael@michaelhartconsulting.com</span>, then click confirm below.
+                Use Print / Save as PDF first, then Open email draft — attach the PDF in Outlook, send from{' '}
+                <span className="text-[#94a3b8]">michael@michaelhartconsulting.com</span>, then confirm below.
               </p>
             </div>
 

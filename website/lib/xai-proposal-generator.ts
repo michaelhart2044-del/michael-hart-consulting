@@ -3,7 +3,11 @@
  * Server-only. Requires XAI_API_KEY in environment.
  */
 
-import type { GeneratedProposal, GeneratorInput } from '@/lib/proposal-generator';
+import {
+  PROPOSAL_APPROACH_HEADER,
+  type GeneratedProposal,
+  type GeneratorInput,
+} from '@/lib/proposal-generator';
 
 const XAI_CHAT_URL = 'https://api.x.ai/v1/chat/completions';
 
@@ -22,11 +26,11 @@ Structure your response EXACTLY with these two section headers on their own line
 
 DEFINE — Current State & Opportunity for [Client Name]
 
-CLIENT PITCH — Recommended Path Forward
+${PROPOSAL_APPROACH_HEADER}
 
 DEFINE must cover: industry context, challenges from intake + call, team/effort, desired outcomes, constraints, and key insights from the consult transcript.
 
-CLIENT PITCH must include:
+RECOMMENDED APPROACH must include:
 - Why this matters (quantified impacts where possible from the conversation)
 - Estimated ROI framing (conservative, illustrative — invite refinement with their data)
 - Recommended starting point: "Engagement Activation Retainer" (4–6 weeks): discovery, quick wins, 30–90 day roadmap, controls health check, 1–2 delivered improvements, executive summary
@@ -64,7 +68,7 @@ function buildUserPrompt(input: GeneratorInput): string {
 
 function splitSections(raw: string): GeneratedProposal {
   const text = raw.trim();
-  const pitchIdx = text.search(/CLIENT PITCH\s*[—–-]/i);
+  const pitchIdx = text.search(/(?:CLIENT PITCH|RECOMMENDED APPROACH)\s*[—–-]/i);
   const defineIdx = text.search(/DEFINE\s*[—–-]/i);
 
   if (defineIdx >= 0 && pitchIdx > defineIdx) {

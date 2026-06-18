@@ -1,7 +1,7 @@
 /**
  * Internal-only proposal generator.
  * Takes structured prep data (from the public intake form) + optional free-text transcript/notes
- * and produces a clean, client-ready "DEFINE" + "CLIENT PITCH" document.
+ * and produces a clean, client-ready "DEFINE" + "RECOMMENDED APPROACH" document.
  *
  * This runs entirely server-side in the private /admin tool.
  * The output is designed to be fed directly into SigVai / xAI or lightly edited by Michael.
@@ -22,6 +22,9 @@ export interface GeneratorInput {
   /** Optional supplemental notes beyond the consult transcript. */
   transcript?: string;
 }
+
+/** Client-facing second section header (replaces legacy "CLIENT PITCH" label). */
+export const PROPOSAL_APPROACH_HEADER = 'RECOMMENDED APPROACH — Path Forward & Next Steps';
 
 export interface GeneratedProposal {
   defineSection: string;
@@ -81,8 +84,8 @@ export function generateProposal(input: GeneratorInput): GeneratedProposal {
   define += `\n---\n`;
   define += `Source: Structured intake form + optional transcript (private, SigVai/xAI ready).\n`;
 
-  // === CLIENT PITCH SECTION (benefits, ROI, package, next steps) ===
-  let pitch = `CLIENT PITCH — Recommended Path Forward\n\n`;
+  // === RECOMMENDED APPROACH (benefits, ROI, package, next steps) ===
+  let pitch = `${PROPOSAL_APPROACH_HEADER}\n\n`;
 
   // Benefits tailored to the actual challenges mentioned
   pitch += `Why This Matters for ${name || 'Your Organization'}\n`;
