@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   getRecentPrepsForAdmin,
   loadPrepForAdmin,
+  sendProposalToClientForAdmin,
   markPrepAsSent,
   saveProposalDraftForAdmin,
   generateInitialProposal,
@@ -59,6 +60,7 @@ export default function AdminProposalGenerator() {
   const [consult30Transcript, setConsult30Transcript] = useState('');
   const [consult60Transcript, setConsult60Transcript] = useState('');
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  const [isSendingProposal, setIsSendingProposal] = useState(false);
 
   // Load recent on mount
   async function refreshRecent() {
@@ -429,6 +431,34 @@ Best regards,`;
     setTimeout(() => setStatus(''), 6000);
   }
 
+  async function handleSendProposalToClient() {
+    if (!loadedSub) {
+      setStatus('Load a submission first');
+      return;
+    }
+    const text = outputText || (proposal ? proposal.fullProposal : '');
+    if (!text.trim()) {
+      setStatus('Generate a proposal first');
+      setTimeout(() => setStatus(''), 2200);
+      return;
+    }
+    if (!confirm(`Send proposal to ${loadedSub.name} at ${loadedSub.email}?`)) return;
+
+    setIsSendingProposal(true);
+    setStatus('');
+    const res = await sendProposalToClientForAdmin(loadedSub.id, text);
+    setIsSendingProposal(false);
+
+    if (res.success) {
+      setStatus(res.message || 'Proposal sent.');
+      setLoadedSub({ ...loadedSub, sentAt: res.sentAt || new Date().toISOString() });
+      await refreshRecent();
+    } else {
+      setStatus(res.error || 'Failed to send proposal');
+    }
+    setTimeout(() => setStatus(''), 5000);
+  }
+
   async function handleMarkSent() {
     if (!loadedSub) {
       setStatus('Load a submission first');
@@ -690,29 +720,48 @@ Best regards,`;
             <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 space-y-3">
               <p className="text-xs font-medium text-[#c5a46e]">2. Deliver to client</p>
               <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => void handleSendProposalToClient()}
+                  disabled={!outputText || isSendingProposal}
+                  className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
+                >
+                  {isSendingProposal ? 'Sending…' : 'Send proposal to client'}
+                </button>
                 <button onClick={handleSaveDraft} disabled={!outputText} className="px-5 py-2 text-sm rounded-full bg-white/5 border border-white/20 disabled:opacity-40 hover:bg-white/10">
                   Save Draft
                 </button>
                 <button onClick={copyAll} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Copy All</button>
                 <button onClick={downloadTxt} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Download .txt</button>
                 <button onClick={printToPdf} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Print / Save as PDF</button>
-                <button onClick={generateEmailDraft} className="px-5 py-2 text-sm rounded-full border border-[#c5a46e]/40 text-[#c5a46e] hover:bg-[#c5a46e]/10">
+                <button onClick={generateEmailDraft} className="px-5 py-2 text-sm rounded-full border border-white/20 text-[#94a3b8] hover:bg-white/5">
                   Open email draft (Outlook)
                 </button>
               </div>
               <p className="text-[11px] text-[#64748b]">
-                Use Print / Save as PDF first, then Open email draft — attach the PDF in Outlook, send from{' '}
-                <span className="text-[#94a3b8]">michael@michaelhartconsulting.com</span>, then confirm below.
+                <span className="text-[#94a3b8]">Recommended:</span> Send proposal to client — emails from your domain, attaches the proposal, marks Layer 3 sent, and BCCs you.
+                Use Outlook only if you prefer to send manually.
               </p>
             </div>
 
             <div className="rounded-lg border border-emerald-500/25 bg-emerald-950/20 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1 text-sm text-[#cbd5e1]">
-                <span className="font-medium text-emerald-200">3. After you send the email</span>
-                <span className="block text-xs text-[#64748b] mt-0.5">
-                  Confirms Layer 3 in the timeline. Outlook send cannot be detected automatically yet.
-                </span>
+                {loadedSub.sentAt ? (
+                  <>
+                    <span className="font-medium text-emerald-200">Proposal sent</span>
+                    <span className="block text-xs text-[#64748b] mt-0.5">
+                      {new Date(loadedSub.sentAt).toLocaleString()} — Layer 3 complete.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-medium text-emerald-200">3. Sent via Outlook instead?</span>
+                    <span className="block text-xs text-[#64748b] mt-0.5">
+                      Only needed if you did not use Send proposal to client above.
+                    </span>
+                  </>
+                )}
               </div>
+              {!loadedSub.sentAt && (
               <button
                 onClick={handleMarkSent}
                 disabled={!loadedSub}
@@ -720,6 +769,7 @@ Best regards,`;
               >
                 Confirm: Sent to Client
               </button>
+              )}
             </div>
           </div>
         )}

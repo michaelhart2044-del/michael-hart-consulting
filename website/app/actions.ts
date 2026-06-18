@@ -41,6 +41,7 @@ import {
   isPasswordStrongEnough,
   verifyClientPassword,
 } from '@/lib/client-password';
+import { sendProposalEmailToClient } from '@/lib/send-proposal-email';
 import { canClientSignIn, mustChangePortalPassword } from '@/lib/portal-access';
 
 /**
@@ -455,6 +456,44 @@ export async function markPrepAsSent(id: string) {
   }
   const ok = await markSubmissionSent(id);
   return { success: ok };
+}
+
+/** Admin: email proposal to client via Resend, save draft, and mark Layer 3 sent. */
+export async function sendProposalToClientForAdmin(submissionId: string, proposalText: string) {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const trimmed = proposalText?.trim() || '';
+  if (trimmed.length < 80) {
+    return { success: false, error: 'Proposal text is too short — generate or edit the proposal first.' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  await saveProposalDraft(submissionId, trimmed);
+
+  const sent = await sendProposalEmailToClient({
+    clientEmail: sub.email,
+    clientName: sub.name,
+    proposalText: trimmed,
+  });
+
+  if (!sent.success) {
+    return sent;
+  }
+
+  await markSubmissionSent(submissionId);
+  const updated = await getSubmissionById(submissionId);
+
+  return {
+    success: true as const,
+    sentAt: updated?.sentAt || new Date().toISOString(),
+    message: `Proposal emailed to ${sub.name} (${sub.email}). Layer 3 marked sent.`,
+  };
 }
 
 export async function saveProposalDraftForAdmin(id: string, draft: string) {
