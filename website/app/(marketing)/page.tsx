@@ -327,7 +327,7 @@ export default function Home() {
               },
               {
                 q: "How do I get started?",
-                a: "Book a no-obligation 30-minute consultation directly on the contact page, or call me at (747) 370-9393. We’ll discuss your situation and determine the best path forward.",
+                a: "Start with Book Consultation: share a few details about your situation and schedule a no-obligation 30-minute initial consultation. Or call (747) 370-9393. We'll discuss your situation and determine the best path forward.",
               },
             ].map((faq, index) => (
               <details
@@ -400,7 +400,7 @@ export default function Home() {
                 name: 'How do I get started?',
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'Book a no-obligation 30-minute consultation directly on the contact page, or call me at (747) 370-9393. We’ll discuss your situation and determine the best path forward.',
+                  text: "Start with Book Consultation: share a few details about your situation and schedule a no-obligation 30-minute initial consultation. Or call (747) 370-9393. We'll discuss your situation and determine the best path forward.",
                 },
               },
             ],
