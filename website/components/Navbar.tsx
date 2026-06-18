@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { site } from '@/lib/site';
 
 interface NavbarProps {
-  /** Optional override for the CTA button href (e.g. "#form" on the contact page) */
+  /** Optional override for the CTA button href */
   ctaHref?: string;
   /** Optional active section for homepage anchor highlighting (e.g. "why" or "services") */
   activeSection?: 'why' | 'services';
@@ -34,9 +34,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
 
   const isHome = pathname === '/';
 
-  // Auto-override CTA on contact page so shared (marketing) layout works without per-page props.
-  // Default now points to the AI-Powered Process Analysis prep flow (public CTAs updated per spec).
-  const resolvedCtaHref = ctaHref ?? (pathname === '/contact' ? '#form' : '/prepare-analysis');
+  const resolvedCtaHref = ctaHref ?? '/prepare-analysis';
 
   // Desktop: omit Home link when on the homepage (logo serves as home)
   const desktopItems = isHome
