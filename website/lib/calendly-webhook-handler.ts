@@ -26,14 +26,6 @@ export interface CalendlyWebhookHandlerResult {
   body: { ok: boolean; outcome: CalendlyWebhookLogOutcome; detail?: string };
 }
 
-export interface MhWebhookTestBody {
-  mh_test?: boolean;
-  event: CalendlyWebhookEventName;
-  kind: CalendlyMeetingKind;
-  email: string;
-  submissionId?: string;
-}
-
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -111,26 +103,8 @@ async function logAndReturn(
 export async function processCalendlyWebhookBody(
   rawBody: string,
   parsed: unknown,
-  options?: { isTest?: boolean },
 ): Promise<CalendlyWebhookHandlerResult> {
   const preview = truncatePayloadForLog(rawBody);
-
-  if (options?.isTest && parsed && typeof parsed === 'object') {
-    const test = parsed as MhWebhookTestBody;
-    if (test.mh_test && test.event && test.kind && test.email) {
-      return processResolvedWebhook({
-        event: test.event,
-        kind: test.kind,
-        email: test.email,
-        submissionIdHint: test.submissionId,
-        eventSlug:
-          test.kind === 'consult30' ? '30min' : 'comprehensive-process-review-roadmap',
-        inviteeUri: 'mh-test-simulator',
-        rawPayloadPreview: preview,
-        isTest: true,
-      });
-    }
-  }
 
   if (!parsed || typeof parsed !== 'object') {
     return logAndReturn(400, 'ignored', {
@@ -210,7 +184,6 @@ export async function processCalendlyWebhookBody(
     eventSlug: slug,
     inviteeUri,
     rawPayloadPreview: preview,
-    isTest: false,
   });
 }
 
@@ -222,7 +195,6 @@ async function processResolvedWebhook(input: {
   eventSlug: string;
   inviteeUri?: string;
   rawPayloadPreview?: string;
-  isTest: boolean;
 }): Promise<CalendlyWebhookHandlerResult> {
   const submission = await resolveSubmissionForWebhook(
     input.kind,
@@ -268,15 +240,14 @@ async function processResolvedWebhook(input: {
   if (
     input.kind === 'consult30' &&
     input.event === 'invitee.created' &&
-    applied.newlyBooked &&
-    !input.isTest
+    applied.newlyBooked
   ) {
     void notifyMichaelConsultBooked(applied.submission).catch((err) => {
       console.error('[calendly-webhook] async notify failed:', err);
     });
   }
 
-  return logAndReturn(200, input.isTest ? 'test' : 'updated', {
+  return logAndReturn(200, 'updated', {
     event: input.event,
     email: input.email,
     eventSlug: input.eventSlug,

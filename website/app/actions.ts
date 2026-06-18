@@ -15,7 +15,6 @@ import {
   getLatestUnbookedSubmissionByEmail,
   grantPortalAccessWithTempPassword,
   deleteSubmission,
-  clearAllSubmissions,
   hasEngagementCommitment,
   hasPortalAccess,
   markEngagementCommitted,
@@ -28,10 +27,9 @@ import {
   updatePreMeetingDiscovery,
 } from '@/lib/submissions-store';
 import { getLatestCalendlyWebhookLog } from '@/lib/calendly-webhook-log';
-import { processCalendlyWebhookBody } from '@/lib/calendly-webhook-handler';
-import type { CalendlyMeetingKind } from '@/lib/calendly-config';
 import { createAdminSession, verifyAdminSession, setAdminCookie, clearAdminCookie, getAdminSessionToken } from '@/lib/admin-auth';
-import { generateProposal, GeneratorInput } from '@/lib/proposal-generator';
+import type { GeneratorInput } from '@/lib/proposal-generator';
+import { generateProposalWithXai, isXaiProposalConfigured } from '@/lib/xai-proposal-generator';
 import {
   setClientCookie,
   clearClientCookie,
@@ -319,39 +317,6 @@ export async function completePrepBookingByEmail(email: string) {
   return completePrepBooking(sub.id);
 }
 
-/** Admin-only: manually mark consult booked if Calendly callback was missed. */
-export async function markConsultBookedForAdmin(submissionId: string) {
-  if (!(await requireAdmin())) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  const sub = await getSubmissionById(submissionId);
-  if (!sub) {
-    return { success: false, error: 'Submission not found.' };
-  }
-
-  if (sub.calendlyBookedAt) {
-    return {
-      success: true,
-      alreadyBooked: true,
-      calendlyBookedAt: sub.calendlyBookedAt,
-      message: 'Already marked as consult booked.',
-    };
-  }
-
-  const booked = await markConsultationBooked(submissionId, { source: 'admin' });
-  if (!booked) {
-    return { success: false, error: 'Failed to record booking.' };
-  }
-
-  const { submission: updated } = booked;
-  return {
-    success: true,
-    calendlyBookedAt: updated.calendlyBookedAt,
-    message: `Marked CONSULT BOOKED for ${updated.name}.`,
-  };
-}
-
 /* ============================================================
    ADMIN-ONLY ACTIONS (protected by middleware + explicit cookie verification)
    ============================================================ */
@@ -449,14 +414,12 @@ export async function getCalendlyIntegrationStatusForAdmin() {
   }
 
   const latest = await getLatestCalendlyWebhookLog();
-  const hasSuccess =
-    latest?.outcome === 'updated' || latest?.outcome === 'test';
+  const hasSuccess = latest?.outcome === 'updated';
 
   return {
     success: true,
     webhookUrl: getCalendlyWebhookPublicUrl(),
     signingKeyConfigured: !!process.env.CALENDLY_WEBHOOK_SIGNING_KEY,
-    testSecretConfigured: !!process.env.CALENDLY_WEBHOOK_TEST_SECRET,
     connected: hasSuccess,
     lastReceived: latest?.receivedAt ?? null,
     lastEvent: latest?.event ?? null,
@@ -466,46 +429,15 @@ export async function getCalendlyIntegrationStatusForAdmin() {
   };
 }
 
-export async function simulateCalendlyWebhookForAdmin(
-  submissionId: string,
-  kind: CalendlyMeetingKind,
-  event: 'invitee.created' | 'invitee.canceled',
-) {
+export async function getProposalAiStatusForAdmin() {
   if (!(await requireAdmin())) {
     return { success: false, error: 'Unauthorized' };
   }
-
-  const sub = await getSubmissionById(submissionId);
-  if (!sub) {
-    return { success: false, error: 'Submission not found.' };
-  }
-
-  const testBody = {
-    mh_test: true,
-    event,
-    kind,
-    email: sub.email,
-    submissionId: sub.id,
+  return {
+    success: true,
+    configured: isXaiProposalConfigured(),
+    model: process.env.XAI_PROPOSAL_MODEL?.trim() || 'grok-4-1-fast-non-reasoning',
   };
-  const raw = JSON.stringify(testBody);
-
-  try {
-    const result = await processCalendlyWebhookBody(raw, testBody, { isTest: true });
-    const updated = await getSubmissionById(sub.id);
-    return {
-      success: result.status < 400,
-      outcome: result.body.outcome,
-      detail: result.body.detail,
-      submission: updated,
-      message:
-        result.status < 400
-          ? `Simulator: ${event} (${kind}) → ${result.body.outcome}`
-          : `Simulator failed: ${result.body.detail || result.body.outcome}`,
-    };
-  } catch (e) {
-    console.error('Calendly webhook simulator failed:', e);
-    return { success: false, error: 'Simulator failed.' };
-  }
 }
 
 export async function loadPrepForAdmin(id: string) {
@@ -553,17 +485,35 @@ export async function saveConsultTranscriptsForAdmin(
   return { success: true, submission: updated };
 }
 
-// Server-side generation (keeps the logic private and consistent)
+// Server-side proposal generation (xAI Grok — post–30-min consult)
 export async function generateInitialProposal(input: GeneratorInput) {
   if (!(await requireAdmin())) {
     return { success: false, error: 'Unauthorized' };
   }
+
+  const transcript = input.consult30Transcript?.trim() || '';
+  if (transcript.length < 80) {
+    return {
+      success: false,
+      error:
+        'Paste the 30-minute consult transcript in the Client Evidence Timeline (Layer 2) before generating.',
+    };
+  }
+
+  if (!isXaiProposalConfigured()) {
+    return {
+      success: false,
+      error: 'XAI_API_KEY is not configured. Add it in Vercel environment variables.',
+    };
+  }
+
   try {
-    const proposal = generateProposal(input);
-    return { success: true, proposal };
+    const proposal = await generateProposalWithXai(input);
+    return { success: true, proposal, source: 'xai' as const };
   } catch (e) {
-    console.error('Proposal generation failed:', e);
-    return { success: false, error: 'Generation failed' };
+    console.error('xAI proposal generation failed:', e);
+    const message = e instanceof Error ? e.message : 'Generation failed';
+    return { success: false, error: message };
   }
 }
 
@@ -743,29 +693,6 @@ export async function revokePortalAccessForAdmin(submissionId: string) {
     success: true,
     portalRevokedAt: updated.portalRevokedAt,
     message: `Portal access revoked for ${updated.name}. They can no longer sign in. Grant access again anytime to re-onboard.`,
-  };
-}
-
-/** Admin-only: permanently delete every client record — for a clean live test or full reset. */
-export async function clearAllClientsForAdmin(confirmation: string) {
-  if (!(await requireAdmin())) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  if (confirmation !== 'DELETE ALL') {
-    return { success: false, error: 'Confirmation phrase did not match.' };
-  }
-
-  const count = await clearAllSubmissions();
-  revalidatePath('/portal');
-  revalidatePath('/portal/login');
-  return {
-    success: true,
-    count,
-    message:
-      count === 0
-        ? 'No client records to delete — already empty.'
-        : `Deleted ${count} client record${count === 1 ? '' : 's'}. Ready for a fresh live test.`,
   };
 }
 

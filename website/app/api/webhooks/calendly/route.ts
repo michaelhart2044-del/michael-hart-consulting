@@ -1,42 +1,33 @@
 import { NextResponse, after } from 'next/server';
 import { processCalendlyWebhookBody } from '@/lib/calendly-webhook-handler';
-import {
-  verifyCalendlyWebhookSignature,
-  verifyWebhookTestSecret,
-} from '@/lib/calendly-webhook-verify';
+import { verifyCalendlyWebhookSignature } from '@/lib/calendly-webhook-verify';
 import { appendCalendlyWebhookLog, truncatePayloadForLog } from '@/lib/calendly-webhook-log';
 
 export const runtime = 'nodejs';
 
 async function handlePost(request: Request) {
   const rawBody = await request.text();
-  const testHeader = request.headers.get('x-mh-webhook-test');
-  const testSecret = process.env.CALENDLY_WEBHOOK_TEST_SECRET;
-  const isTest = verifyWebhookTestSecret(testHeader, testSecret);
+  const signingKey = process.env.CALENDLY_WEBHOOK_SIGNING_KEY;
+  const signatureHeader = request.headers.get('calendly-webhook-signature');
+  const verified = verifyCalendlyWebhookSignature(rawBody, signatureHeader, signingKey);
 
-  if (!isTest) {
-    const signingKey = process.env.CALENDLY_WEBHOOK_SIGNING_KEY;
-    const signatureHeader = request.headers.get('calendly-webhook-signature');
-    const verified = verifyCalendlyWebhookSignature(rawBody, signatureHeader, signingKey);
+  if (!verified.ok) {
+    const detail =
+      verified.reason === 'missing-key'
+        ? 'CALENDLY_WEBHOOK_SIGNING_KEY not configured'
+        : `Signature verification failed: ${verified.reason}`;
 
-    if (!verified.ok) {
-      const detail =
-        verified.reason === 'missing-key'
-          ? 'CALENDLY_WEBHOOK_SIGNING_KEY not configured'
-          : `Signature verification failed: ${verified.reason}`;
+    await appendCalendlyWebhookLog({
+      event: 'unauthorized',
+      email: '',
+      eventSlug: '',
+      outcome: 'invalid-signature',
+      detail,
+      rawPayloadPreview: truncatePayloadForLog(rawBody),
+    });
 
-      await appendCalendlyWebhookLog({
-        event: 'unauthorized',
-        email: '',
-        eventSlug: '',
-        outcome: 'invalid-signature',
-        detail,
-        rawPayloadPreview: truncatePayloadForLog(rawBody),
-      });
-
-      console.warn(`[calendly-webhook] 401 ${detail}`);
-      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    console.warn(`[calendly-webhook] 401 ${detail}`);
+    return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   }
 
   let parsed: unknown;
@@ -54,8 +45,7 @@ async function handlePost(request: Request) {
     return NextResponse.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
   }
 
-  // Respond quickly; handler persists + logs synchronously (email fires async inside handler).
-  const result = await processCalendlyWebhookBody(rawBody, parsed, { isTest });
+  const result = await processCalendlyWebhookBody(rawBody, parsed);
 
   after(() => {
     // Reserved for future heavy post-response work if needed.

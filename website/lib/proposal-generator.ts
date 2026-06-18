@@ -17,7 +17,10 @@ export interface GeneratorInput {
   peopleInvolved: string;
   successLooksLike: string;
   additionalContext: string;
-  transcript?: string; // free-form notes or full transcript the user pastes
+  /** 30-min consult transcript from Evidence Timeline (required for xAI generation). */
+  consult30Transcript?: string;
+  /** Optional supplemental notes beyond the consult transcript. */
+  transcript?: string;
 }
 
 export interface GeneratedProposal {

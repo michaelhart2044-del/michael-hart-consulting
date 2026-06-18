@@ -281,14 +281,6 @@ export default function ClientEvidenceTimeline({
 
   const readyForBundle = missingItems.length === 0;
 
-  async function handleResetTimeline() {
-    onConsult30TranscriptChange('');
-    onConsult60TranscriptChange('');
-    setCopied(false);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    await onSaveTranscripts();
-  }
-
   async function handleGenerateBundle() {
     await onSaveTranscripts();
     const bundle = buildDmaicBundle(submission, consult30Transcript, consult60Transcript);
@@ -345,13 +337,6 @@ export default function ClientEvidenceTimeline({
             </ul>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => void handleResetTimeline()}
-          className="shrink-0 text-xs px-4 py-2 rounded-full border border-white/20 text-[#94a3b8] hover:bg-white/5 hover:text-[#e2e8f0]"
-        >
-          Reset Timeline for New Test
-        </button>
       </div>
 
       <div className="text-sm rounded-lg border border-white/10 bg-black/20 px-4 py-3">

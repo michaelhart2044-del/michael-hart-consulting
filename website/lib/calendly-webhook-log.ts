@@ -6,8 +6,7 @@ export type CalendlyWebhookLogOutcome =
   | 'updated'
   | 'no-match'
   | 'ignored'
-  | 'invalid-signature'
-  | 'test';
+  | 'invalid-signature';
 
 export interface CalendlyWebhookLogEntry {
   receivedAt: string;

@@ -8,13 +8,12 @@ import {
   saveProposalDraftForAdmin,
   generateInitialProposal,
   markEngagementCommittedForAdmin,
-  markConsultBookedForAdmin,
   grantPortalAccessForAdmin,
   resendPortalAccessForAdmin,
   revokePortalAccessForAdmin,
   deleteClientForAdmin,
-  clearAllClientsForAdmin,
   saveConsultTranscriptsForAdmin,
+  getProposalAiStatusForAdmin,
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
@@ -59,6 +58,7 @@ export default function AdminProposalGenerator() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [consult30Transcript, setConsult30Transcript] = useState('');
   const [consult60Transcript, setConsult60Transcript] = useState('');
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
 
   // Load recent on mount
   async function refreshRecent() {
@@ -75,6 +75,9 @@ export default function AdminProposalGenerator() {
   useEffect(() => {
     queueMicrotask(() => {
       void refreshRecent();
+      void getProposalAiStatusForAdmin().then((res) => {
+        if (res.success) setAiConfigured(!!res.configured);
+      });
     });
   }, []);
 
@@ -89,8 +92,7 @@ export default function AdminProposalGenerator() {
     setLoadedSub(sub);
     setConsult30Transcript(sub.consult30Transcript || '');
     setConsult60Transcript(sub.consult60Transcript || '');
-    // Pre-fill the transcript/notes area with the clean fullText from the form
-    setTranscript(sub.fullText || '');
+    setTranscript('');
     // Clear any prior generated output so user can re-generate with fresh data
     setProposal(null);
     setOutputText('');
@@ -115,18 +117,24 @@ export default function AdminProposalGenerator() {
   }
 
   async function handleGenerate() {
+    if (!loadedSub) {
+      setStatus('Load a client first.');
+      return;
+    }
+
     setIsGenerating(true);
     setStatus('');
 
     const input = {
-      name: loadedSub?.name || 'Client',
-      industry: loadedSub?.industry || '',
-      mainChallenge: loadedSub?.mainChallenge || '',
-      additionalChallenges: loadedSub?.additionalChallenges || [],
-      peopleInvolved: loadedSub?.peopleInvolved || '',
-      successLooksLike: loadedSub?.successLooksLike || '',
-      additionalContext: loadedSub?.additionalContext || '',
-      transcript: transcript || '',
+      name: loadedSub.name || 'Client',
+      industry: loadedSub.industry || '',
+      mainChallenge: loadedSub.mainChallenge || '',
+      additionalChallenges: loadedSub.additionalChallenges || [],
+      peopleInvolved: loadedSub.peopleInvolved || '',
+      successLooksLike: loadedSub.successLooksLike || '',
+      additionalContext: loadedSub.additionalContext || '',
+      consult30Transcript: consult30Transcript || loadedSub.consult30Transcript || '',
+      transcript: transcript.trim() || undefined,
     };
 
     const res = await generateInitialProposal(input);
@@ -134,7 +142,7 @@ export default function AdminProposalGenerator() {
       const p = res.proposal as Generated;
       setProposal(p);
       setOutputText(p.fullProposal);
-      setStatus('Proposal generated. You can edit the text below before copying or saving.');
+      setStatus('Proposal generated with Grok (xAI). Review and edit before sending.');
     } else {
       setStatus(res.error || 'Generation failed');
     }
@@ -301,24 +309,6 @@ ${site.phone}`;
     const res = await saveProposalDraftForAdmin(loadedSub.id, outputText);
     setStatus(res.success ? 'Draft saved to this submission record' : (res.error || 'Failed to save draft'));
     setTimeout(() => setStatus(''), 2200);
-  }
-
-  async function handleMarkConsultBooked(submissionId?: string) {
-    const id = submissionId || loadedSub?.id;
-    if (!id) {
-      setStatus('Load a submission first');
-      return;
-    }
-    setBusyId(id);
-    const res = await markConsultBookedForAdmin(id);
-    if (res.success) {
-      setStatus(res.message || 'Marked as consult booked.');
-      await refreshRecent();
-    } else {
-      setStatus(res.error || 'Failed to mark consult booked');
-    }
-    setBusyId(null);
-    setTimeout(() => setStatus(''), 4000);
   }
 
   async function handleMarkStep8(submissionId?: string) {
@@ -524,8 +514,15 @@ ${site.phone}`;
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-[-1px]">New Proposal</h1>
-          <p className="text-sm text-[#94a3b8] mt-1">Private • Data never leaves this secure area</p>
+          <h1 className="text-3xl font-semibold tracking-[-1px]">Engagement Hub</h1>
+          <p className="text-sm text-[#94a3b8] mt-1">
+            Intake → consult → proposal → portal → SigVai
+            {aiConfigured === false && (
+              <span className="block text-amber-300/90 mt-1">
+                Add XAI_API_KEY in Vercel to enable AI proposal generation.
+              </span>
+            )}
+          </p>
         </div>
         <button
           onClick={handleLogout}
@@ -540,16 +537,6 @@ ${site.phone}`;
           {status}
         </div>
       )}
-
-      <CalendlyIntegrationPanel
-        loadedSub={loadedSub}
-        onSubmissionUpdated={(sub) => setLoadedSub(sub)}
-        onMessage={(message) => {
-          setStatus(message);
-          window.setTimeout(() => setStatus(''), 5000);
-        }}
-        onRefreshRecent={refreshRecent}
-      />
 
       {/* Recent Prep Submissions */}
       <section className="border border-white/10 rounded-2xl bg-[#0f172a] p-6">
@@ -636,55 +623,6 @@ ${site.phone}`;
                 >
                   Load
                 </button>
-                {!item.calendlyBookedAt && (
-                  <button
-                    onClick={() => handleMarkConsultBooked(item.id)}
-                    disabled={busyId === item.id}
-                    className="text-xs px-3 py-1.5 rounded-full border border-emerald-500/40 text-emerald-200 hover:bg-emerald-900/20 disabled:opacity-50"
-                  >
-                    {busyId === item.id ? 'Saving…' : 'Mark Consult Booked'}
-                  </button>
-                )}
-                {!item.engagementCommittedAt && (
-                  <button
-                    onClick={() => handleMarkStep8(item.id)}
-                    disabled={busyId === item.id}
-                    className="text-xs px-3 py-1.5 rounded-full border border-amber-500/40 text-amber-200 hover:bg-amber-900/20 disabled:opacity-50"
-                  >
-                    {busyId === item.id ? 'Saving…' : 'Mark Step 8'}
-                  </button>
-                )}
-                {item.engagementCommittedAt && !item.portalAccessGrantedAt && (
-                  <button
-                    onClick={() => handleGrantPortalAccess(item.id)}
-                    disabled={busyId === item.id || isGrantingPortal}
-                    className="text-xs px-3 py-1.5 rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium disabled:opacity-50"
-                  >
-                    {busyId === item.id && isGrantingPortal
-                      ? 'Sending…'
-                      : item.portalRevokedAt
-                        ? 'Re-grant Portal Access'
-                        : 'Grant Portal Access'}
-                  </button>
-                )}
-                {item.portalAccessGrantedAt && (
-                  <>
-                    <button
-                      onClick={() => handleResendPortalAccess(item.id)}
-                      disabled={busyId === item.id || isGrantingPortal}
-                      className="text-xs px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/5 disabled:opacity-50"
-                    >
-                      {busyId === item.id && isGrantingPortal ? 'Sending…' : 'Resend Portal Access'}
-                    </button>
-                    <button
-                      onClick={() => handleRevokePortalAccess(item.id)}
-                      disabled={busyId === item.id}
-                      className="text-xs px-3 py-1.5 rounded-full border border-red-500/40 text-red-200 hover:bg-red-900/20 disabled:opacity-50"
-                    >
-                      {busyId === item.id ? 'Revoking…' : 'Revoke Access'}
-                    </button>
-                  </>
-                )}
                 <button
                   onClick={() => handleDeleteClient(item.id)}
                   disabled={busyId === item.id}
@@ -695,46 +633,6 @@ ${site.phone}`;
               </div>
             </div>
           ))}
-        </div>
-
-        <div className="mt-6 pt-6 border-t border-red-500/20">
-          <p className="text-xs font-medium text-red-200/90 mb-1">Reset all client data</p>
-          <p className="text-xs text-[#64748b] mb-3">
-            Permanently deletes every intake, portal, and proposal record. Use before a real end-to-end test from scratch.
-          </p>
-          <button
-            onClick={async () => {
-              if (
-                !window.confirm(
-                  'Delete ALL client records?\n\nThis cannot be undone. Use only to wipe test data before a live run.',
-                )
-              ) {
-                return;
-              }
-              const phrase = window.prompt('Type DELETE ALL to confirm:');
-              if (phrase !== 'DELETE ALL') {
-                setStatus('Reset cancelled — confirmation phrase did not match.');
-                setTimeout(() => setStatus(''), 4000);
-                return;
-              }
-              setStatus('Deleting all records…');
-              const res = await clearAllClientsForAdmin('DELETE ALL');
-              if (res.success) {
-                setLoadedSub(null);
-                setProposal(null);
-                setOutputText('');
-                setTranscript('');
-                setConsult30Transcript('');
-                setConsult60Transcript('');
-                await refreshRecent();
-              }
-              setStatus(res.success ? (res.message || 'All records deleted.') : (res.error || 'Reset failed.'));
-              setTimeout(() => setStatus(''), 6000);
-            }}
-            className="text-xs px-4 py-2 rounded-full border border-red-500/40 text-red-200 hover:bg-red-900/20"
-          >
-            Delete All Client Records
-          </button>
         </div>
       </section>
 
@@ -846,27 +744,33 @@ ${site.phone}`;
         </section>
       )}
 
-      {/* Transcript / Notes input */}
+      {/* Supplemental notes for proposal (optional) */}
+      {loadedSub && (
       <section className="border border-white/10 rounded-2xl bg-[#0f172a] p-6">
-        <label className="block font-semibold mb-2">Or paste full transcript / notes</label>
+        <label className="block font-semibold mb-2">Supplemental notes for proposal (optional)</label>
         <textarea
           value={transcript}
           onChange={(e) => setTranscript(e.target.value)}
-          rows={9}
+          rows={4}
           className="w-full bg-[#111827] border border-white/20 rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-[#c5a46e] placeholder:text-[#64748b]"
-          placeholder="Paste any additional notes, call transcript, or extra context here. The generator will incorporate it into both sections."
+          placeholder="Optional context beyond the 30-min transcript — e.g. follow-up email, extra constraints."
         />
-        <p className="text-[11px] text-[#64748b] mt-2">Loading a prep submission above will pre-populate this with the exact structured answers the client provided.</p>
+        <p className="text-[11px] text-[#64748b] mt-2">
+          Primary source: paste the 30-min Teams transcript in Layer 2 above. Generate runs after that transcript is saved.
+        </p>
       </section>
+      )}
 
       {/* Generate + Copy for SigVai */}
+      {loadedSub && (
+      <>
       <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
         <button
           onClick={handleGenerate}
-          disabled={isGenerating}
+          disabled={isGenerating || consult30Transcript.trim().length < 80}
           className="px-8 py-3.5 text-base font-semibold bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full disabled:opacity-60 transition-all active:scale-[0.985]"
         >
-          {isGenerating ? 'Generating…' : 'Generate Initial Proposal'}
+          {isGenerating ? 'Generating with Grok…' : 'Generate Initial Proposal (Grok)'}
         </button>
 
         <button
@@ -876,9 +780,11 @@ ${site.phone}`;
           Copy for SigVai
         </button>
       </div>
-      <p className="text-center text-xs text-[#64748b] -mt-1">
-        Use “Copy for SigVai” to send clean structured input directly to your separate SigVai system.
+      <p className="text-center text-xs text-[#64748b] -mt-1 mb-2">
+        Use “Copy for SigVai” for your private DMAIC workflow after the engagement deepens.
       </p>
+      </>
+      )}
 
       {/* Output */}
       {(proposal || outputText) && (
@@ -944,12 +850,12 @@ ${site.phone}`;
         </section>
       )}
 
-      {/* Quick tips */}
-      <div className="text-xs text-[#64748b] border-t border-white/10 pt-6">
-        Tips: Load a recent submission for structured data, then add any notes or transcript in the textarea above before generating.
-        The generator produces a strong DEFINE + a benefit-led CLIENT PITCH including the Engagement Activation Retainer framing and clear next steps.
-        Everything is designed for direct use with SigVai / xAI or light human polish.
-      </div>
+      <CalendlyIntegrationPanel
+        onMessage={(message) => {
+          setStatus(message);
+          window.setTimeout(() => setStatus(''), 5000);
+        }}
+      />
     </div>
   );
 }
