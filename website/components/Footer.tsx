@@ -58,7 +58,13 @@ export default function Footer() {
 
             <div>
               <div className="font-medium text-accent mb-3">Contact</div>
-              <div className="text-muted text-sm space-y-1">
+              <div className="text-muted text-sm space-y-2">
+                <Link
+                  href="/prepare-analysis"
+                  className="hover:text-accent transition-colors block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded"
+                >
+                  Book Consultation
+                </Link>
                 <a
                   href={site.phoneHref}
                   className="hover:text-accent transition-colors block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent rounded"
