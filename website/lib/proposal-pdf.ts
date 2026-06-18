@@ -13,7 +13,8 @@ const GOLD = colors.accent;
 const GOLD_DARK = '#8f6f3d';
 const MUTED = colors.subtle;
 const BODY = '#1e293b';
-const FOOTER_H = 72;
+const FOOTER_H = 88;
+const FOOTER_GAP = 10;
 const MINI_HEADER_H = 42;
 const CLOSING_H = 72;
 const BODY_SIZE = 10.5;
@@ -77,8 +78,12 @@ function contentWidth(doc: PDFKit.PDFDocument): number {
   return doc.page.width - doc.page.margins.left - doc.page.margins.right;
 }
 
-function contentBottom(doc: PDFKit.PDFDocument): number {
+function footerAreaTop(doc: PDFKit.PDFDocument): number {
   return doc.page.height - doc.page.margins.bottom - FOOTER_H;
+}
+
+function contentBottom(doc: PDFKit.PDFDocument): number {
+  return footerAreaTop(doc) - FOOTER_GAP;
 }
 
 function setBodyFont(doc: PDFKit.PDFDocument): void {
@@ -226,10 +231,14 @@ function isListLeadLine(trimmed: string, nextTrimmed: string | null): boolean {
   return false;
 }
 
-function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number): void {
+function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number, ctx: PdfLayoutContext): void {
   const left = doc.page.margins.left;
 
-  doc.font(FONT_BOLD).fontSize(13).fillColor(NAVY).text(title, { width, lineGap: 1 });
+  doc.font(FONT_BOLD).fontSize(13);
+  const titleHeight = doc.heightOfString(title, { width, lineGap: 1 });
+  ensureSpace(doc, ctx, titleHeight + 24);
+
+  doc.fillColor(NAVY).text(title, { width, lineGap: 1 });
 
   const underlineY = doc.y + 5;
   doc.moveTo(left, underlineY).lineTo(left + width, underlineY).strokeColor(GOLD_DARK).lineWidth(1.1).stroke();
@@ -238,11 +247,24 @@ function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number
   setBodyFont(doc);
 }
 
-function drawBulletLine(doc: PDFKit.PDFDocument, trimmed: string, width: number): void {
+function drawBulletLine(
+  doc: PDFKit.PDFDocument,
+  trimmed: string,
+  width: number,
+  ctx: PdfLayoutContext,
+): void {
   const left = doc.page.margins.left;
   const bulletCol = 12;
   const textIndent = bulletCol + 8;
   const content = trimmed.replace(BULLET_LINE, '');
+
+  doc.font(FONT).fontSize(BODY_SIZE);
+  const textHeight = doc.heightOfString(content, {
+    width: width - textIndent,
+    lineGap: 2.5,
+    paragraphGap: 2,
+  });
+  ensureSpace(doc, ctx, textHeight + 6);
 
   const y = doc.y;
   doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text(MARKER_DOT, left, y, {
@@ -274,34 +296,33 @@ function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: 
     }
 
     if (SECTION_HEADER.test(trimmed)) {
-      ensureSpace(doc, ctx, 44);
       doc.moveDown(0.5);
-      drawSectionHeader(doc, trimmed, width);
+      drawSectionHeader(doc, trimmed, width, ctx);
       continue;
     }
 
     if (BULLET_LINE.test(trimmed)) {
-      ensureSpace(doc, ctx, 16);
-      drawBulletLine(doc, trimmed, width);
+      drawBulletLine(doc, trimmed, width, ctx);
       continue;
     }
 
     const nextLine = nextNonEmptyLine(lines, i);
     if (isListLeadLine(trimmed, nextLine)) {
-      ensureSpace(doc, ctx, 16);
-      drawBulletLine(doc, trimmed, width);
+      drawBulletLine(doc, trimmed, width, ctx);
       continue;
     }
 
     if (NUMBERED_LINE.test(trimmed)) {
-      ensureSpace(doc, ctx, 16);
       setBodyFont(doc);
+      const numberedHeight = doc.heightOfString(trimmed, { width: width - 20, lineGap: 2.5, paragraphGap: 2 });
+      ensureSpace(doc, ctx, numberedHeight + 6);
       doc.text(trimmed, { width, indent: 20, lineGap: 2.5, paragraphGap: 2 });
       continue;
     }
 
-    ensureSpace(doc, ctx, 16);
     setBodyFont(doc);
+    const paragraphHeight = doc.heightOfString(trimmed, { width, lineGap: 2.5, paragraphGap: 3 });
+    ensureSpace(doc, ctx, paragraphHeight + 6);
     doc.text(trimmed, { width, align: 'left', lineGap: 2.5, paragraphGap: 3 });
   }
 }
@@ -326,24 +347,31 @@ function drawClosingBlock(doc: PDFKit.PDFDocument, ctx: PdfLayoutContext): void 
 function drawPageFooter(doc: PDFKit.PDFDocument, pageIndex: number, pageCount: number): void {
   const left = doc.page.margins.left;
   const right = doc.page.width - doc.page.margins.right;
-  const footerTop = doc.page.height - doc.page.margins.bottom - 52;
+  const zoneTop = footerAreaTop(doc);
+  const pageBottom = doc.page.height;
+
+  // Mask any content that bled into the footer band.
+  doc.save();
+  doc.rect(left, zoneTop, right - left, pageBottom - zoneTop).fill('#ffffff');
+  doc.restore();
 
   if (pageIndex === 0) {
-    doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(site.name, left, footerTop + 14, {
+    doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(site.name, left, zoneTop + 36, {
       width: contentWidth(doc),
       align: 'center',
     });
     return;
   }
 
-  doc.moveTo(left, footerTop).lineTo(right, footerTop).strokeColor(GOLD).lineWidth(0.75).opacity(0.55).stroke().opacity(1);
+  const lineY = zoneTop + 6;
+  doc.moveTo(left, lineY).lineTo(right, lineY).strokeColor(GOLD).lineWidth(0.75).opacity(0.55).stroke().opacity(1);
 
-  doc.font(FONT).fontSize(8).fillColor(MUTED).text(`${site.phone}  •  ${site.email}  •  ${siteHost()}`, left, footerTop + 8, {
+  doc.font(FONT).fontSize(8).fillColor(MUTED).text(`${site.phone}  •  ${site.email}  •  ${siteHost()}`, left, lineY + 10, {
     width: contentWidth(doc),
     align: 'left',
   });
 
-  doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(`${site.name}  •  Page ${pageIndex + 1} of ${pageCount}`, left, footerTop + 20, {
+  doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(`${site.name}  •  Page ${pageIndex + 1} of ${pageCount}`, left, lineY + 22, {
     width: contentWidth(doc),
     align: 'left',
   });
@@ -362,7 +390,7 @@ export async function generateProposalPdfBuffer(params: {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: 'LETTER',
-      margins: { top: 48, bottom: 64, left: 54, right: 54 },
+      margins: { top: 48, bottom: 72, left: 54, right: 54 },
       bufferPages: true,
       info: {
         Title: `Initial Proposal — ${clientName}`,
