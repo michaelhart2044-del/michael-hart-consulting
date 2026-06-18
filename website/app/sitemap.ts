@@ -28,6 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/privacy-policy`, lastModified, changeFrequency: 'yearly' as const, priority: 0.3 },
     { url: `${baseUrl}/terms-of-service`, lastModified, changeFrequency: 'yearly' as const, priority: 0.3 },
     { url: `${baseUrl}/services`, lastModified, changeFrequency: 'monthly' as const, priority: 0.7 },
+    { url: `${baseUrl}/industries`, lastModified, changeFrequency: 'monthly' as const, priority: 0.7 },
 
     // All service pages (must stay in sync with slugs in lib/services.tsx)
     { url: `${baseUrl}/services/forensic-accounting-litigation-support`, lastModified, changeFrequency: 'monthly' as const, priority: 0.6 },
