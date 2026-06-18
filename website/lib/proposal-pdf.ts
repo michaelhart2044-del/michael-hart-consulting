@@ -43,16 +43,16 @@ function siteHost(): string {
   return site.url.replace(/^https?:\/\//, '');
 }
 
-/** Pacific time — matches primary business timezone. */
+/** Eastern Time (Lilburn, GA) — Intl auto-switches EDT / EST for daylight saving. */
 function formatProposalTimestamp(date = new Date()): string {
   return new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Los_Angeles',
+    timeZone: 'America/New_York',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    timeZoneName: 'long',
+    timeZoneName: 'short',
   }).format(date);
 }
 
