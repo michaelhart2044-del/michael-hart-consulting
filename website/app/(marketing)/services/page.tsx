@@ -115,7 +115,7 @@ export default function ServicesIndex() {
             Not sure which service fits your situation?
           </p>
           <Link
-            href="/contact"
+            href="/prepare-analysis"
             className="inline-block px-8 py-3 bg-accent hover:bg-accent-hover text-black font-medium rounded-full transition-all active:scale-[0.985]"
           >
             Schedule a Consultation
