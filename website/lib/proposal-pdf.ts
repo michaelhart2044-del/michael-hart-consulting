@@ -26,7 +26,7 @@ const BODY_SIZE = 10.5;
 const FONT = 'Helvetica';
 const FONT_BOLD = 'Helvetica-Bold';
 
-/** Round dot — all lists (PDF-safe, uniform). */
+/** Round dot — cover page services list only. */
 const MARKER_DOT = '\u2022';
 
 const SECTION_HEADER = /^(DEFINE|RECOMMENDED APPROACH|CLIENT PITCH)\s*[—–-]/i;
@@ -213,28 +213,44 @@ function ensureSpace(doc: PDFKit.PDFDocument, ctx: PdfLayoutContext, needed: num
   }
 }
 
-const LIST_LABEL =
-  /^(Why This Matters|Estimated ROI|Clear next steps|Recommended starting point|Industry context|Challenges from|Team\/effort|Desired outcomes|Constraints|Key insights)/i;
+function drawBodyLine(
+  doc: PDFKit.PDFDocument,
+  trimmed: string,
+  width: number,
+  ctx: PdfLayoutContext,
+): void {
+  const content = trimmed.replace(BULLET_LINE, '');
+  const labelMatch = /^([^:]+:)([\s\S]*)$/.exec(content);
 
-function nextNonEmptyLine(lines: string[], fromIndex: number): string | null {
-  for (let i = fromIndex + 1; i < lines.length; i++) {
-    const t = lines[i].trim();
-    if (t) return t;
+  doc.font(FONT).fontSize(BODY_SIZE);
+  const textHeight = doc.heightOfString(content, {
+    width,
+    lineGap: 2.5,
+    paragraphGap: 2,
+  });
+  ensureSpace(doc, ctx, textHeight + 6);
+
+  if (labelMatch) {
+    doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text(labelMatch[1], {
+      width,
+      continued: Boolean(labelMatch[2].trim()),
+      lineGap: 2.5,
+    });
+    if (labelMatch[2].trim()) {
+      doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(labelMatch[2].trimStart(), {
+        width,
+        lineGap: 2.5,
+        paragraphGap: 2,
+      });
+    }
+  } else {
+    doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(content, {
+      width,
+      lineGap: 2.5,
+      paragraphGap: 2,
+    });
   }
-  return null;
 }
-
-/** Grok often emits a label line before dashed sub-bullets — treat as a bulleted row for alignment. */
-function isListLeadLine(trimmed: string, nextTrimmed: string | null): boolean {
-  if (SECTION_HEADER.test(trimmed)) return false;
-  if (BULLET_LINE.test(trimmed)) return false;
-  if (NUMBERED_LINE.test(trimmed)) return false;
-  if (/:\s*$/.test(trimmed)) return true;
-  if (LIST_LABEL.test(trimmed)) return true;
-  if (nextTrimmed && BULLET_LINE.test(nextTrimmed)) return true;
-  return false;
-}
-
 function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number, ctx: PdfLayoutContext): void {
   const left = doc.page.margins.left;
 
@@ -250,57 +266,6 @@ function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number
 
   doc.y = underlineY + 12;
   setBodyFont(doc);
-}
-
-function drawBulletLine(
-  doc: PDFKit.PDFDocument,
-  trimmed: string,
-  width: number,
-  ctx: PdfLayoutContext,
-): void {
-  const left = doc.page.margins.left;
-  const bulletCol = 12;
-  const textIndent = bulletCol + 8;
-  const content = trimmed.replace(BULLET_LINE, '');
-  const labelMatch = /^([^:]+:)([\s\S]*)$/.exec(content);
-
-  doc.font(FONT).fontSize(BODY_SIZE);
-  const textHeight = doc.heightOfString(content, {
-    width: width - textIndent,
-    lineGap: 2.5,
-    paragraphGap: 2,
-  });
-  ensureSpace(doc, ctx, textHeight + 6);
-
-  const y = doc.y;
-  doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text(MARKER_DOT, left, y, {
-    width: bulletCol,
-    lineBreak: false,
-  });
-
-  const textX = left + textIndent;
-  const textW = width - textIndent;
-
-  if (labelMatch) {
-    doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text(labelMatch[1], textX, y, {
-      width: textW,
-      continued: Boolean(labelMatch[2].trim()),
-      lineGap: 2.5,
-    });
-    if (labelMatch[2].trim()) {
-      doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(labelMatch[2].trimStart(), {
-        width: textW,
-        lineGap: 2.5,
-        paragraphGap: 2,
-      });
-    }
-  } else {
-    doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(content, textX, y, {
-      width: textW,
-      lineGap: 2.5,
-      paragraphGap: 2,
-    });
-  }
 }
 
 function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: PdfLayoutContext): void {
@@ -326,29 +291,12 @@ function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: 
       continue;
     }
 
-    if (BULLET_LINE.test(trimmed)) {
-      drawBulletLine(doc, trimmed, width, ctx);
+    if (BULLET_LINE.test(trimmed) || NUMBERED_LINE.test(trimmed)) {
+      drawBodyLine(doc, trimmed.replace(NUMBERED_LINE, ''), width, ctx);
       continue;
     }
 
-    const nextLine = nextNonEmptyLine(lines, i);
-    if (isListLeadLine(trimmed, nextLine)) {
-      drawBulletLine(doc, trimmed, width, ctx);
-      continue;
-    }
-
-    if (NUMBERED_LINE.test(trimmed)) {
-      setBodyFont(doc);
-      const numberedHeight = doc.heightOfString(trimmed, { width: width - 20, lineGap: 2.5, paragraphGap: 2 });
-      ensureSpace(doc, ctx, numberedHeight + 6);
-      doc.text(trimmed, { width, indent: 20, lineGap: 2.5, paragraphGap: 2 });
-      continue;
-    }
-
-    setBodyFont(doc);
-    const paragraphHeight = doc.heightOfString(trimmed, { width, lineGap: 2.5, paragraphGap: 3 });
-    ensureSpace(doc, ctx, paragraphHeight + 6);
-    doc.text(trimmed, { width, align: 'left', lineGap: 2.5, paragraphGap: 3 });
+    drawBodyLine(doc, trimmed, width, ctx);
   }
 }
 
