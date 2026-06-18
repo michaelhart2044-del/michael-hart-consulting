@@ -52,6 +52,7 @@ function formatProposalTimestamp(date = new Date()): string {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZoneName: 'long',
   }).format(date);
 }
 
@@ -219,8 +220,7 @@ function drawBodyLine(
   width: number,
   ctx: PdfLayoutContext,
 ): void {
-  const content = trimmed.replace(BULLET_LINE, '');
-  const labelMatch = /^([^:]+:)([\s\S]*)$/.exec(content);
+  const content = trimmed.replace(BULLET_LINE, '').replace(NUMBERED_LINE, '');
 
   doc.font(FONT).fontSize(BODY_SIZE);
   const textHeight = doc.heightOfString(content, {
@@ -229,28 +229,9 @@ function drawBodyLine(
     paragraphGap: 2,
   });
   ensureSpace(doc, ctx, textHeight + 6);
-
-  if (labelMatch) {
-    doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text(labelMatch[1], {
-      width,
-      continued: Boolean(labelMatch[2].trim()),
-      lineGap: 2.5,
-    });
-    if (labelMatch[2].trim()) {
-      doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(labelMatch[2].trimStart(), {
-        width,
-        lineGap: 2.5,
-        paragraphGap: 2,
-      });
-    }
-  } else {
-    doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(content, {
-      width,
-      lineGap: 2.5,
-      paragraphGap: 2,
-    });
-  }
+  doc.fillColor(BODY).text(content, { width, lineGap: 2.5, paragraphGap: 2 });
 }
+
 function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number, ctx: PdfLayoutContext): void {
   const left = doc.page.margins.left;
 
@@ -259,7 +240,7 @@ function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number
   // Keep section header with at least one line of body content on the same page.
   ensureSpace(doc, ctx, titleHeight + 24 + 28);
 
-  doc.fillColor(NAVY).text(title, { width, lineGap: 1 });
+  doc.fillColor(GOLD).text(title, { width, lineGap: 1 });
 
   const underlineY = doc.y + 5;
   doc.moveTo(left, underlineY).lineTo(left + width, underlineY).strokeColor(GOLD_DARK).lineWidth(1.1).stroke();
@@ -292,7 +273,7 @@ function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: 
     }
 
     if (BULLET_LINE.test(trimmed) || NUMBERED_LINE.test(trimmed)) {
-      drawBodyLine(doc, trimmed.replace(NUMBERED_LINE, ''), width, ctx);
+      drawBodyLine(doc, trimmed, width, ctx);
       continue;
     }
 
