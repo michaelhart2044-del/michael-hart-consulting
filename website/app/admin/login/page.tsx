@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { authenticateAdmin } from '@/app/actions';
+import BrandLogo from '@/components/BrandLogo';
+import { site } from '@/lib/site';
 
 export default function AdminLogin() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,8 +28,11 @@ export default function AdminLogin() {
     <div className="min-h-[70vh] flex items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
+          <div className="inline-flex rounded-full p-[3px] bg-gradient-to-br from-accent/50 via-accent/25 to-transparent mb-5">
+            <BrandLogo size="auth" className="rounded-full" />
+          </div>
           <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-          <p className="text-sm text-[#94a3b8] mt-1">Private admin area</p>
+          <p className="text-sm text-[#94a3b8] mt-1">{site.name} — private admin area</p>
         </div>
 
         <form action={handleSubmit} className="space-y-4">

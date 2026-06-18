@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { services, flagshipServiceSlugs } from '@/lib/services';
 import { site } from '@/lib/site';
 import ResultCard from '@/components/ResultCard';
-import Image from 'next/image';
+import BrandLogo from '@/components/BrandLogo';
 import { industries } from '@/lib/industries';
 
 export const metadata: Metadata = {
@@ -73,15 +73,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Modest hero visual treatment using logo */}
-        <div className="hidden md:flex flex-shrink-0 opacity-10">
-          <Image 
-            src="/mh-logo.png" 
-            alt="" 
-            width={160} 
-            height={160} 
-            className="w-36 h-36 object-contain" 
-          />
+        {/* Hero brand mark */}
+        <div className="hidden md:flex flex-shrink-0 items-center justify-center opacity-[0.12] group">
+          <div className="rounded-full p-1 ring-1 ring-accent/20">
+            <BrandLogo size="hero" decorative className="opacity-90" />
+          </div>
         </div>
       </div>
 

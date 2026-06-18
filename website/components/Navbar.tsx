@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import BrandLogo from '@/components/BrandLogo';
 import { site } from '@/lib/site';
 
 interface NavbarProps {
@@ -100,14 +100,10 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b border-white/10">
       <div className="max-w-5xl mx-auto px-6 flex items-center justify-between h-20">
         {/* Logo + Company Name */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <Image
-            src="/mh-logo.png"
-            alt="Michael Hart Consulting"
-            width={40}
-            height={40}
-            className="h-10 w-auto object-contain"
-          />
+        <Link href="/" className="flex items-center gap-3 group min-w-0">
+          <div className="flex-shrink-0 rounded-full p-[2px] bg-gradient-to-br from-accent/60 via-accent/30 to-transparent group-hover:from-accent group-hover:via-accent-hover transition-all duration-300">
+            <BrandLogo size="nav" priority className="rounded-full" />
+          </div>
           <span className="font-semibold text-accent text-base md:text-lg tracking-[-0.3px] group-hover:text-accent-hover transition-colors whitespace-nowrap">
             <span className="md:hidden">MH Consulting</span>
             <span className="hidden md:inline">{site.name}</span>

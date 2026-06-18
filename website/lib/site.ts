@@ -22,6 +22,9 @@ export const site = {
     linkedin: "https://www.linkedin.com/in/michael-hart-9a5092414",
   } as { linkedin?: string },
 
+  // Brand logo (navbar, hero watermark, auth pages, favicon source)
+  logo: "/mh-logo.png",
+
   // Open Graph image for metadata
   ogImage: "/og-image.png",
 } as const;
