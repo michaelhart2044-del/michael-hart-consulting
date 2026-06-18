@@ -73,7 +73,9 @@ export default function AdminProposalGenerator() {
   }
 
   useEffect(() => {
-    refreshRecent();
+    queueMicrotask(() => {
+      void refreshRecent();
+    });
   }, []);
 
   async function handleLoad(id: string) {
@@ -476,7 +478,7 @@ ${site.phone}`;
       // refresh the recent list so the flag appears
       await refreshRecent();
       // update local loaded state
-      setLoadedSub({ ...loadedSub, sentAt: new Date().toISOString() } as any);
+      setLoadedSub({ ...loadedSub, sentAt: new Date().toISOString() });
     } else {
       setStatus(res.error || 'Failed to mark sent');
     }

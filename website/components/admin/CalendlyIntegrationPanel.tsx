@@ -59,7 +59,9 @@ export default function CalendlyIntegrationPanel({
   }, []);
 
   useEffect(() => {
-    void refreshStatus();
+    queueMicrotask(() => {
+      void refreshStatus();
+    });
   }, [refreshStatus]);
 
   async function copyWebhookUrl() {

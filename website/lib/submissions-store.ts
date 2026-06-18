@@ -74,7 +74,7 @@ const BLOB_PATHNAME = 'data/prep-submissions.json';
 const MAX_ENTRIES = 100;
 const MAX_CALENDLY_EVENTS_PER_CLIENT = 20;
 
-function useBlobStorage(): boolean {
+function isBlobStorageEnabled(): boolean {
   return !!process.env.BLOB_READ_WRITE_TOKEN;
 }
 
@@ -112,7 +112,7 @@ async function loadFromBlob(): Promise<PrepSubmission[]> {
 }
 
 async function loadAll(): Promise<PrepSubmission[]> {
-  if (useBlobStorage()) return loadFromBlob();
+  if (isBlobStorageEnabled()) return loadFromBlob();
   return loadFromDisk();
 }
 
@@ -148,7 +148,7 @@ function trimList(list: PrepSubmission[]): PrepSubmission[] {
 }
 
 async function persist(list: PrepSubmission[]) {
-  if (useBlobStorage()) {
+  if (isBlobStorageEnabled()) {
     await saveToBlob(list);
   } else {
     await saveToDisk(list);
@@ -507,11 +507,13 @@ export async function revokePortalAccess(id: string): Promise<PrepSubmission | n
   if (idx === -1) return null;
 
   const now = new Date().toISOString();
-  const { portalAccessGrantedAt: _g, portalPasswordHash: _p, mustChangePassword: _m, emailConfirmedAt: _e, ...rest } = all[idx];
-  all[idx] = {
-    ...rest,
-    portalRevokedAt: now,
-  };
+  const updated = { ...all[idx] };
+  delete updated.portalAccessGrantedAt;
+  delete updated.portalPasswordHash;
+  delete updated.mustChangePassword;
+  delete updated.emailConfirmedAt;
+  updated.portalRevokedAt = now;
+  all[idx] = updated;
   await persist(all);
   return all[idx];
 }

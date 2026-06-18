@@ -3,13 +3,35 @@
 import { useState, useRef, useEffect } from 'react';
 import { site } from '@/lib/site';
 
+interface CalendlyPrefill {
+  name?: string;
+  email?: string;
+  customAnswers?: Record<string, string>;
+}
+
+interface CalendlyInlineOptions {
+  url: string;
+  parentElement: HTMLElement;
+  prefill?: CalendlyPrefill;
+}
+
+interface CalendlyGlobal {
+  initInlineWidget: (options: CalendlyInlineOptions) => void;
+}
+
 declare global {
   interface Window {
-    Calendly?: any;
+    Calendly?: CalendlyGlobal;
   }
 }
 
-export default function CalendlyWidget({ url, prefill }: { url?: string; prefill?: any }) {
+export default function CalendlyWidget({
+  url,
+  prefill,
+}: {
+  url?: string;
+  prefill?: CalendlyPrefill;
+}) {
   const [isOpen, setIsOpen] = useState(true);
   const widgetContainerRef = useRef<HTMLDivElement>(null);
 
@@ -22,7 +44,7 @@ export default function CalendlyWidget({ url, prefill }: { url?: string; prefill
       if (window.Calendly && widgetContainerRef.current) {
         // Clear any previous content
         widgetContainerRef.current.innerHTML = '';
-        const options: any = {
+        const options: CalendlyInlineOptions = {
           url: calendlyUrl,
           parentElement: widgetContainerRef.current,
         };

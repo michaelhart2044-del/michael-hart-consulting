@@ -1,5 +1,3 @@
-import { analysisQuestions } from '@/lib/analysis-questions';
-
 /**
  * Internal-only proposal generator.
  * Takes structured prep data (from the public intake form) + optional free-text transcript/notes

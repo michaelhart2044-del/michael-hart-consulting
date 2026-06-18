@@ -185,47 +185,6 @@ export async function sendContactEmail(formData: FormData) {
   }
 }
 
-function buildPrepOwnerEmailHtml(sub: {
-  name: string;
-  email: string;
-  industry: string;
-  mainChallenge: string;
-  additionalChallenges: string[];
-  peopleInvolved: string;
-  successLooksLike: string;
-  additionalContext: string;
-}, booked: boolean): string {
-  const name = escapeHtml(sub.name);
-  const email = escapeHtml(sub.email);
-  const safeIndustry = escapeHtml(sub.industry);
-  const challengeDisplay = escapeHtml(sub.mainChallenge);
-  const safePeople = escapeHtml(sub.peopleInvolved);
-  const safeSuccess = escapeHtml(sub.successLooksLike).replace(/\n/g, '<br>');
-  const safeContext = escapeHtml(sub.additionalContext).replace(/\n/g, '<br>');
-  const safeAdditional = sub.additionalChallenges.map((c) => escapeHtml(c));
-
-  return `
-    <p><strong>Name:</strong> ${name}</p>
-    <p><strong>Email:</strong> ${email}</p>
-    <p><strong>Industry / Business Type:</strong> ${safeIndustry || 'Not specified'}</p>
-    <p><strong>Main Challenge:</strong> ${challengeDisplay || 'Not specified'}</p>
-    ${safeAdditional.length > 0 ? `
-      <p><strong>Additional challenges:</strong></p>
-      <ul style="margin:4px 0 12px 16px; padding:0; list-style:none;">
-        ${safeAdditional.map((c) => `<li style="margin:2px 0;">• ${c}</li>`).join('')}
-      </ul>
-    ` : ''}
-    <p><strong>People involved in month-end / reporting:</strong> ${safePeople || 'Not specified'}</p>
-    <p><strong>What success looks like (30–90 days):</strong><br>${safeSuccess || '<em>Not specified</em>'}</p>
-    ${safeContext ? `<p><strong>Deadlines, stakeholders or upcoming changes:</strong><br>${safeContext}</p>` : ''}
-    <p style="margin-top:16px;font-size:12px;color:#666;">Submitted via the prep form on ${site.name}.</p>
-    ${booked
-      ? '<p style="font-size:12px;color:#888;"><em>Consultation is booked — you will also receive a Calendly notification with the meeting time and Teams link.</em></p>'
-      : '<p style="font-size:12px;color:#888;"><em>Booking not completed yet — visible in /admin only until the client schedules.</em></p>'}
-    <p><small>Answers also attached as prep-answers.txt for easy import into SigVai / xAI.</small></p>
-  `;
-}
-
 /**
  * Server action for the prep form on /prepare-analysis (Step 1 — Continue).
  * Saves to admin store only. Michael is emailed after the client completes Calendly (Step 2).
@@ -474,7 +433,7 @@ export async function getRecentPrepsForAdmin() {
       comprehensiveCanceledAt: s.comprehensiveCanceledAt,
     }));
     return { success: true, items: safe };
-  } catch (e) {
+  } catch {
     return { success: false, error: 'Failed to load submissions', items: [] };
   }
 }

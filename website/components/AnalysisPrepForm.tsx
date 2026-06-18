@@ -45,7 +45,6 @@ export default function AnalysisPrepForm() {
   const [error, setError] = useState('');
   const [selectedChallenge, setSelectedChallenge] = useState('');
   const [additionalChallenges, setAdditionalChallenges] = useState<AdditionalChallenge[]>([]);
-  const [prefilledCalendlyUrl, setPrefilledCalendlyUrl] = useState('');
   const [submittedSummary, setSubmittedSummary] = useState('');
   const [showCalendly, setShowCalendly] = useState(false);
   const [bookingDone, setBookingDone] = useState(false);
@@ -161,20 +160,7 @@ Any specific deadlines, stakeholders, or upcoming changes: ${context || 'Not pro
 ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `- ${c}`).join('\n')}` : ''}`;
 
     // Single-line clean version for Calendly prefill (a1) — avoids URL-encoding artifacts like + in the final stored data
-    const calendlyValue = summary.replace(/\n/g, ' | ').replace(/\s+/g, ' ').trim();
-
-    // Prefill name, email, and custom answers (a1 for the "Prep answers" custom question in Calendly).
-    // User must add a custom question in their Calendly 30min event (e.g. "Prep answers from website form").
-    // The booking notification will then include these answers cleanly.
-    const params = new URLSearchParams();
-    const clientName = formData.get('name') as string || '';
     const clientEmail = formData.get('email') as string || '';
-    if (clientName) params.set('name', clientName);
-    if (clientEmail) params.set('email', clientEmail);
-    params.set('a1', calendlyValue);  // a1 maps to first custom question in the Calendly event
-    // Keep a prefilled URL as fallback (for direct links), using the | version to minimize visible encoding.
-    const prefilled = `${site.calendlyUrl}?${params.toString()}`;
-    setPrefilledCalendlyUrl(prefilled);
     setSubmittedSummary(summary);
 
     const result = await sendAnalysisPrep(formData);

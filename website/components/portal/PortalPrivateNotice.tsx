@@ -1,5 +1,3 @@
-import { site } from '@/lib/site';
-
 export default function PortalPrivateNotice() {
   return (
     <div className="border border-[#c5a46e]/30 bg-[#0f172a]/80 rounded-2xl p-5 text-sm leading-relaxed">

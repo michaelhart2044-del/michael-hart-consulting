@@ -26,7 +26,7 @@ const BLOB_PATHNAME = 'data/calendly-webhook-log.json';
 const MAX_ENTRIES = 50;
 const MAX_PAYLOAD_PREVIEW = 4096;
 
-function useBlobStorage(): boolean {
+function isBlobStorageEnabled(): boolean {
   return !!process.env.BLOB_READ_WRITE_TOKEN;
 }
 
@@ -67,7 +67,7 @@ async function persist(entries: CalendlyWebhookLogEntry[]) {
     .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
     .slice(0, MAX_ENTRIES);
 
-  if (useBlobStorage()) {
+  if (isBlobStorageEnabled()) {
     await put(BLOB_PATHNAME, JSON.stringify(trimmed, null, 2), {
       access: 'private',
       allowOverwrite: true,
@@ -82,7 +82,7 @@ async function persist(entries: CalendlyWebhookLogEntry[]) {
 }
 
 export async function getCalendlyWebhookLogs(limit = 10): Promise<CalendlyWebhookLogEntry[]> {
-  const all = useBlobStorage() ? await loadFromBlob() : await loadFromDisk();
+  const all = isBlobStorageEnabled() ? await loadFromBlob() : await loadFromDisk();
   return [...all]
     .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
     .slice(0, limit);
@@ -107,7 +107,7 @@ export async function appendCalendlyWebhookLog(
     rawPayloadPreview: entry.rawPayloadPreview?.slice(0, MAX_PAYLOAD_PREVIEW),
   };
 
-  const current = useBlobStorage() ? await loadFromBlob() : await loadFromDisk();
+  const current = isBlobStorageEnabled() ? await loadFromBlob() : await loadFromDisk();
   await persist([full, ...current]);
   return full;
 }
