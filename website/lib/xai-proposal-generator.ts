@@ -41,6 +41,7 @@ Rules:
 - Use ONLY facts from the provided intake and transcript. Do not invent client metrics.
 - If the transcript lacks numbers, use ranges and label them as illustrative.
 - No markdown headers except the two section titles above. Use plain text with bullet dashes.
+- Do not include internal operator notes (e.g. "Source:", SigVai references, or separator lines).
 - Keep total length 900–1400 words unless the case is unusually complex.`;
 }
 

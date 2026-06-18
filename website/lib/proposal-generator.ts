@@ -81,8 +81,7 @@ export function generateProposal(input: GeneratorInput): GeneratedProposal {
     define += `\nAdditional Insights from Discussion / Notes:\n${clean(transcript).slice(0, 1200)}\n`;
   }
 
-  define += `\n---\n`;
-  define += `Source: Structured intake form + optional transcript (private, SigVai/xAI ready).\n`;
+  define += `\n`;
 
   // === RECOMMENDED APPROACH (benefits, ROI, package, next steps) ===
   let pitch = `${PROPOSAL_APPROACH_HEADER}\n\n`;
