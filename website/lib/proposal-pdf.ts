@@ -13,10 +13,14 @@ const GOLD = colors.accent;
 const GOLD_DARK = '#8f6f3d';
 const MUTED = colors.subtle;
 const BODY = '#1e293b';
-const FOOTER_H = 88;
-const FOOTER_GAP = 10;
+/** Reserved band above bottom margin — compact footer, bleed-safe via white mask. */
+const FOOTER_H = 44;
+const FOOTER_GAP = 8;
+const PAGE_BOTTOM_MARGIN = 54;
 const MINI_HEADER_H = 42;
-const CLOSING_H = 72;
+/** Breathing room between last body paragraph and sign-off rule. */
+const CLOSING_SEP_GAP = 34;
+const CLOSING_LINE_GAP = 6;
 const BODY_SIZE = 10.5;
 
 const FONT = 'Helvetica';
@@ -236,7 +240,8 @@ function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number
 
   doc.font(FONT_BOLD).fontSize(13);
   const titleHeight = doc.heightOfString(title, { width, lineGap: 1 });
-  ensureSpace(doc, ctx, titleHeight + 24);
+  // Keep section header with at least one line of body content on the same page.
+  ensureSpace(doc, ctx, titleHeight + 24 + 28);
 
   doc.fillColor(NAVY).text(title, { width, lineGap: 1 });
 
@@ -257,6 +262,7 @@ function drawBulletLine(
   const bulletCol = 12;
   const textIndent = bulletCol + 8;
   const content = trimmed.replace(BULLET_LINE, '');
+  const labelMatch = /^([^:]+:)([\s\S]*)$/.exec(content);
 
   doc.font(FONT).fontSize(BODY_SIZE);
   const textHeight = doc.heightOfString(content, {
@@ -271,11 +277,30 @@ function drawBulletLine(
     width: bulletCol,
     lineBreak: false,
   });
-  doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(content, left + textIndent, y, {
-    width: width - textIndent,
-    lineGap: 2.5,
-    paragraphGap: 2,
-  });
+
+  const textX = left + textIndent;
+  const textW = width - textIndent;
+
+  if (labelMatch) {
+    doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text(labelMatch[1], textX, y, {
+      width: textW,
+      continued: Boolean(labelMatch[2].trim()),
+      lineGap: 2.5,
+    });
+    if (labelMatch[2].trim()) {
+      doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(labelMatch[2].trimStart(), {
+        width: textW,
+        lineGap: 2.5,
+        paragraphGap: 2,
+      });
+    }
+  } else {
+    doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(content, textX, y, {
+      width: textW,
+      lineGap: 2.5,
+      paragraphGap: 2,
+    });
+  }
 }
 
 function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: PdfLayoutContext): void {
@@ -327,21 +352,32 @@ function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: 
   }
 }
 
-/** Text sign-off on the last content page. */
-function drawClosingBlock(doc: PDFKit.PDFDocument, ctx: PdfLayoutContext): void {
-  ensureSpace(doc, ctx, CLOSING_H + 12);
-  doc.moveDown(1.2);
-
-  const left = doc.page.margins.left;
+function measureClosingBlockHeight(doc: PDFKit.PDFDocument): number {
   const width = contentWidth(doc);
 
-  doc.moveTo(left, doc.y).lineTo(left + width * 0.35, doc.y).strokeColor(GOLD_DARK).lineWidth(0.75).stroke();
+  doc.font(FONT_BOLD).fontSize(BODY_SIZE);
+  const nameHeight = doc.heightOfString('Michael Hart, Founder', { width });
+  doc.font(FONT).fontSize(BODY_SIZE);
+  const firmHeight = doc.heightOfString(site.name, { width });
 
-  doc.moveDown(0.8);
-  doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text('Michael Hart, Founder', { width });
-  doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(site.name, { width });
-  doc.font(FONT).fontSize(BODY_SIZE).fillColor(MUTED).text(`${site.phone}  •  ${site.email}`, { width });
-  doc.font(FONT).fontSize(BODY_SIZE).fillColor(MUTED).text(siteHost(), { width });
+  return CLOSING_SEP_GAP + 10 + nameHeight + CLOSING_LINE_GAP + firmHeight;
+}
+
+/** Name + firm only — contact details live in the page footer. */
+function drawClosingBlock(doc: PDFKit.PDFDocument, ctx: PdfLayoutContext): void {
+  const left = doc.page.margins.left;
+  const width = contentWidth(doc);
+  const blockHeight = measureClosingBlockHeight(doc);
+
+  ensureSpace(doc, ctx, blockHeight + 4);
+  doc.y += CLOSING_SEP_GAP;
+
+  doc.moveTo(left, doc.y).lineTo(left + width * 0.32, doc.y).strokeColor(GOLD_DARK).lineWidth(0.75).stroke();
+  doc.y += 10;
+
+  doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text('Michael Hart, Founder', { width, lineGap: 1 });
+  doc.moveDown(0.2);
+  doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(site.name, { width, lineGap: 1 });
 }
 
 function drawPageFooter(doc: PDFKit.PDFDocument, pageIndex: number, pageCount: number): void {
@@ -356,22 +392,22 @@ function drawPageFooter(doc: PDFKit.PDFDocument, pageIndex: number, pageCount: n
   doc.restore();
 
   if (pageIndex === 0) {
-    doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(site.name, left, zoneTop + 36, {
+    doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(site.name, left, zoneTop + 14, {
       width: contentWidth(doc),
       align: 'center',
     });
     return;
   }
 
-  const lineY = zoneTop + 6;
+  const lineY = zoneTop + 4;
   doc.moveTo(left, lineY).lineTo(right, lineY).strokeColor(GOLD).lineWidth(0.75).opacity(0.55).stroke().opacity(1);
 
-  doc.font(FONT).fontSize(8).fillColor(MUTED).text(`${site.phone}  •  ${site.email}  •  ${siteHost()}`, left, lineY + 10, {
+  doc.font(FONT).fontSize(8).fillColor(MUTED).text(`${site.phone}  •  ${site.email}  •  ${siteHost()}`, left, lineY + 8, {
     width: contentWidth(doc),
     align: 'left',
   });
 
-  doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(`${site.name}  •  Page ${pageIndex + 1} of ${pageCount}`, left, lineY + 22, {
+  doc.font(FONT).fontSize(7.5).fillColor(MUTED).text(`${site.name}  •  Page ${pageIndex + 1} of ${pageCount}`, left, lineY + 19, {
     width: contentWidth(doc),
     align: 'left',
   });
@@ -390,7 +426,7 @@ export async function generateProposalPdfBuffer(params: {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: 'LETTER',
-      margins: { top: 48, bottom: 72, left: 54, right: 54 },
+      margins: { top: 48, bottom: PAGE_BOTTOM_MARGIN, left: 54, right: 54 },
       bufferPages: true,
       info: {
         Title: `Initial Proposal — ${clientName}`,
