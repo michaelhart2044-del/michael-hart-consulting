@@ -65,6 +65,7 @@ export function sanitizeProposalForClient(text: string): string {
       if (/^===\s*END SIGVAI/i.test(t)) return false;
       if (/SigVai\s*\/\s*xAI ready/i.test(t)) return false;
       if (SIGNOFF_LINE.test(t)) return false;
+      if (/^Michael Hart\s*\.?$/i.test(t)) return false;
       return true;
     })
     .join('\n')
@@ -203,6 +204,28 @@ function ensureSpace(doc: PDFKit.PDFDocument, ctx: PdfLayoutContext, needed: num
   }
 }
 
+const LIST_LABEL =
+  /^(Why This Matters|Estimated ROI|Clear next steps|Recommended starting point|Industry context|Challenges from|Team\/effort|Desired outcomes|Constraints|Key insights)/i;
+
+function nextNonEmptyLine(lines: string[], fromIndex: number): string | null {
+  for (let i = fromIndex + 1; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (t) return t;
+  }
+  return null;
+}
+
+/** Grok often emits a label line before dashed sub-bullets — treat as a bulleted row for alignment. */
+function isListLeadLine(trimmed: string, nextTrimmed: string | null): boolean {
+  if (SECTION_HEADER.test(trimmed)) return false;
+  if (BULLET_LINE.test(trimmed)) return false;
+  if (NUMBERED_LINE.test(trimmed)) return false;
+  if (/:\s*$/.test(trimmed)) return true;
+  if (LIST_LABEL.test(trimmed)) return true;
+  if (nextTrimmed && BULLET_LINE.test(nextTrimmed)) return true;
+  return false;
+}
+
 function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number): void {
   const left = doc.page.margins.left;
 
@@ -237,8 +260,8 @@ function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: 
   const width = contentWidth(doc);
   const lines = proposalText.split('\n');
 
-  for (const rawLine of lines) {
-    const trimmed = rawLine.trim();
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
 
     if (!trimmed) {
       ensureSpace(doc, ctx, 10);
@@ -263,10 +286,17 @@ function renderProposalBody(doc: PDFKit.PDFDocument, proposalText: string, ctx: 
       continue;
     }
 
+    const nextLine = nextNonEmptyLine(lines, i);
+    if (isListLeadLine(trimmed, nextLine)) {
+      ensureSpace(doc, ctx, 16);
+      drawBulletLine(doc, trimmed, width);
+      continue;
+    }
+
     if (NUMBERED_LINE.test(trimmed)) {
       ensureSpace(doc, ctx, 16);
       setBodyFont(doc);
-      doc.text(trimmed, { width, indent: 12, lineGap: 2.5, paragraphGap: 2 });
+      doc.text(trimmed, { width, indent: 20, lineGap: 2.5, paragraphGap: 2 });
       continue;
     }
 
