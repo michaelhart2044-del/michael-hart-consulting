@@ -21,6 +21,11 @@ const BODY_SIZE = 10.5;
 const FONT = 'Helvetica';
 const FONT_BOLD = 'Helvetica-Bold';
 
+/** Round dot — cover services (Windows-style bullet). */
+const MARKER_DOT = '\u2022';
+/** Small arrow — body lists (Windows-style arrow bullet). */
+const MARKER_ARROW = '\u25B8';
+
 const SECTION_HEADER = /^(DEFINE|RECOMMENDED APPROACH|CLIENT PITCH)\s*[—–-]/i;
 const BULLET_LINE = /^[-•*]\s+/;
 const NUMBERED_LINE = /^\d+\.\s+/;
@@ -81,19 +86,19 @@ function setBodyFont(doc: PDFKit.PDFDocument): void {
   doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY);
 }
 
-function drawAlignedAsteriskList(
+function drawAlignedMarkerList(
   doc: PDFKit.PDFDocument,
   items: string[],
   startY: number,
   fontSize: number,
+  marker: string,
 ): void {
   const left = doc.page.margins.left;
   const width = contentWidth(doc);
-  const bulletCol = 12;
+  const bulletCol = 14;
   const textIndent = bulletCol + 6;
 
   doc.font(FONT).fontSize(fontSize);
-  const textWidth = width - textIndent;
   const blockWidth = Math.min(
     width,
     Math.max(...items.map((item) => doc.widthOfString(item) + textIndent)),
@@ -102,7 +107,7 @@ function drawAlignedAsteriskList(
 
   let y = startY;
   for (const item of items) {
-    doc.font(FONT_BOLD).fontSize(fontSize).fillColor(NAVY).text('*', blockLeft, y, {
+    doc.font(FONT_BOLD).fontSize(fontSize).fillColor(NAVY).text(marker, blockLeft, y, {
       width: bulletCol,
       lineBreak: false,
     });
@@ -159,7 +164,7 @@ function drawCoverPage(doc: PDFKit.PDFDocument, clientName: string, logo: Buffer
     .stroke()
     .opacity(1);
 
-  drawAlignedAsteriskList(
+  drawAlignedMarkerList(
     doc,
     [
       'Forensic Accounting & Litigation Support',
@@ -170,6 +175,7 @@ function drawCoverPage(doc: PDFKit.PDFDocument, clientName: string, logo: Buffer
     ],
     servicesY + 14,
     8.5,
+    MARKER_DOT,
   );
 }
 
@@ -218,7 +224,10 @@ function drawBulletLine(doc: PDFKit.PDFDocument, trimmed: string, width: number)
   const content = trimmed.replace(BULLET_LINE, '');
 
   const y = doc.y;
-  doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text('*', left, y, { width: bulletCol, lineBreak: false });
+  doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text(MARKER_ARROW, left, y, {
+    width: bulletCol,
+    lineBreak: false,
+  });
   doc.font(FONT).fontSize(BODY_SIZE).fillColor(BODY).text(content, left + textIndent, y, {
     width: width - textIndent,
     lineGap: 2.5,
