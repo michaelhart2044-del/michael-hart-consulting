@@ -178,6 +178,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
+                featured: true,
                 title: "Month-End Close Acceleration",
                 challenge: "A multi-location healthcare provider with 8 facilities was stuck with a 25-day close cycle, draining the team and delaying critical board reporting.",
                 approach: "We standardized processes across locations and implemented targeted automation for reconciliations and close workflows using SQL, Power Query, and existing tools.",
@@ -201,9 +202,16 @@ export default function Home() {
             ].map((item, i) => (
               <div 
                 key={i} 
-                className="group border border-white/10 rounded-2xl p-6 bg-card hover:border-accent/40 hover:bg-[#111827] transition-all duration-300 flex flex-col relative"
+                className={`group border rounded-2xl p-6 bg-card hover:bg-[#111827] transition-all duration-300 flex flex-col relative ${
+                  'featured' in item && item.featured
+                    ? 'border-accent/30 hover:border-accent/50'
+                    : 'border-white/10 hover:border-accent/40'
+                }`}
               >
                 <div className="absolute top-0 left-0 right-0 h-0.5 bg-accent/40 rounded-t-2xl" />
+                {'featured' in item && item.featured && (
+                  <div className="text-xs tracking-widest text-accent font-medium mb-2">FEATURED CASE STUDY</div>
+                )}
                 <h3 className="text-xl font-semibold mb-3 group-hover:text-accent transition-colors">
                   {item.title}
                 </h3>
