@@ -239,10 +239,7 @@ Thank you for our conversation. I've attached the initial proposal outlining our
 
 Please review at your convenience and let me know if you have any questions — or if you'd like to schedule a brief follow-up to walk through scope and timing together.
 
-Best regards,
-Michael Hart
-Michael Hart Consulting Group LLC
-${site.phone}`;
+Best regards,`;
   }
 
   async function generateEmailDraft() {
