@@ -284,7 +284,7 @@ Michael Hart
 Michael Hart Consulting Group LLC
 ${site.phone}`;
 
-    const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(shortBody)}`;
+    const mailto = `mailto:${encodeURIComponent(loadedSub?.email || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(shortBody)}`;
 
     // Open mailto (best-effort; some browsers block or truncate)
     try {
@@ -464,7 +464,7 @@ ${site.phone}`;
     }
     const res = await markPrepAsSent(loadedSub.id);
     if (res.success) {
-      setStatus('Marked as sent');
+      setStatus('Marked as sent — Layer 3 updated.');
       // refresh the recent list so the flag appears
       await refreshRecent();
       // update local loaded state
@@ -647,6 +647,113 @@ ${site.phone}`;
         />
       )}
 
+      {/* Layer 3 — Initial proposal (right after 30-min transcript) */}
+      {loadedSub && (
+      <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-6">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Layer 3</div>
+          <h2 className="font-semibold text-lg mt-0.5">Initial Proposal</h2>
+          <p className="text-sm text-[#94a3b8] mt-1">
+            After the 30-min call: generate with Grok → review → save → email client → confirm sent.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2 text-[#cbd5e1]">Supplemental notes (optional)</label>
+          <textarea
+            value={transcript}
+            onChange={(e) => setTranscript(e.target.value)}
+            rows={3}
+            className="w-full bg-[#111827] border border-white/20 rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-[#c5a46e] placeholder:text-[#64748b]"
+            placeholder="Optional — e.g. follow-up email context. Primary source is the Layer 2 transcript."
+          />
+        </div>
+
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating || consult30Transcript.trim().length < 80}
+            className="px-8 py-3.5 text-base font-semibold bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full disabled:opacity-60 transition-all active:scale-[0.985]"
+          >
+            {isGenerating ? 'Generating with Grok…' : '1. Generate Initial Proposal (Grok)'}
+          </button>
+          <button
+            onClick={copyForSigVai}
+            className="px-6 py-3 text-sm font-medium rounded-full border border-white/20 text-[#94a3b8] hover:bg-white/5 hover:text-[#e2e8f0]"
+          >
+            Copy intake for SigVai (optional)
+          </button>
+        </div>
+
+        {(proposal || outputText) && (
+          <div className="space-y-6 pt-4 border-t border-white/10">
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="font-semibold">Generated proposal — edit before sending</h3>
+              <span className="text-xs text-[#64748b]">Save Draft stores on this client record</span>
+            </div>
+
+            {proposal && (
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div className="border border-white/10 rounded-xl p-4 bg-black/20">
+                  <div className="uppercase tracking-[1px] text-[10px] text-[#c5a46e] mb-2">DEFINE</div>
+                  <pre className="whitespace-pre-wrap text-[#cbd5e1] text-[12.5px] leading-relaxed font-mono">{proposal.defineSection}</pre>
+                </div>
+                <div className="border border-white/10 rounded-xl p-4 bg-black/20">
+                  <div className="uppercase tracking-[1px] text-[10px] text-[#c5a46e] mb-2">CLIENT PITCH</div>
+                  <pre className="whitespace-pre-wrap text-[#cbd5e1] text-[12.5px] leading-relaxed font-mono">{proposal.pitchSection}</pre>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <div className="text-xs uppercase tracking-widest text-[#94a3b8] mb-1.5">Full editable text</div>
+              <textarea
+                value={outputText}
+                onChange={(e) => setOutputText(e.target.value)}
+                rows={18}
+                className="w-full font-mono text-sm bg-[#111827] border border-white/20 rounded-xl p-4 focus:outline-none focus:border-[#c5a46e] leading-relaxed"
+              />
+            </div>
+
+            <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 space-y-3">
+              <p className="text-xs font-medium text-[#c5a46e]">2. Deliver to client</p>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={handleSaveDraft} disabled={!outputText} className="px-5 py-2 text-sm rounded-full bg-white/5 border border-white/20 disabled:opacity-40 hover:bg-white/10">
+                  Save Draft
+                </button>
+                <button onClick={copyAll} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Copy All</button>
+                <button onClick={downloadTxt} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Download .txt</button>
+                <button onClick={printToPdf} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Print / Save as PDF</button>
+                <button onClick={generateEmailDraft} className="px-5 py-2 text-sm rounded-full border border-[#c5a46e]/40 text-[#c5a46e] hover:bg-[#c5a46e]/10">
+                  Open email draft (Outlook)
+                </button>
+              </div>
+              <p className="text-[11px] text-[#64748b]">
+                Email draft copies the full proposal to your clipboard and opens Outlook. Paste the proposal into the body, send from{' '}
+                <span className="text-[#94a3b8]">michael@michaelhartconsulting.com</span>, then click confirm below.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-emerald-500/25 bg-emerald-950/20 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex-1 text-sm text-[#cbd5e1]">
+                <span className="font-medium text-emerald-200">3. After you send the email</span>
+                <span className="block text-xs text-[#64748b] mt-0.5">
+                  Confirms Layer 3 in the timeline. Outlook send cannot be detected automatically yet.
+                </span>
+              </div>
+              <button
+                onClick={handleMarkSent}
+                disabled={!loadedSub}
+                className="shrink-0 px-6 py-2.5 text-sm font-semibold rounded-full bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-40"
+              >
+                Confirm: Sent to Client
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+      )}
+
       {/* Steps 8–9 — Engagement commitment + portal invite */}
       {loadedSub && (
         <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-4">
@@ -741,112 +848,6 @@ ${site.phone}`;
               {busyId === loadedSub.id ? 'Deleting…' : 'Delete Client Record'}
             </button>
           </div>
-        </section>
-      )}
-
-      {/* Supplemental notes for proposal (optional) */}
-      {loadedSub && (
-      <section className="border border-white/10 rounded-2xl bg-[#0f172a] p-6">
-        <label className="block font-semibold mb-2">Supplemental notes for proposal (optional)</label>
-        <textarea
-          value={transcript}
-          onChange={(e) => setTranscript(e.target.value)}
-          rows={4}
-          className="w-full bg-[#111827] border border-white/20 rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-[#c5a46e] placeholder:text-[#64748b]"
-          placeholder="Optional context beyond the 30-min transcript — e.g. follow-up email, extra constraints."
-        />
-        <p className="text-[11px] text-[#64748b] mt-2">
-          Primary source: paste the 30-min Teams transcript in Layer 2 above. Generate runs after that transcript is saved.
-        </p>
-      </section>
-      )}
-
-      {/* Generate + Copy for SigVai */}
-      {loadedSub && (
-      <>
-      <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-        <button
-          onClick={handleGenerate}
-          disabled={isGenerating || consult30Transcript.trim().length < 80}
-          className="px-8 py-3.5 text-base font-semibold bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full disabled:opacity-60 transition-all active:scale-[0.985]"
-        >
-          {isGenerating ? 'Generating with Grok…' : 'Generate Initial Proposal (Grok)'}
-        </button>
-
-        <button
-          onClick={copyForSigVai}
-          className="px-8 py-3.5 text-base font-semibold bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full transition-all active:scale-[0.985] ring-2 ring-offset-2 ring-offset-[#0a0f2c] ring-[#c5a46e]/60"
-        >
-          Copy for SigVai
-        </button>
-      </div>
-      <p className="text-center text-xs text-[#64748b] -mt-1 mb-2">
-        Use “Copy for SigVai” for your private DMAIC workflow after the engagement deepens.
-      </p>
-      </>
-      )}
-
-      {/* Output */}
-      {(proposal || outputText) && (
-        <section className="border border-white/10 rounded-2xl bg-[#0f172a] p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-lg">Generated Proposal (editable)</h2>
-            <div className="text-xs text-[#64748b]">Edit the text below — changes stay local until you Save Draft</div>
-          </div>
-
-          {/* Structured preview (read-only for quick scan) */}
-          {proposal && (
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div className="border border-white/10 rounded-xl p-4 bg-black/20">
-                <div className="uppercase tracking-[1px] text-[10px] text-[#c5a46e] mb-2">DEFINE</div>
-                <pre className="whitespace-pre-wrap text-[#cbd5e1] text-[12.5px] leading-relaxed font-mono">{proposal.defineSection}</pre>
-              </div>
-              <div className="border border-white/10 rounded-xl p-4 bg-black/20">
-                <div className="uppercase tracking-[1px] text-[10px] text-[#c5a46e] mb-2">CLIENT PITCH</div>
-                <pre className="whitespace-pre-wrap text-[#cbd5e1] text-[12.5px] leading-relaxed font-mono">{proposal.pitchSection}</pre>
-              </div>
-            </div>
-          )}
-
-          {/* Fully editable combined output */}
-          <div>
-            <div className="text-xs uppercase tracking-widest text-[#94a3b8] mb-1.5">FULL EDITABLE OUTPUT</div>
-            <textarea
-              value={outputText}
-              onChange={(e) => setOutputText(e.target.value)}
-              rows={22}
-              className="w-full font-mono text-sm bg-[#111827] border border-white/20 rounded-xl p-4 focus:outline-none focus:border-[#c5a46e] leading-relaxed"
-            />
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex flex-wrap gap-2 pt-2">
-            <button onClick={copyAll} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Copy All</button>
-            <button onClick={downloadTxt} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Download .txt</button>
-            <button onClick={printToPdf} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Print / Save as PDF</button>
-            <button onClick={generateEmailDraft} className="px-5 py-2 text-sm rounded-full border border-white/20 hover:bg-white/5">Generate Email Draft</button>
-
-            <div className="flex-1" />
-
-            <button
-              onClick={handleSaveDraft}
-              disabled={!loadedSub || !outputText}
-              className="px-5 py-2 text-sm rounded-full bg-white/5 border border-white/20 disabled:opacity-40 hover:bg-white/10"
-            >
-              Save Draft
-            </button>
-            <button
-              onClick={handleMarkSent}
-              disabled={!loadedSub}
-              className="px-5 py-2 text-sm rounded-full bg-emerald-600/80 hover:bg-emerald-600 text-white disabled:opacity-40"
-            >
-              Mark as Sent
-            </button>
-          </div>
-
-          <p className="text-[11px] text-[#64748b]">
-            All actions stay inside the private tool. “Save Draft” and “Mark as Sent” persist against the loaded submission record.
-          </p>
         </section>
       )}
 

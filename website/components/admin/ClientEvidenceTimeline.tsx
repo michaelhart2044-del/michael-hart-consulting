@@ -483,17 +483,23 @@ export default function ClientEvidenceTimeline({
         </LayerCard>
       </div>
 
-      <div className="pt-4 border-t border-[#c5a46e]/25 flex flex-col sm:flex-row items-center justify-center gap-3">
+      <div className="pt-4 border-t border-[#c5a46e]/25 space-y-2">
+        <p className="text-xs text-[#64748b] text-center max-w-prose mx-auto">
+          <span className="text-[#94a3b8] font-medium">Later in the engagement</span> — after Layers 4–5 (portal prep + 60-min deep dive).
+          Not part of the initial 30-min proposal flow.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <button
           type="button"
           onClick={() => void handleGenerateBundle()}
-          className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full transition-all active:scale-[0.985] ring-2 ring-offset-2 ring-offset-[#0f172a] ring-[#c5a46e]/50"
+          className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium rounded-full border border-[#c5a46e]/40 text-[#c5a46e] hover:bg-[#c5a46e]/10 transition-all"
         >
           Generate DMAIC Bundle for SigVai
         </button>
         {copied && (
           <span className="text-sm font-medium text-emerald-300 animate-pulse">Copied!</span>
         )}
+        </div>
       </div>
     </section>
   );
