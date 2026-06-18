@@ -2,15 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import ContactForm from '@/components/ContactForm';
 import { site } from '@/lib/site';
-import Script from 'next/script';
-import CalendlyWidget from '@/components/CalendlyWidget';
 
 export const metadata: Metadata = {
   title: 'Contact',
-  description: `Get in touch with ${site.name}. ${site.description} Book a consultation or send us a message.`,
+  description: `Get in touch with ${site.name}. Book a consultation or send us a message. ${site.description}`,
   openGraph: {
     title: `Contact | ${site.name}`,
-    description: `Get in touch with ${site.name}. ${site.description} Book a consultation or send us a message.`,
+    description: `Get in touch with ${site.name}. Book a consultation or send us a message.`,
     images: [
       {
         url: site.ogImage,
@@ -24,7 +22,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: `Contact | ${site.name}`,
-    description: `Get in touch with ${site.name}. ${site.description} Book a consultation or send us a message.`,
+    description: `Get in touch with ${site.name}. Book a consultation or send us a message.`,
     images: [site.ogImage],
   },
 };
@@ -32,48 +30,60 @@ export const metadata: Metadata = {
 export default function Contact() {
   return (
     <>
-      {/* Contact Header */}
-      <div className="max-w-5xl mx-auto px-6 pt-32 pb-16">
+      {/* Header */}
+      <div className="max-w-5xl mx-auto px-6 pt-32 pb-12">
         <div className="max-w-2xl">
           <h1 className="text-5xl font-semibold tracking-tight">Get in Touch</h1>
           <p className="mt-4 text-lg text-muted">
-            Whether you have a specific question or want to explore how we can support your business, we’d love to hear from you.
+            Ready to explore how we can help? Start with a consultation. Have a general question instead? Send us a message below.
           </p>
         </div>
       </div>
 
-      {/* Contact Form + Info */}
-      <div className="max-w-5xl mx-auto px-6 pb-20">
-        <div className="grid md:grid-cols-5 gap-12">
-          
-          {/* Contact Form */}
-          <div className="md:col-span-3" id="form">
-            <div className="mb-6 p-4 bg-card border border-accent/20 rounded-lg text-sm">
-              <div className="text-xs tracking-widest text-accent font-medium mb-1">FEATURED CASE STUDY</div>
-              <div className="font-medium mb-1">Month-End Close Acceleration</div>
-              <div className="text-muted mb-1">Challenge: 25-day close cycle draining team at 8-facility healthcare provider.</div>
-              <div className="text-muted mb-1">Approach: Standardized processes and automated reconciliations/close workflows.</div>
-              <div className="text-muted">Results: Reduced to 5 business days, saving 160+ team hours per month.</div>
-              <div className="text-xs text-subtle mt-1">— Controller, Multi-Location Healthcare Provider</div>
+      {/* Primary: Book Consultation */}
+      <div className="max-w-5xl mx-auto px-6 pb-12">
+        <div className="grid md:grid-cols-5 gap-12 items-start">
+          <div className="md:col-span-3">
+            <div className="bg-card border border-accent/30 rounded-2xl p-8 md:p-10 hover:border-accent/50 transition-all duration-300">
+              <div className="text-xs tracking-widest text-accent font-medium mb-3">GET STARTED</div>
+              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Ready to work together?</h2>
+              <p className="mt-4 text-muted leading-relaxed">
+                Book a 30-minute initial consultation. Share a few details about your situation, then pick a time that works for you. Takes about 3 minutes.
+              </p>
+              <div className="mt-8">
+                <Link
+                  href="/prepare-analysis"
+                  className="inline-block w-full md:w-auto text-center px-6 py-3 bg-[#8f6f3d] hover:bg-[#b89a6e] text-black font-medium rounded-full transition-all active:scale-[0.985]"
+                >
+                  Book Consultation
+                </Link>
+              </div>
+              <p className="mt-6 text-sm text-subtle">
+                See client results on our{' '}
+                <Link href="/#results" className="text-accent hover:underline">
+                  homepage
+                </Link>
+                .
+              </p>
             </div>
-            <h2 className="text-2xl font-semibold mb-6">Send us a message</h2>
-            <ContactForm />
           </div>
 
           {/* Contact Information */}
           <div className="md:col-span-2">
             <div className="border border-white/10 rounded-2xl p-8 bg-section h-full">
               <h2 className="text-2xl font-semibold mb-8">Contact Information</h2>
-              
+
               <div className="space-y-8 text-muted">
                 <div>
                   <div className="text-sm text-accent font-medium tracking-widest mb-2">PHONE</div>
-                  <a href={site.phoneHref} className="text-lg hover:text-accent transition-colors">{site.phone}</a>
+                  <a href={site.phoneHref} className="text-lg hover:text-accent transition-colors">
+                    {site.phone}
+                  </a>
                 </div>
 
                 <div>
                   <div className="text-sm text-accent font-medium tracking-widest mb-2">EMAIL</div>
-                  <a href={`mailto:${site.email}`} className="text-lg hover:text-accent transition-colors">
+                  <a href={`mailto:${site.email}`} className="text-lg hover:text-accent transition-colors break-all">
                     {site.email}
                   </a>
                 </div>
@@ -82,43 +92,23 @@ export default function Contact() {
               <div className="mt-10 pt-8 border-t border-white/10 text-sm text-subtle leading-relaxed">
                 We typically respond within 24 hours on business days.
               </div>
-
-              <div className="mt-6 pt-6 border-t border-white/10 text-xs text-subtle">
-                <div className="font-medium text-accent mb-1.5 tracking-widest">KEY OUTCOMES</div>
-                <ul className="space-y-1">
-                  <li>• Close cycles cut 80% (25 days → 5)</li>
-                  <li>• Reconciliations 95% faster (6 hrs → 15 min)</li>
-                </ul>
-              </div>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* Calendly Booking Section */}
-      <div id="book" className="max-w-5xl mx-auto px-6 pb-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-semibold mb-4">Book a Consultation Directly</h2>
-          <p className="text-muted mb-4">
-            Optionally share a few details in advance on the prep page so we can make the most of our time:
-          </p>
-          <Link href="/prepare-analysis" className="inline-block text-accent hover:underline font-medium mb-6">
-            Go to prep page →
-          </Link>
-          <p className="text-muted mb-8">
-            Or book now. We’ll send a calendar invite and confirmation.
-          </p>
+      {/* Secondary: General inquiry form */}
+      <div className="border-t border-white/10 bg-section">
+        <div className="max-w-5xl mx-auto px-6 py-16">
+          <div className="max-w-2xl" id="form">
+            <h2 className="text-2xl font-semibold mb-2">Have a general question?</h2>
+            <p className="text-muted mb-8">
+              Not ready to book yet? Send a message and we&apos;ll get back to you.
+            </p>
+            <ContactForm />
+          </div>
         </div>
-        <CalendlyWidget />
       </div>
-
-      <Script
-        type="text/javascript"
-        src="https://assets.calendly.com/assets/external/widget.js"
-        strategy="lazyOnload"
-      />
-
     </>
   );
 }

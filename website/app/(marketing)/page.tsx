@@ -166,7 +166,7 @@ export default function Home() {
       </section>
 
       {/* Client Results & Social Proof */}
-      <section className="border-t border-white/10 bg-background py-12 md:py-16">
+      <section id="results" className="border-t border-white/10 bg-background py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Results That Speak for Themselves</h2>
