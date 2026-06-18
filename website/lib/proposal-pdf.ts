@@ -21,10 +21,8 @@ const BODY_SIZE = 10.5;
 const FONT = 'Helvetica';
 const FONT_BOLD = 'Helvetica-Bold';
 
-/** Round dot — cover services (Windows-style bullet). */
+/** Round dot — all lists (PDF-safe, uniform). */
 const MARKER_DOT = '\u2022';
-/** Chevron — body lists; ASCII-safe (Unicode arrows show as % in PDF Helvetica). */
-const MARKER_ARROW = '>';
 
 const SECTION_HEADER = /^(DEFINE|RECOMMENDED APPROACH|CLIENT PITCH)\s*[—–-]/i;
 const BULLET_LINE = /^[-•*]\s+/;
@@ -224,7 +222,7 @@ function drawBulletLine(doc: PDFKit.PDFDocument, trimmed: string, width: number)
   const content = trimmed.replace(BULLET_LINE, '');
 
   const y = doc.y;
-  doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text(MARKER_ARROW, left, y, {
+  doc.font(FONT_BOLD).fontSize(BODY_SIZE).fillColor(NAVY).text(MARKER_DOT, left, y, {
     width: bulletCol,
     lineBreak: false,
   });
