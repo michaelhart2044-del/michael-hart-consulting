@@ -5,6 +5,7 @@
 import { Resend } from 'resend';
 import { site } from '@/lib/site';
 import { getResendFrom } from '@/lib/resend-email';
+import { generateProposalPdfBuffer } from '@/lib/proposal-pdf';
 
 function escapeHtml(unsafe: string): string {
   return unsafe
@@ -41,7 +42,15 @@ export async function sendProposalEmailToClient(params: {
   const { clientEmail, clientName, proposalText } = params;
   const greeting = clientName.split(' ')[0] || 'there';
   const subject = `Initial Proposal — ${clientName}`;
-  const filename = `Proposal — ${safeFilename(clientName)}.txt`;
+  const filename = `Proposal — ${safeFilename(clientName)}.pdf`;
+
+  let pdfBuffer: Buffer;
+  try {
+    pdfBuffer = await generateProposalPdfBuffer({ clientName, proposalText });
+  } catch (error) {
+    console.error('Proposal PDF generation failed:', error);
+    return { success: false, error: 'Failed to generate proposal PDF.' };
+  }
 
   const resend = new Resend(apiKey);
 
@@ -56,7 +65,7 @@ export async function sendProposalEmailToClient(params: {
       attachments: [
         {
           filename,
-          content: Buffer.from(proposalText, 'utf-8').toString('base64'),
+          content: pdfBuffer.toString('base64'),
         },
       ],
     });

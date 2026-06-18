@@ -738,7 +738,7 @@ Best regards,`;
                 </button>
               </div>
               <p className="text-[11px] text-[#64748b]">
-                <span className="text-[#94a3b8]">Recommended:</span> Send proposal to client — emails from your domain, attaches the proposal, marks Layer 3 sent, and BCCs you.
+                <span className="text-[#94a3b8]">Recommended:</span> Send proposal to client — emails a PDF attachment, marks Layer 3 sent, and BCCs you.
                 Use Outlook only if you prefer to send manually.
               </p>
             </div>
