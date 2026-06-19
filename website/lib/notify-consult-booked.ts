@@ -1,6 +1,11 @@
 import { Resend } from 'resend';
 import { site } from '@/lib/site';
 import { getResendFrom } from '@/lib/resend-email';
+import {
+  labelForEntityCount,
+  labelForFinanceTeamSize,
+  labelForRevenueBand,
+} from '@/lib/intake-options';
 import type { PrepSubmission } from '@/lib/submissions-store';
 
 function escapeHtml(text: string): string {
@@ -15,6 +20,9 @@ function buildPrepOwnerEmailHtml(sub: PrepSubmission, booked: boolean): string {
   const name = escapeHtml(sub.name);
   const email = escapeHtml(sub.email);
   const safeIndustry = escapeHtml(sub.industry);
+  const safeRevenue = escapeHtml(labelForRevenueBand(sub.revenueBand));
+  const safeEntities = escapeHtml(labelForEntityCount(sub.entityCount));
+  const safeTeam = escapeHtml(labelForFinanceTeamSize(sub.financeTeamSize) || sub.peopleInvolved);
   const challengeDisplay = escapeHtml(sub.mainChallenge);
   const safePeople = escapeHtml(sub.peopleInvolved);
   const safeSuccess = escapeHtml(sub.successLooksLike).replace(/\n/g, '<br>');
@@ -25,6 +33,9 @@ function buildPrepOwnerEmailHtml(sub: PrepSubmission, booked: boolean): string {
     <p><strong>Name:</strong> ${name}</p>
     <p><strong>Email:</strong> ${email}</p>
     <p><strong>Industry / Business Type:</strong> ${safeIndustry || 'Not specified'}</p>
+    <p><strong>Approximate annual revenue:</strong> ${safeRevenue || 'Not specified'}</p>
+    <p><strong>Legal entities:</strong> ${safeEntities || 'Not specified'}</p>
+    <p><strong>Finance team (close/reporting):</strong> ${safeTeam || 'Not specified'}</p>
     <p><strong>Main Challenge:</strong> ${challengeDisplay || 'Not specified'}</p>
     ${safeAdditional.length > 0 ? `
       <p><strong>Additional challenges:</strong></p>

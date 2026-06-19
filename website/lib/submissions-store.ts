@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { get, put, BlobNotFoundError } from '@vercel/blob';
 import type { CalendlyMeetingKind } from '@/lib/calendly-config';
+import type { EngagementQuoteStored } from '@/lib/engagement-pricing';
 
 /**
  * Private, server-only store for consultation prep submissions.
@@ -26,6 +27,12 @@ export interface PrepSubmission {
   name: string;
   email: string;
   industry: string;
+  /** Approximate annual revenue band from Step 1 intake. */
+  revenueBand?: string;
+  /** Legal entity count from Step 1 intake. */
+  entityCount?: string;
+  /** Finance team size on close/reporting from Step 1 intake. */
+  financeTeamSize?: string;
   mainChallenge: string;
   additionalChallenges: string[];
   peopleInvolved: string;
@@ -42,6 +49,8 @@ export interface PrepSubmission {
   comprehensiveCanceledAt?: string;
   /** Per-client Calendly audit trail (newest first, max 20) */
   calendlyEvents?: CalendlyClientEvent[];
+  /** EAI recommended / admin-saved engagement economics */
+  engagementQuote?: EngagementQuoteStored;
   /** Admin-saved proposal draft */
   proposalDraft?: string;
   sentAt?: string;
@@ -557,6 +566,23 @@ export async function saveProposalDraft(id: string, draft: string): Promise<bool
   all[idx] = { ...all[idx], proposalDraft: draft };
   await persist(all);
   return true;
+}
+
+/** Admin — persist Engagement Activation Index quote (computed + optional overrides). */
+export async function saveEngagementQuote(
+  id: string,
+  quote: EngagementQuoteStored,
+): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  all[idx] = {
+    ...all[idx],
+    engagementQuote: { ...quote, savedAt: new Date().toISOString() },
+  };
+  await persist(all);
+  return all[idx];
 }
 
 export async function updatePreMeetingDiscovery(

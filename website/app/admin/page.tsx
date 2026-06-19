@@ -19,6 +19,7 @@ import {
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
 import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
+import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
 import { site } from '@/lib/site';
 
@@ -661,6 +662,15 @@ Best regards,`;
           consult60Transcript={consult60Transcript}
           onConsult60TranscriptChange={setConsult60Transcript}
           onSaveTranscripts={handleSaveConsultTranscripts}
+        />
+      )}
+
+      {loadedSub && (
+        <EngagementEconomicsPanel
+          submission={loadedSub}
+          consult30Transcript={consult30Transcript}
+          onSaved={(sub) => setLoadedSub(sub)}
+          onStatus={(message, isError) => showStatus(message, isError)}
         />
       )}
 

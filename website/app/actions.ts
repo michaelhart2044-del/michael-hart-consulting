@@ -21,11 +21,23 @@ import {
   markSubmissionSent,
   revokePortalAccess,
   saveProposalDraft,
+  saveEngagementQuote,
   saveConsultTranscripts,
   type PrepSubmission,
   setClientPasswordHash,
   updatePreMeetingDiscovery,
 } from '@/lib/submissions-store';
+import {
+  labelForEntityCount,
+  labelForFinanceTeamSize,
+  labelForRevenueBand,
+  financeTeamSizeToPeopleInvolved,
+} from '@/lib/intake-options';
+import {
+  computeEngagementQuote,
+  type EngagementQuoteStored,
+  type EngagementPricingInput,
+} from '@/lib/engagement-pricing';
 import { getLatestCalendlyWebhookLog } from '@/lib/calendly-webhook-log';
 import { createAdminSession, verifyAdminSession, setAdminCookie, clearAdminCookie, getAdminSessionToken } from '@/lib/admin-auth';
 import type { GeneratorInput } from '@/lib/proposal-generator';
@@ -198,9 +210,14 @@ export async function sendAnalysisPrep(formData: FormData) {
   const rawName = (formData.get('name') as string) || '';
   const rawEmail = (formData.get('email') as string) || '';
   const industry = (formData.get('industry') as string) || '';
+  const revenueBand = (formData.get('revenue_band') as string) || '';
+  const entityCount = (formData.get('entity_count') as string) || '';
+  const financeTeamSize = (formData.get('finance_team_size') as string) || '';
   const mainChallenge = (formData.get('main_challenge') as string) || '';
   const mainChallengeOther = (formData.get('main_challenge_other') as string) || '';
-  const peopleInvolved = (formData.get('people_involved') as string) || '';
+  const peopleInvolved =
+    financeTeamSizeToPeopleInvolved(financeTeamSize) ||
+    ((formData.get('people_involved') as string) || '');
   const successLooksLike = (formData.get('success_looks_like') as string) || '';
   const additionalContext = (formData.get('additional_context') as string) || '';
   const additionalChallengesList = formData.getAll('additional_challenge')
@@ -235,6 +252,9 @@ export async function sendAnalysisPrep(formData: FormData) {
 
   let rawAttach = `Prep Answers for ${rawName.trim()} <${rawEmail.trim()}>\n\n`;
   rawAttach += `Industry / Business Type: ${industry || 'Not specified'}\n`;
+  rawAttach += `Approximate annual revenue: ${labelForRevenueBand(revenueBand) || 'Not specified'}\n`;
+  rawAttach += `Legal entities: ${labelForEntityCount(entityCount) || 'Not specified'}\n`;
+  rawAttach += `Finance team (close/reporting): ${labelForFinanceTeamSize(financeTeamSize) || peopleInvolved || 'Not specified'}\n`;
   rawAttach += `Main Challenge: ${mainChallengeDisplay}\n`;
   if (additionalChallengesList.length > 0) {
     rawAttach += `Additional challenges:\n${additionalChallengesList.map((c: string) => `- ${c}`).join('\n')}\n`;
@@ -248,6 +268,9 @@ export async function sendAnalysisPrep(formData: FormData) {
       name: rawName.trim(),
       email: rawEmail.trim(),
       industry: industry || 'Not specified',
+      revenueBand: revenueBand || undefined,
+      entityCount: entityCount || undefined,
+      financeTeamSize: financeTeamSize || undefined,
       mainChallenge: mainChallengeDisplay,
       additionalChallenges: additionalChallengesList,
       peopleInvolved: peopleInvolved || '',
@@ -554,6 +577,59 @@ export async function generateInitialProposal(input: GeneratorInput) {
     const message = e instanceof Error ? e.message : 'Generation failed';
     return { success: false, error: message };
   }
+}
+
+function submissionToPricingInput(
+  sub: PrepSubmission,
+  consult30Transcript?: string,
+): EngagementPricingInput {
+  return {
+    industry: sub.industry,
+    revenueBand: sub.revenueBand,
+    entityCount: sub.entityCount,
+    financeTeamSize: sub.financeTeamSize,
+    peopleInvolved: sub.peopleInvolved,
+    mainChallenge: sub.mainChallenge,
+    additionalChallenges: sub.additionalChallenges,
+    successLooksLike: sub.successLooksLike,
+    additionalContext: sub.additionalContext,
+    consult30Transcript: consult30Transcript ?? sub.consult30Transcript,
+  };
+}
+
+/** Admin — compute Engagement Activation Index from dossier + optional live transcript. */
+export async function computeEngagementQuoteForAdmin(
+  submissionId: string,
+  consult30Transcript?: string,
+) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false as const, error: 'Submission not found.' };
+  }
+
+  const quote = computeEngagementQuote(submissionToPricingInput(sub, consult30Transcript));
+  return { success: true as const, quote, submission: sub };
+}
+
+/** Admin — save EAI quote with optional fee overrides. */
+export async function saveEngagementQuoteForAdmin(
+  submissionId: string,
+  quote: EngagementQuoteStored,
+) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const updated = await saveEngagementQuote(submissionId, quote);
+  if (!updated) {
+    return { success: false as const, error: 'Submission not found.' };
+  }
+
+  return { success: true as const, submission: updated };
 }
 
 /* ============================================================

@@ -2,6 +2,12 @@
 
 import { useState } from 'react';
 import type { PrepSubmission } from '@/lib/submissions-store';
+import {
+  labelForEntityCount,
+  labelForFinanceTeamSize,
+  labelForRevenueBand,
+} from '@/lib/intake-options';
+import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
 
 type DossierSubmission = PrepSubmission & { proposalDraft?: string };
 
@@ -65,6 +71,9 @@ function buildDmaicBundle(
     '--- PHASE 1: INITIAL INTAKE ---',
     `Submitted: ${formatBundleTimestamp(submission.createdAt)}`,
     `Industry / Business Type: ${submission.industry}`,
+    `Approximate annual revenue: ${labelForRevenueBand(submission.revenueBand)}`,
+    `Legal entities: ${labelForEntityCount(submission.entityCount)}`,
+    `Finance team: ${labelForFinanceTeamSize(submission.financeTeamSize) || submission.peopleInvolved || 'Not provided'}`,
     `Main Challenge: ${submission.mainChallenge}`,
     `Additional Challenges:\n${additionalChallenges}`,
     `People involved in month-end / reporting: ${submission.peopleInvolved}`,
@@ -75,6 +84,20 @@ function buildDmaicBundle(
     `Booked: ${formatBundleTimestamp(submission.calendlyBookedAt)}`,
     'Transcript:',
     pendingOrText(consult30Transcript, 'PENDING — paste 30-min Teams transcript in evidence timeline'),
+    '',
+    '--- ENGAGEMENT ECONOMICS (EAI) ---',
+    submission.engagementQuote
+      ? (() => {
+          const f = effectiveQuoteFees(submission.engagementQuote!);
+          return [
+            `EAI Score: ${submission.engagementQuote!.eaiScore} (${submission.engagementQuote!.tierLabel})`,
+            `Activation: ${formatUsd(f.activationFee)} | Total Phase 1: ${formatUsd(f.totalFee)} | Balance: ${formatUsd(f.balanceDue)}`,
+            submission.engagementQuote!.notes ? `Notes: ${submission.engagementQuote!.notes}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n');
+        })()
+      : 'PENDING — compute and save quote in Engagement Economics panel',
     '',
     '--- PHASE 3: PROPOSAL ---',
     `Proposal sent: ${formatBundleTimestamp(submission.sentAt)}`,
@@ -358,10 +381,17 @@ export default function ClientEvidenceTimeline({
             timestamp={formatTimestamp(submission.createdAt)}
             detail={
               hasIntake
-                ? `${submission.industry} — ${submission.mainChallenge.slice(0, 80)}${submission.mainChallenge.length > 80 ? '…' : ''}`
+                ? `${submission.industry} — ${submission.mainChallenge.slice(0, 60)}${submission.mainChallenge.length > 60 ? '…' : ''}`
                 : undefined
             }
           />
+          {hasIntake && (submission.revenueBand || submission.entityCount || submission.financeTeamSize) && (
+            <SubStep
+              label="Organization snapshot"
+              status="complete"
+              detail={`${labelForRevenueBand(submission.revenueBand)} · ${labelForEntityCount(submission.entityCount)} · ${labelForFinanceTeamSize(submission.financeTeamSize) || submission.peopleInvolved}`}
+            />
+          )}
         </LayerCard>
 
         <LayerCard

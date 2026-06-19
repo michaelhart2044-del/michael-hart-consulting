@@ -7,6 +7,14 @@ const PREP_ID_KEY = 'mh_prep_submission_id';
 const PREP_EMAIL_KEY = 'mh_prep_client_email';
 import { site } from '@/lib/site';
 import CalendlyWidget from './CalendlyWidget';
+import {
+  REVENUE_BAND_OPTIONS,
+  ENTITY_COUNT_OPTIONS,
+  FINANCE_TEAM_SIZE_OPTIONS,
+  labelForEntityCount,
+  labelForFinanceTeamSize,
+  labelForRevenueBand,
+} from '@/lib/intake-options';
 
 const industryOptions = [
   'Legal & Litigation',
@@ -137,9 +145,12 @@ export default function AnalysisPrepForm() {
     // This lets the answers travel with the Calendly booking notification (no extra work for the client).
     // User should add a matching "Prep answers / notes from website" custom question as the first custom question in their Calendly event.
     const industry = formData.get('industry') as string || '';
+    const revenueBand = formData.get('revenue_band') as string || '';
+    const entityCount = formData.get('entity_count') as string || '';
+    const financeTeamSize = formData.get('finance_team_size') as string || '';
     const mainCh = formData.get('main_challenge') as string || '';
     const mainChOther = formData.get('main_challenge_other') as string || '';
-    const people = formData.get('people_involved') as string || '';
+    const people = labelForFinanceTeamSize(financeTeamSize) || '';
     const success = formData.get('success_looks_like') as string || '';
     const context = formData.get('additional_context') as string || '';
     const addChals = formData.getAll('additional_challenge')
@@ -153,6 +164,9 @@ export default function AnalysisPrepForm() {
 
     // Clean multi-line version for the immediate email / attachment (great for humans and SigVai)
     const summary = `Industry / Business Type: ${industry || 'Not provided'}
+Approximate annual revenue: ${labelForRevenueBand(revenueBand) || 'Not provided'}
+Legal entities: ${labelForEntityCount(entityCount) || 'Not provided'}
+Finance team on close/reporting: ${people || 'Not provided'}
 Main Challenge Right Now: ${mainDisplay || 'Not provided'}
 How many people involved in month-end / reporting: ${people || 'Not provided'}
 What does “success” look like in the next 30–90 days: ${success || 'Not provided'}
@@ -282,6 +296,58 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
         </select>
       </div>
 
+      <div className="rounded-xl border border-white/10 bg-[#111827]/60 p-4 space-y-4">
+        <div>
+          <p className="text-sm font-medium text-[#e2e8f0]">About your organization</p>
+          <p className="text-xs text-muted mt-1">
+            Helps us prepare for your consultation. No pricing is shown here.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="revenue_band" className="block text-sm text-muted mb-1.5">Approximate annual revenue</label>
+            <select
+              id="revenue_band"
+              name="revenue_band"
+              className="w-full bg-[#0f172a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-accent text-sm"
+            >
+              <option value="">Select...</option>
+              {REVENUE_BAND_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="entity_count" className="block text-sm text-muted mb-1.5">Number of legal entities</label>
+            <select
+              id="entity_count"
+              name="entity_count"
+              className="w-full bg-[#0f172a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-accent text-sm"
+            >
+              <option value="">Select...</option>
+              {ENTITY_COUNT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <label htmlFor="finance_team_size" className="block text-sm text-muted mb-1.5">
+              Finance team involved in month-end / reporting
+            </label>
+            <select
+              id="finance_team_size"
+              name="finance_team_size"
+              className="w-full bg-[#0f172a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-accent text-sm"
+            >
+              <option value="">Select...</option>
+              {FINANCE_TEAM_SIZE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div>
         <label htmlFor="main_challenge" className="block text-sm text-muted mb-1.5">Main Challenge Right Now</label>
         <select
@@ -377,17 +443,6 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
             })}
           </div>
         )}
-      </div>
-
-      <div>
-        <label htmlFor="people_involved" className="block text-sm text-muted mb-1.5">How many people are currently involved in month-end / reporting?</label>
-        <input
-          id="people_involved"
-          type="text"
-          name="people_involved"
-          className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder:text-subtle focus:outline-none focus:border-accent text-sm"
-          placeholder="e.g. 4-6"
-        />
       </div>
 
       <div>
