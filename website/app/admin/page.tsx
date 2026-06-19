@@ -64,6 +64,40 @@ export default function AdminProposalGenerator() {
   const [consult60Transcript, setConsult60Transcript] = useState('');
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
   const [isSendingProposal, setIsSendingProposal] = useState(false);
+  const [layer3Status, setLayer3Status] = useState('');
+  const [layer3StatusIsError, setLayer3StatusIsError] = useState(false);
+
+  function showLayer3Status(message: string, isError = false) {
+    setLayer3Status(message);
+    setLayer3StatusIsError(isError);
+    showStatus(message, isError, isError ? 15000 : 8000);
+  }
+
+  function getGenerateBlockers(): string[] {
+    const blockers: string[] = [];
+    if (!loadedSub) {
+      blockers.push('Load a client from Recent Prep Submissions.');
+      return blockers;
+    }
+    const transcriptLen = consult30Transcript.trim().length;
+    if (transcriptLen < 80) {
+      blockers.push(
+        transcriptLen === 0
+          ? 'Paste the 30-min transcript in Layer 2 (Client Evidence Timeline) — not the optional “Supplemental notes” box below.'
+          : `30-min transcript is too short (${transcriptLen} of 80 characters minimum). Use the Layer 2 field above Engagement Economics.`,
+      );
+    }
+    if (!loadedSub.engagementQuote?.savedAt) {
+      blockers.push('Click “Save quote on dossier” in Engagement Economics (between Layer 2 and Layer 3).');
+    }
+    if (aiConfigured === false) {
+      blockers.push('XAI_API_KEY is not set in Vercel — Grok cannot run until the key is added and redeployed.');
+    }
+    return blockers;
+  }
+
+  const generateBlockers = loadedSub ? getGenerateBlockers() : ['Load a client from Recent Prep Submissions.'];
+  const canGenerate = generateBlockers.length === 0 && !isGenerating;
 
   function showStatus(message: string, isError = false, ms = isError ? 12000 : 5000) {
     setStatus(message);
@@ -132,11 +166,19 @@ export default function AdminProposalGenerator() {
 
   async function handleGenerate() {
     if (!loadedSub) {
-      setStatus('Load a client first.');
+      showLayer3Status('Load a client first.', true);
+      return;
+    }
+
+    const blockers = getGenerateBlockers();
+    if (blockers.length > 0) {
+      showLayer3Status(blockers.join(' '), true);
       return;
     }
 
     setIsGenerating(true);
+    setLayer3Status('Calling Grok — this usually takes 15–45 seconds…');
+    setLayer3StatusIsError(false);
     setStatus('');
 
     const input = {
@@ -151,16 +193,22 @@ export default function AdminProposalGenerator() {
       transcript: transcript.trim() || undefined,
     };
 
-    const res = await generateInitialProposal(loadedSub.id, input);
-    if (res.success && res.proposal) {
-      const p = res.proposal as Generated;
-      setProposal(p);
-      setOutputText(p.fullProposal);
-      setStatus('Proposal generated with Grok — saved engagement pricing injected. Review before sending.');
-    } else {
-      setStatus(res.error || 'Generation failed');
+    try {
+      const res = await generateInitialProposal(loadedSub.id, input);
+      if (res.success && res.proposal) {
+        const p = res.proposal as Generated;
+        setProposal(p);
+        setOutputText(p.fullProposal);
+        showLayer3Status('Proposal generated — saved engagement pricing injected. Review the full text below.');
+      } else {
+        showLayer3Status(res.error || 'Generation failed', true);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected error — check your connection and try again.';
+      showLayer3Status(message, true);
+    } finally {
+      setIsGenerating(false);
     }
-    setIsGenerating(false);
   }
 
   async function handleLogout() {
@@ -721,25 +769,59 @@ Best regards,`;
           />
         </div>
 
+        <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 space-y-2">
+          <div className="text-[10px] uppercase tracking-wider text-[#64748b]">Before you generate</div>
+          <ul className="text-sm space-y-1">
+            <li className={loadedSub ? 'text-emerald-300' : 'text-amber-200'}>
+              {loadedSub ? '✓' : '○'} Client loaded
+            </li>
+            <li className={consult30Transcript.trim().length >= 80 ? 'text-emerald-300' : 'text-amber-200'}>
+              {consult30Transcript.trim().length >= 80 ? '✓' : '○'} 30-min transcript in Layer 2 (
+              {consult30Transcript.trim().length}/80 chars)
+            </li>
+            <li className={loadedSub?.engagementQuote?.savedAt ? 'text-emerald-300' : 'text-amber-200'}>
+              {loadedSub?.engagementQuote?.savedAt ? '✓' : '○'} Engagement quote saved on dossier
+            </li>
+            <li className={aiConfigured !== false ? 'text-emerald-300' : 'text-amber-200'}>
+              {aiConfigured !== false ? '✓' : '○'} Grok API key configured
+            </li>
+          </ul>
+          {generateBlockers.length > 0 && (
+            <p className="text-xs text-amber-100/90 pt-1 border-t border-white/10">
+              {generateBlockers.join(' ')}
+            </p>
+          )}
+        </div>
+
         <div className="flex flex-col sm:flex-row flex-wrap gap-3">
           <button
-            onClick={handleGenerate}
-            disabled={
-              isGenerating ||
-              consult30Transcript.trim().length < 80 ||
-              !loadedSub.engagementQuote?.savedAt
-            }
-            className="px-8 py-3.5 text-base font-semibold bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full disabled:opacity-60 transition-all active:scale-[0.985]"
+            type="button"
+            onClick={() => void handleGenerate()}
+            disabled={!canGenerate}
+            className="px-8 py-3.5 text-base font-semibold bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.985]"
           >
-            {isGenerating ? 'Generating with Grok…' : '1. Generate Initial Proposal (Grok)'}
+            {isGenerating ? 'Generating with Grok… (please wait)' : '1. Generate Initial Proposal (Grok)'}
           </button>
           <button
+            type="button"
             onClick={copyForSigVai}
             className="px-6 py-3 text-sm font-medium rounded-full border border-white/20 text-[#94a3b8] hover:bg-white/5 hover:text-[#e2e8f0]"
           >
             Copy intake for SigVai (optional)
           </button>
         </div>
+
+        {layer3Status && (
+          <div
+            className={`text-sm px-4 py-3 rounded-lg border ${
+              layer3StatusIsError
+                ? 'bg-red-950/40 border-red-500/40 text-red-200'
+                : 'bg-emerald-950/30 border-emerald-500/30 text-emerald-100'
+            }`}
+          >
+            {layer3Status}
+          </div>
+        )}
 
         {(proposal || outputText) && (
           <div className="space-y-6 pt-4 border-t border-white/10">
