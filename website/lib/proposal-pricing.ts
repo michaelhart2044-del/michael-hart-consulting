@@ -4,43 +4,75 @@
 
 import {
   buildPricingSummaryBlock,
+  effectiveQuoteFees,
+  formatUsd,
   type EngagementQuoteStored,
 } from '@/lib/engagement-pricing';
 import type { GeneratedProposal } from '@/lib/proposal-generator';
 
-const INVESTMENT_ANCHOR = /INVESTMENT\s*[—–-]\s*Engagement Activation Retainer/i;
+const INVESTMENT_HEADER = /INVESTMENT\s*[—–-]\s*Engagement Activation Retainer/i;
+const CLEAR_NEXT_STEPS = /(\n[ \t]*Clear next steps\b[^\n]*)/i;
 
-/** Remove an existing auto-injected or pasted investment block. */
+/** Grok sometimes echoes fee lines from the prompt — remove before injecting the canonical block. */
 export function stripPricingSection(text: string): string {
-  return text
-    .replace(
-      /\n*INVESTMENT\s*[—–-]\s*Engagement Activation Retainer[^\n]*\n[\s\S]*?(?=\n\n(?:Clear Next Steps|\d+\.\s|I['']m looking forward|Michael Hart\s*$|$))/i,
-      '',
-    )
-    .replace(
-      /\n*This retainer is designed to stand alone or serve as the on-ramp[\s\S]*?confirmed after the initial consultation and data review\.\n?/i,
-      '\n',
-    )
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+  let cleaned = text;
+
+  // Full INVESTMENT block (ours or pasted)
+  cleaned = cleaned.replace(
+    /\n*INVESTMENT\s*[—–-]\s*Engagement Activation Retainer[^\n]*\n[\s\S]*?(?=\n[ \t]*(?:Clear next steps\b|\d+\.\s|I['']m looking forward|Michael Hart\b)|$)/gi,
+    '',
+  );
+
+  // Standalone fee lines (from Grok echoing approved economics)
+  cleaned = cleaned.replace(/\n[ \t]*Fixed fee:\s*\$[\d,]+(?:\.\d+)?\.?\s*/gi, '\n');
+  cleaned = cleaned.replace(
+    /\n[ \t]*Activation due at signing:\s*\$[\d,]+(?:\.\d+)?[^\n]*\n?/gi,
+    '\n',
+  );
+  cleaned = cleaned.replace(
+    /\n[ \t]*Balance due upon delivery[^\n]*:\s*\$[\d,]+(?:\.\d+)?\.?\s*/gi,
+    '\n',
+  );
+
+  // Narrative fee sentence Grok adds (often inline after Clear next steps)
+  cleaned = cleaned.replace(
+    /\s*The activation retainer is structured with \$[\d,]+(?:\.\d+)? due at signing[\s\S]*?\.\s*/gi,
+    ' ',
+  );
+
+  cleaned = cleaned.replace(
+    /\n*This retainer is designed to stand alone or serve as the on-ramp[\s\S]*?confirmed after the initial consultation and data review\.\n?/i,
+    '\n',
+  );
+
+  // Fix prior corruption: "Clear next steps2,000." → "Clear next steps:"
+  cleaned = cleaned.replace(/Clear next steps[\d,]+(?:\.\d+)?\.\s*/gi, 'Clear next steps: ');
+
+  return cleaned.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 function insertPricingBlock(section: string, pricingBlock: string): string {
   const cleaned = stripPricingSection(section);
 
-  const beforeClearNext = /(\n\nClear Next Steps\b)/i;
-  if (beforeClearNext.test(cleaned)) {
-    return cleaned.replace(beforeClearNext, `\n\n${pricingBlock}$1`);
+  const clearMatch = cleaned.match(CLEAR_NEXT_STEPS);
+  if (clearMatch && clearMatch.index != null) {
+    const before = cleaned.slice(0, clearMatch.index).trimEnd();
+    const after = cleaned.slice(clearMatch.index).trimStart();
+    return `${before}\n\n${pricingBlock}\n\n${after}`.trim();
   }
 
-  const beforeSignoff = /(\n\nI['']m looking forward)/i;
-  if (beforeSignoff.test(cleaned)) {
-    return cleaned.replace(beforeSignoff, `\n\n${pricingBlock}$1`);
+  const signoffMatch = cleaned.match(/\n[ \t]*I['']m looking forward/i);
+  if (signoffMatch && signoffMatch.index != null) {
+    const before = cleaned.slice(0, signoffMatch.index).trimEnd();
+    const after = cleaned.slice(signoffMatch.index).trimStart();
+    return `${before}\n\n${pricingBlock}\n\n${after}`.trim();
   }
 
-  const beforeMichael = /(\n\nMichael Hart\s*$)/i;
-  if (beforeMichael.test(cleaned)) {
-    return cleaned.replace(beforeMichael, `\n\n${pricingBlock}$1`);
+  const michaelMatch = cleaned.match(/\n[ \t]*Michael Hart\s*$/i);
+  if (michaelMatch && michaelMatch.index != null) {
+    const before = cleaned.slice(0, michaelMatch.index).trimEnd();
+    const after = cleaned.slice(michaelMatch.index).trimStart();
+    return `${before}\n\n${pricingBlock}\n\n${after}`.trim();
   }
 
   return `${cleaned}\n\n${pricingBlock}`.trim();
@@ -77,17 +109,19 @@ export function applyEngagementPricingToFullText(
     return `${defineSection}\n\n${pitchSection}`.trim();
   }
 
-  if (INVESTMENT_ANCHOR.test(proposalText)) {
+  if (INVESTMENT_HEADER.test(proposalText)) {
     return insertPricingBlock(proposalText, pricingBlock);
   }
 
-  return `${stripPricingSection(proposalText)}\n\n${pricingBlock}`.trim();
+  return insertPricingBlock(proposalText, pricingBlock);
 }
 
 export function buildPricingPromptContext(quote: EngagementQuoteStored): string {
+  const { activationFee, totalFee, balanceDue } = effectiveQuoteFees(quote);
   return [
-    '--- APPROVED ENGAGEMENT ECONOMICS (use these exact figures; do not invent other dollar amounts) ---',
-    buildPricingSummaryBlock(quote),
-    'The system will insert this block verbatim — reference the activation retainer qualitatively only; do not add competing fee lines.',
+    '--- APPROVED ENGAGEMENT ECONOMICS (internal reference — do NOT paste these lines into the proposal) ---',
+    `Tier: ${quote.tierLabel} | EAI: ${quote.eaiScore}`,
+    `Total: ${formatUsd(totalFee)} | Activation: ${formatUsd(activationFee)} | Balance: ${formatUsd(balanceDue)}`,
+    'Write about the Engagement Activation Retainer qualitatively only. Exact fee lines are inserted automatically after generation.',
   ].join('\n');
 }
