@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
     <>
       {/* Header */}
       <div className="max-w-4xl mx-auto px-6 pt-32 pb-12">
-        <h1 className="text-5xl font-semibold tracking-tight">Privacy Policy</h1>
+        <h1 className="type-h1">Privacy Policy</h1>
         <p className="mt-4 text-muted">Last updated: June 2026</p>
       </div>
 

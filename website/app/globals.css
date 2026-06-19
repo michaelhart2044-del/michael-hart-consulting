@@ -34,18 +34,51 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-border: var(--border-subtle);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 html {
   font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.625;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Shared marketing typography — same family, weight, and scale on mobile + desktop */
+@layer components {
+  .type-h1 {
+    @apply text-4xl md:text-5xl font-semibold tracking-[-1px] leading-tight;
+  }
+
+  .type-h2 {
+    @apply text-3xl md:text-4xl font-semibold tracking-tight;
+  }
+
+  .type-h3 {
+    @apply text-2xl md:text-3xl font-semibold tracking-tight;
+  }
+
+  .type-lead {
+    @apply text-lg text-muted leading-relaxed;
+  }
+
+  .type-body {
+    @apply text-base text-muted leading-relaxed;
+  }
+
+  .type-eyebrow {
+    @apply text-xs tracking-widest text-accent font-medium uppercase;
+  }
 }
 
 /* Premium focus styles using gold accent */

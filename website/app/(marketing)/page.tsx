@@ -36,11 +36,11 @@ export default function Home() {
       {/* Hero */}
       <div className="max-w-5xl mx-auto px-6 pt-20 pb-12 md:pt-24 md:pb-16 flex flex-col md:flex-row gap-8 md:gap-12 items-center">
         <div className="max-w-3xl">
-          <h1 className="text-[2rem] leading-[1.05] md:text-4xl lg:text-5xl font-semibold tracking-[-1.25px]">
+          <h1 className="type-h1">
             Expert Financial Advisory:<br className="hidden md:block" /> Operations, Controls &amp; Automation
           </h1>
 
-          <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed max-w-2xl">
+          <p className="mt-6 type-lead max-w-2xl">
             Results-driven expertise transforming financial operations through reporting, close processes, controls, automation, and strategic leadership.
           </p>
 
@@ -103,8 +103,8 @@ export default function Home() {
       <section id="why" className="border-t border-white/10 bg-section py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Why Work With Us</h2>
-            <p className="mt-4 text-base md:text-lg text-muted">
+            <h2 className="type-h2">Why Work With Us</h2>
+            <p className="mt-4 type-lead">
               We bring extensive hands-on experience in financial reporting, revenue accounting, month-end close, reconciliations, audit support, and process optimization to help organizations achieve efficiency, accuracy, and compliance with Generally Accepted Accounting Principles (GAAP) as the standard.
             </p>
           </div>
@@ -165,8 +165,8 @@ export default function Home() {
       <section id="results" className="border-t border-white/10 bg-background py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Results That Speak for Themselves</h2>
-            <p className="mt-4 text-base md:text-lg text-muted">
+            <h2 className="type-h2">Results That Speak for Themselves</h2>
+            <p className="mt-4 type-lead">
               Measurable impact from transforming financial operations, automating processes, and strengthening controls across organizations.
             </p>
           </div>
@@ -229,8 +229,8 @@ export default function Home() {
       <section className="border-t border-white/10 bg-background py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Client Testimonials</h2>
-            <p className="mt-4 text-base md:text-lg text-muted">
+            <h2 className="type-h2">Client Testimonials</h2>
+            <p className="mt-4 type-lead">
               Leaders share how our expertise in operations, controls, and automation has delivered results above the rest.
             </p>
           </div>
@@ -256,8 +256,8 @@ export default function Home() {
       <section id="services" className="border-t border-white/10 bg-background py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Our Services</h2>
-            <p className="mt-4 text-base md:text-lg text-muted">
+            <h2 className="type-h2">Our Services</h2>
+            <p className="mt-4 type-lead">
               Our flagship services focus on operations, controls, and automation — the core of our expertise. We specialize in month-end close and financial reporting, process automation and finance transformation, SOX controls and audit support, and finance function transformation and leadership. For our complete range of services, see the full list.
             </p>
           </div>
@@ -301,8 +301,8 @@ export default function Home() {
       <section id="faq" className="border-t border-white/10 bg-background py-12 md:py-16">
         <div className="max-w-5xl mx-auto px-6">
           <div className="max-w-2xl mb-12">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Frequently Asked Questions</h2>
-            <p className="mt-4 text-base md:text-lg text-muted">
+            <h2 className="type-h2">Frequently Asked Questions</h2>
+            <p className="mt-4 type-lead">
               Answers to common questions about my advisory services, approach, and how we can work together.
             </p>
           </div>
@@ -416,8 +416,8 @@ export default function Home() {
       <section id="contact" className="border-t border-white/10 bg-section py-12 md:py-16">
         <div className="max-w-3xl mx-auto px-6">
           <div className="bg-card border border-white/10 rounded-2xl p-10 md:p-12 text-center hover:border-accent/30 transition-all duration-300">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Ready to Get Started?</h2>
-            <p className="mt-4 text-base md:text-lg text-muted max-w-xl mx-auto">
+            <h2 className="type-h2">Ready to Get Started?</h2>
+            <p className="mt-4 type-lead max-w-xl mx-auto">
               Whether you&apos;re facing a complex challenge or planning your next strategic move, we&apos;re here to help you move forward with clarity. Recent clients cut close cycles 80% and reconciliations by 95%.
             </p>
 

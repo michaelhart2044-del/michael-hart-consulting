@@ -34,10 +34,10 @@ export default function About() {
       {/* Page Header */}
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-16">
         <div className="max-w-3xl">
-          <h1 className="text-4xl md:text-5xl font-semibold tracking-[-1px] leading-tight">
+          <h1 className="type-h1">
             About <span className="whitespace-nowrap">{site.name}</span>
           </h1>
-          <p className="mt-4 text-lg text-muted">
+          <p className="mt-4 type-lead">
             Expert financial advisory in operations, controls, automation, revenue accounting, financial close, and transformation. Helping organizations achieve efficiency, compliance, and strategic growth.
           </p>
         </div>
@@ -201,8 +201,8 @@ export default function About() {
       <div className="max-w-5xl mx-auto px-6 pb-20">
         <div className="max-w-3xl mx-auto">
           <div className="bg-card border border-white/10 rounded-2xl p-10 md:p-12 text-center hover:border-accent/30 transition-all duration-300">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Ready to discuss your challenges?</h2>
-            <p className="mt-4 text-base md:text-lg text-muted max-w-xl mx-auto">
+            <h2 className="type-h2">Ready to discuss your challenges?</h2>
+            <p className="mt-4 type-lead max-w-xl mx-auto">
               Whether you&apos;re preparing for litigation, evaluating a transaction, or modernizing financial processes, we&apos;re here to help.
             </p>
             <div className="mt-8">

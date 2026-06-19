@@ -33,10 +33,10 @@ export default function PrepareAnalysis() {
       {/* Header + primary book button (compact, elegant) */}
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-10">
         <div className="max-w-2xl">
-          <h1 className="text-4xl md:text-5xl font-semibold tracking-[-1.25px] leading-tight">
+          <h1 className="type-h1">
             Prepare for Your Initial Consultation
           </h1>
-          <p className="mt-6 text-[15px] md:text-lg text-muted leading-relaxed">
+          <p className="mt-6 type-lead">
             Two steps: share your details, then pick a time. Takes about 3 minutes.
           </p>
         </div>

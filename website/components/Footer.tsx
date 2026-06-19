@@ -10,8 +10,8 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between gap-y-10">
           {/* Left side */}
           <div className="max-w-[200px] mr-8 md:mr-12">
-            <div className="font-semibold text-xs md:text-sm whitespace-nowrap">{site.name}</div>
-            <p className="mt-2 text-xs md:text-sm text-subtle max-w-xs">
+            <div className="font-semibold text-sm whitespace-nowrap">{site.name}</div>
+            <p className="mt-2 text-sm text-subtle max-w-xs">
               {site.tagline}
             </p>
           </div>

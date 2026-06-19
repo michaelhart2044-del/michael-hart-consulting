@@ -33,8 +33,8 @@ export default function Industries() {
       {/* Header */}
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-16">
         <div className="max-w-3xl">
-          <h1 className="text-5xl font-semibold tracking-tight">Industries We Serve</h1>
-          <p className="mt-4 text-lg text-muted">
+          <h1 className="type-h1">Industries We Serve</h1>
+          <p className="mt-4 type-lead">
             We tailor our flagship services in operations, controls, automation, and finance transformation to the unique challenges of each industry. Engagements are designed around the specific regulatory, operational, and growth needs of our clients.
           </p>
         </div>

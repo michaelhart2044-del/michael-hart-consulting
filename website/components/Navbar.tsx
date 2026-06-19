@@ -100,18 +100,17 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b border-white/10">
       <div className="max-w-5xl mx-auto px-6 flex items-center justify-between h-20">
         {/* Logo + Company Name */}
-        <Link href="/" className="flex items-center gap-3 group min-w-0">
+        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0 flex-1 md:flex-initial pr-2">
           <div className="flex-shrink-0 rounded-full p-[2px] bg-gradient-to-br from-accent/60 via-accent/30 to-transparent group-hover:from-accent group-hover:via-accent-hover transition-all duration-300">
             <BrandLogo size="nav" priority className="rounded-full" />
           </div>
-          <span className="font-semibold text-accent text-base md:text-lg tracking-[-0.3px] group-hover:text-accent-hover transition-colors whitespace-nowrap">
-            <span className="md:hidden">MH Consulting</span>
-            <span className="hidden md:inline">{site.name}</span>
+          <span className="font-semibold text-accent text-sm sm:text-base md:text-lg leading-snug tracking-[-0.3px] group-hover:text-accent-hover transition-colors min-w-0">
+            {site.name}
           </span>
         </Link>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-8 text-sm">
+        <div className="hidden md:flex items-center gap-8 text-base">
           {desktopItems.map((item) => (
             <Link
               key={item.href}
@@ -161,7 +160,7 @@ export default function Navbar({ ctaHref, activeSection }: NavbarProps) {
         ref={menuRef}
         className={`md:hidden bg-background/95 backdrop-blur border-t border-white/10 overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 py-4' : 'max-h-0'}`}
       >
-        <div className="max-w-5xl mx-auto px-6 flex flex-col gap-4 text-sm">
+        <div className="max-w-5xl mx-auto px-6 flex flex-col gap-4 text-base">
           {mobileItems.map((item) => (
             <Link
               key={item.href}

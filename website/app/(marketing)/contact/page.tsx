@@ -33,8 +33,8 @@ export default function Contact() {
       {/* Header */}
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-12">
         <div className="max-w-2xl">
-          <h1 className="text-5xl font-semibold tracking-tight">Get in Touch</h1>
-          <p className="mt-4 text-lg text-muted">
+          <h1 className="type-h1">Get in Touch</h1>
+          <p className="mt-4 type-lead">
             Ready to explore how we can help? Start with a consultation. Have a general question instead? Send us a message below.
           </p>
         </div>
@@ -45,8 +45,8 @@ export default function Contact() {
         <div className="grid md:grid-cols-5 gap-12 items-start">
           <div className="md:col-span-3">
             <div className="bg-card border border-accent/30 rounded-2xl p-8 md:p-10 hover:border-accent/50 transition-all duration-300">
-              <div className="text-xs tracking-widest text-accent font-medium mb-3">GET STARTED</div>
-              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Ready to work together?</h2>
+              <div className="type-eyebrow mb-3">GET STARTED</div>
+              <h2 className="type-h3">Ready to work together?</h2>
               <p className="mt-4 text-muted leading-relaxed">
                 Book a 30-minute initial consultation. Share a few details about your situation, then pick a time that works for you. Takes about 3 minutes.
               </p>

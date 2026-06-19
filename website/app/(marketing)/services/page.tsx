@@ -33,8 +33,8 @@ export default function ServicesIndex() {
       {/* Header */}
       <div className="max-w-5xl mx-auto px-6 pt-24 pb-12">
         <div className="max-w-3xl">
-          <h1 className="text-5xl font-semibold tracking-tight">Our Services</h1>
-          <p className="mt-4 text-lg text-muted">
+          <h1 className="type-h1">Our Services</h1>
+          <p className="mt-4 type-lead">
             Our flagship services focus on operations, controls, and automation — the core of our expertise. We specialize in month-end close and financial reporting, process automation and finance transformation, SOX controls and audit support, and finance function transformation and leadership. We also provide additional specialized support across a broader range of financial and operational challenges.
           </p>
         </div>
@@ -43,8 +43,8 @@ export default function ServicesIndex() {
       {/* Flagship Services */}
       <div className="max-w-5xl mx-auto px-6 pb-12">
         <div className="max-w-2xl mb-8">
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Flagship Services</h2>
-          <p className="mt-2 text-base md:text-lg text-muted">
+          <h2 className="type-h2">Flagship Services</h2>
+          <p className="mt-2 type-lead">
             These four areas represent our primary focus and deepest expertise.
           </p>
         </div>
@@ -79,8 +79,8 @@ export default function ServicesIndex() {
       {/* Additional Services */}
       <div className="max-w-5xl mx-auto px-6 pb-20">
         <div className="max-w-2xl mb-8">
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Additional Services</h2>
-          <p className="mt-2 text-base md:text-lg text-muted">
+          <h2 className="type-h2">Additional Services</h2>
+          <p className="mt-2 type-lead">
             We also deliver specialized advisory in forensic accounting, M&amp;A, forecasting, AI solutions, and more.
           </p>
         </div>

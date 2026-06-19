@@ -91,8 +91,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <Link href="/services" className="text-sm text-accent hover:underline mb-4 inline-block">
             ← All Services
           </Link>
-          <h1 className="text-5xl font-semibold tracking-tight">{service.title}</h1>
-          <p className="mt-4 text-xl text-muted">{service.shortDesc}</p>
+          <h1 className="type-h1">{service.title}</h1>
+          <p className="mt-4 type-lead">{service.shortDesc}</p>
         </div>
       </div>
 
