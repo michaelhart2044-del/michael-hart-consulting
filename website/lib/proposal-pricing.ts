@@ -1,29 +1,20 @@
 /**
- * Inject saved engagement economics into client-facing proposal text.
+ * Client-facing proposal text — strip fees at initial proposal stage.
+ * Engagement economics stay in admin (EAI panel) until agreement / PandaDoc (Phase 2C).
  */
 
-import {
-  buildPricingSummaryBlock,
-  effectiveQuoteFees,
-  formatUsd,
-  type EngagementQuoteStored,
-} from '@/lib/engagement-pricing';
 import type { GeneratedProposal } from '@/lib/proposal-generator';
+import type { EngagementQuoteStored } from '@/lib/engagement-pricing';
 
-const INVESTMENT_HEADER = /INVESTMENT\s*[—–-]\s*Engagement Activation Retainer/i;
-const CLEAR_NEXT_STEPS = /(\n[ \t]*Clear next steps\b[^\n]*)/i;
-
-/** Grok sometimes echoes fee lines from the prompt — remove before injecting the canonical block. */
+/** Remove investment blocks, fee lines, and Grok-echoed pricing from client delivery. */
 export function stripPricingSection(text: string): string {
   let cleaned = text;
 
-  // Full INVESTMENT block (ours or pasted)
   cleaned = cleaned.replace(
     /\n*INVESTMENT\s*[—–-]\s*Engagement Activation Retainer[^\n]*\n[\s\S]*?(?=\n[ \t]*(?:Clear next steps\b|\d+\.\s|I['']m looking forward|Michael Hart\b)|$)/gi,
     '',
   );
 
-  // Standalone fee lines (from Grok echoing approved economics)
   cleaned = cleaned.replace(/\n[ \t]*Fixed fee:\s*\$[\d,]+(?:\.\d+)?\.?\s*/gi, '\n');
   cleaned = cleaned.replace(
     /\n[ \t]*Activation due at signing:\s*\$[\d,]+(?:\.\d+)?[^\n]*\n?/gi,
@@ -34,7 +25,6 @@ export function stripPricingSection(text: string): string {
     '\n',
   );
 
-  // Narrative fee sentence Grok adds (often inline after Clear next steps)
   cleaned = cleaned.replace(
     /\s*The activation retainer is structured with \$[\d,]+(?:\.\d+)? due at signing[\s\S]*?\.\s*/gi,
     ' ',
@@ -45,83 +35,43 @@ export function stripPricingSection(text: string): string {
     '\n',
   );
 
-  // Fix prior corruption: "Clear next steps2,000." → "Clear next steps:"
   cleaned = cleaned.replace(/Clear next steps[\d,]+(?:\.\d+)?\.\s*/gi, 'Clear next steps: ');
 
   return cleaned.replace(/\n{3,}/g, '\n\n').trim();
 }
 
-function insertPricingBlock(section: string, pricingBlock: string): string {
-  const cleaned = stripPricingSection(section);
-
-  const clearMatch = cleaned.match(CLEAR_NEXT_STEPS);
-  if (clearMatch && clearMatch.index != null) {
-    const before = cleaned.slice(0, clearMatch.index).trimEnd();
-    const after = cleaned.slice(clearMatch.index).trimStart();
-    return `${before}\n\n${pricingBlock}\n\n${after}`.trim();
-  }
-
-  const signoffMatch = cleaned.match(/\n[ \t]*I['']m looking forward/i);
-  if (signoffMatch && signoffMatch.index != null) {
-    const before = cleaned.slice(0, signoffMatch.index).trimEnd();
-    const after = cleaned.slice(signoffMatch.index).trimStart();
-    return `${before}\n\n${pricingBlock}\n\n${after}`.trim();
-  }
-
-  const michaelMatch = cleaned.match(/\n[ \t]*Michael Hart\s*$/i);
-  if (michaelMatch && michaelMatch.index != null) {
-    const before = cleaned.slice(0, michaelMatch.index).trimEnd();
-    const after = cleaned.slice(michaelMatch.index).trimStart();
-    return `${before}\n\n${pricingBlock}\n\n${after}`.trim();
-  }
-
-  return `${cleaned}\n\n${pricingBlock}`.trim();
+/** Initial proposal (Layer 3) — scope and approach only; no fee language. */
+export function prepareProposalForClientDelivery(text: string): string {
+  return stripPricingSection(text);
 }
 
-/** Merge saved quote pricing into a generated proposal (post-Grok). */
-export function applyEngagementPricingToProposal(
-  proposal: GeneratedProposal,
-  quote: EngagementQuoteStored,
-): GeneratedProposal {
-  const pricingBlock = buildPricingSummaryBlock(quote);
-  const pitchSection = insertPricingBlock(proposal.pitchSection, pricingBlock);
-  const fullProposal = `${proposal.defineSection}\n\n${pitchSection}`.trim();
-
+function stripPricingFromSections(proposal: GeneratedProposal): GeneratedProposal {
+  const defineSection = proposal.defineSection.trim();
+  const pitchSection = stripPricingSection(proposal.pitchSection);
   return {
-    defineSection: proposal.defineSection,
+    defineSection,
     pitchSection,
-    fullProposal,
+    fullProposal: `${defineSection}\n\n${pitchSection}`.trim(),
   };
 }
 
-/** Merge saved quote pricing into full proposal text (pre-send safety net). */
-export function applyEngagementPricingToFullText(
-  proposalText: string,
-  quote: EngagementQuoteStored,
-): string {
-  const pricingBlock = buildPricingSummaryBlock(quote);
-  const pitchIdx = proposalText.search(/(?:RECOMMENDED APPROACH|CLIENT PITCH)\s*[—–-]/i);
-  const defineIdx = proposalText.search(/DEFINE\s*[—–-]/i);
-
-  if (defineIdx >= 0 && pitchIdx > defineIdx) {
-    const defineSection = proposalText.slice(0, pitchIdx).trim();
-    const pitchSection = insertPricingBlock(proposalText.slice(pitchIdx).trim(), pricingBlock);
-    return `${defineSection}\n\n${pitchSection}`.trim();
-  }
-
-  if (INVESTMENT_HEADER.test(proposalText)) {
-    return insertPricingBlock(proposalText, pricingBlock);
-  }
-
-  return insertPricingBlock(proposalText, pricingBlock);
+/** Post-Grok: remove any fee language; do not inject pricing at initial proposal stage. */
+export function finalizeInitialProposal(proposal: GeneratedProposal): GeneratedProposal {
+  return stripPricingFromSections(proposal);
 }
 
-export function buildPricingPromptContext(quote: EngagementQuoteStored): string {
-  const { activationFee, totalFee, balanceDue } = effectiveQuoteFees(quote);
+/** Pre-send / PDF safety net. */
+export function finalizeProposalText(proposalText: string): string {
+  return prepareProposalForClientDelivery(proposalText);
+}
+
+/** Internal Grok context — tier/scope hint only; never paste fees into the proposal. */
+export function buildEngagementScopeHint(quote: EngagementQuoteStored): string {
   return [
-    '--- APPROVED ENGAGEMENT ECONOMICS (internal reference — do NOT paste these lines into the proposal) ---',
-    `Tier: ${quote.tierLabel} | EAI: ${quote.eaiScore}`,
-    `Total: ${formatUsd(totalFee)} | Activation: ${formatUsd(activationFee)} | Balance: ${formatUsd(balanceDue)}`,
-    'Write about the Engagement Activation Retainer qualitatively only. Exact fee lines are inserted automatically after generation.',
+    '--- INTERNAL ENGAGEMENT SCOPE (do not include fees or INVESTMENT section in the proposal) ---',
+    `Complexity tier: ${quote.tierLabel} (EAI ${quote.eaiScore}).`,
+    'Describe the Engagement Activation Retainer (4–6 weeks) and deliverables only.',
+    'Do NOT mention dollar amounts, activation fees, total fees, balance due, or an INVESTMENT section.',
+    'Pricing is shared separately after the client reviews this initial proposal.',
   ].join('\n');
 }

@@ -55,8 +55,8 @@ import {
 } from '@/lib/client-password';
 import { sendProposalEmailToClient } from '@/lib/send-proposal-email';
 import {
-  applyEngagementPricingToFullText,
-  applyEngagementPricingToProposal,
+  finalizeInitialProposal,
+  finalizeProposalText,
 } from '@/lib/proposal-pricing';
 import { canClientSignIn, mustChangePortalPassword } from '@/lib/portal-access';
 
@@ -503,11 +503,7 @@ export async function sendProposalToClientForAdmin(submissionId: string, proposa
 
   await saveProposalDraft(submissionId, trimmed);
 
-  const quote = sub.engagementQuote;
-  const clientProposalText =
-    quote?.savedAt != null
-      ? applyEngagementPricingToFullText(trimmed, quote)
-      : trimmed;
+  const clientProposalText = finalizeProposalText(trimmed);
 
   if (clientProposalText !== trimmed) {
     await saveProposalDraft(submissionId, clientProposalText);
@@ -572,14 +568,6 @@ export async function generateInitialProposal(submissionId: string, input: Gener
     return { success: false, error: 'Submission not found.' };
   }
 
-  if (!sub.engagementQuote?.savedAt) {
-    return {
-      success: false,
-      error:
-        'Save the engagement quote in Engagement Economics (above) before generating the proposal.',
-    };
-  }
-
   const transcript = input.consult30Transcript?.trim() || '';
   if (transcript.length < 80) {
     return {
@@ -601,10 +589,10 @@ export async function generateInitialProposal(submissionId: string, input: Gener
   try {
     const proposal = await generateProposalWithXai({
       ...input,
-      engagementQuote: quote,
+      engagementQuote: sub.engagementQuote,
     });
-    const withPricing = applyEngagementPricingToProposal(proposal, quote);
-    return { success: true, proposal: withPricing, source: 'xai' as const };
+    const finalized = finalizeInitialProposal(proposal);
+    return { success: true, proposal: finalized, source: 'xai' as const };
   } catch (e) {
     console.error('xAI proposal generation failed:', e);
     const message = e instanceof Error ? e.message : 'Generation failed';

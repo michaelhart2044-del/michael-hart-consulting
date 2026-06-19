@@ -7,6 +7,7 @@ import path from 'path';
 import PDFDocument from 'pdfkit';
 import { colors } from '@/lib/brand-tokens';
 import { site } from '@/lib/site';
+import { finalizeProposalText } from '@/lib/proposal-pricing';
 
 const NAVY = colors.background;
 const GOLD = colors.accent;
@@ -21,7 +22,8 @@ const MINI_HEADER_H = 42;
 /** Breathing room between last body paragraph and sign-off rule. */
 const CLOSING_SEP_GAP = 34;
 const CLOSING_LINE_GAP = 6;
-const BODY_SIZE = 10.5;
+const BODY_SIZE = 11;
+const BODY_LINE_GAP = 3;
 
 const FONT = 'Helvetica';
 const FONT_BOLD = 'Helvetica-Bold';
@@ -30,6 +32,9 @@ const FONT_BOLD = 'Helvetica-Bold';
 const MARKER_DOT = '\u2022';
 
 const SECTION_HEADER = /^(DEFINE|RECOMMENDED APPROACH|CLIENT PITCH)\s*[—–-]/i;
+const INVESTMENT_LINE = /^INVESTMENT\s*[—–-]/i;
+const FEE_LINE =
+  /^(Fixed fee:|Activation due at signing:|Balance due upon delivery)/i;
 const BULLET_LINE = /^[-•*]\s+/;
 const NUMBERED_LINE = /^\d+\.\s+/;
 const SIGNOFF_LINE = /^[—–-]+\s*Michael Hart\s*\.?$/i;
@@ -72,6 +77,8 @@ export function sanitizeProposalForClient(text: string): string {
       if (/SigVai\s*\/\s*xAI ready/i.test(t)) return false;
       if (SIGNOFF_LINE.test(t)) return false;
       if (/^Michael Hart\s*\.?$/i.test(t)) return false;
+      if (INVESTMENT_LINE.test(t)) return false;
+      if (FEE_LINE.test(t)) return false;
       return true;
     })
     .join('\n')
@@ -205,6 +212,7 @@ function drawMiniHeader(doc: PDFKit.PDFDocument, clientName: string, logo: Buffe
   doc.moveTo(left, ruleY).lineTo(right, ruleY).strokeColor(GOLD).lineWidth(0.5).opacity(0.45).stroke().opacity(1);
 
   doc.y = ruleY + 12;
+  setBodyFont(doc);
 }
 
 function ensureSpace(doc: PDFKit.PDFDocument, ctx: PdfLayoutContext, needed: number): void {
@@ -225,11 +233,11 @@ function drawBodyLine(
   doc.font(FONT).fontSize(BODY_SIZE);
   const textHeight = doc.heightOfString(content, {
     width,
-    lineGap: 2.5,
+    lineGap: BODY_LINE_GAP,
     paragraphGap: 2,
   });
   ensureSpace(doc, ctx, textHeight + 6);
-  doc.fillColor(BODY).text(content, { width, lineGap: 2.5, paragraphGap: 2 });
+  doc.fillColor(BODY).text(content, { width, lineGap: BODY_LINE_GAP, paragraphGap: 2 });
 }
 
 function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, width: number, ctx: PdfLayoutContext): void {
@@ -347,7 +355,7 @@ export async function generateProposalPdfBuffer(params: {
   proposalText: string;
 }): Promise<Buffer> {
   const { clientName, proposalText } = params;
-  const cleanText = sanitizeProposalForClient(proposalText);
+  const cleanText = finalizeProposalText(sanitizeProposalForClient(proposalText));
 
   const logo = await fs.readFile(path.join(process.cwd(), 'public', 'mh-logo.png'));
   const ctx: PdfLayoutContext = { clientName, logo };

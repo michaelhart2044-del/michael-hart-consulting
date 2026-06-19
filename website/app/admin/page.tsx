@@ -22,7 +22,7 @@ import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
 import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
 import { site } from '@/lib/site';
-import { buildPricingSummaryBlock, effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
+import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
 
 interface RecentItem {
   id: string;
@@ -88,7 +88,7 @@ export default function AdminProposalGenerator() {
       );
     }
     if (!loadedSub.engagementQuote?.savedAt) {
-      blockers.push('Click “Save quote on dossier” in Engagement Economics (between Layer 2 and Layer 3).');
+      blockers.push('Optional: save engagement quote in Engagement Economics for internal pricing (not included in initial proposal).');
     }
     if (aiConfigured === false) {
       blockers.push('XAI_API_KEY is not set in Vercel — Grok cannot run until the key is added and redeployed.');
@@ -96,7 +96,7 @@ export default function AdminProposalGenerator() {
     return blockers;
   }
 
-  const generateBlockers = loadedSub ? getGenerateBlockers() : ['Load a client from Recent Prep Submissions.'];
+  const generateBlockers = loadedSub ? getGenerateBlockers().filter((b) => !b.startsWith('Optional:')) : ['Load a client from Recent Prep Submissions.'];
   const canGenerate = generateBlockers.length === 0 && !isGenerating;
 
   function showStatus(message: string, isError = false, ms = isError ? 12000 : 5000) {
@@ -199,7 +199,7 @@ export default function AdminProposalGenerator() {
         const p = res.proposal as Generated;
         setProposal(p);
         setOutputText(p.fullProposal);
-        showLayer3Status('Proposal generated — saved engagement pricing injected. Review the full text below.');
+        showLayer3Status('Proposal generated — scope and approach only (no fees). Review the full text below.');
       } else {
         showLayer3Status(res.error || 'Generation failed', true);
       }
@@ -730,31 +730,19 @@ Best regards,`;
           <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Layer 3</div>
           <h2 className="font-semibold text-lg mt-0.5">Initial Proposal</h2>
           <p className="text-sm text-[#94a3b8] mt-1">
-            After the 30-min call: save engagement quote → generate with Grok → review → email client.
+            After the 30-min call: generate with Grok → review → email client. Initial proposals are scope-only — no fees (pricing comes at agreement).
           </p>
         </div>
 
-        {loadedSub.engagementQuote?.savedAt ? (
-          <div className="rounded-lg border border-[#c5a46e]/30 bg-[#c5a46e]/5 px-4 py-3 text-sm text-[#e2e8f0] space-y-1">
-            <div className="text-[10px] uppercase tracking-wider text-[#c5a46e]">Pricing locked for this proposal</div>
-            {(() => {
-              const fees = effectiveQuoteFees(loadedSub.engagementQuote!);
-              return (
-                <>
-                  <div>
-                    {formatUsd(fees.activationFee)} activation → {formatUsd(fees.totalFee)} total
-                    <span className="text-[#64748b]"> · {loadedSub.engagementQuote!.tierLabel} tier</span>
-                  </div>
-                  <pre className="text-xs text-[#94a3b8] whitespace-pre-wrap font-mono mt-2">
-                    {buildPricingSummaryBlock(loadedSub.engagementQuote!)}
-                  </pre>
-                </>
-              );
-            })()}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-amber-500/40 bg-amber-950/20 px-4 py-3 text-sm text-amber-100">
-            Save the engagement quote in <span className="font-medium">Engagement Economics</span> above before generating — Grok will inject those exact fees into the proposal and PDF.
+        <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-sm text-[#94a3b8]">
+          Client-facing PDFs at this stage include <span className="text-[#e2e8f0]">DEFINE</span> and{' '}
+          <span className="text-[#e2e8f0]">RECOMMENDED APPROACH</span> only. Engagement Economics above stays internal until agreement.
+        </div>
+
+        {loadedSub?.engagementQuote?.savedAt && (
+          <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-xs text-[#64748b]">
+            Internal quote on file: {formatUsd(effectiveQuoteFees(loadedSub.engagementQuote).activationFee)} activation →{' '}
+            {formatUsd(effectiveQuoteFees(loadedSub.engagementQuote).totalFee)} total — not included in this PDF.
           </div>
         )}
 
@@ -779,8 +767,8 @@ Best regards,`;
               {consult30Transcript.trim().length >= 80 ? '✓' : '○'} 30-min transcript in Layer 2 (
               {consult30Transcript.trim().length}/80 chars)
             </li>
-            <li className={loadedSub?.engagementQuote?.savedAt ? 'text-emerald-300' : 'text-amber-200'}>
-              {loadedSub?.engagementQuote?.savedAt ? '✓' : '○'} Engagement quote saved on dossier
+            <li className={loadedSub?.engagementQuote?.savedAt ? 'text-emerald-300' : 'text-[#64748b]'}>
+              {loadedSub?.engagementQuote?.savedAt ? '✓' : '○'} Internal quote saved (optional)
             </li>
             <li className={aiConfigured !== false ? 'text-emerald-300' : 'text-amber-200'}>
               {aiConfigured !== false ? '✓' : '○'} Grok API key configured

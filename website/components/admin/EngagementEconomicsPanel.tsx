@@ -116,7 +116,7 @@ export default function EngagementEconomicsPanel({
         <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Engagement Economics</div>
         <h2 className="font-semibold text-lg mt-0.5">Engagement Activation Index</h2>
         <p className="text-sm text-[#94a3b8] mt-1">
-          Auto-scored from Step 1 intake and Layer 2 transcript. Save to dossier — required before Layer 3 proposal generation.
+          Auto-scored from Step 1 intake and Layer 2 transcript. Internal pricing — not included in the initial client proposal.
         </p>
       </div>
 

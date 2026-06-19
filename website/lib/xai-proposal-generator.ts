@@ -8,7 +8,7 @@ import {
   type GeneratedProposal,
   type GeneratorInput,
 } from '@/lib/proposal-generator';
-import { buildPricingPromptContext } from '@/lib/proposal-pricing';
+import { buildEngagementScopeHint } from '@/lib/proposal-pricing';
 
 const XAI_CHAT_URL = 'https://api.x.ai/v1/chat/completions';
 
@@ -38,10 +38,11 @@ RECOMMENDED APPROACH must include:
 - Clear next steps (artifacts to share, kickoff timing)
 - Sign off: Michael Hart (no em dash or prefix)
 
-Pricing rules:
-- When APPROVED ENGAGEMENT ECONOMICS are provided, do NOT invent dollar amounts or alternate fee structures.
-- Describe the activation retainer and deliverables qualitatively; exact fees are inserted automatically after generation.
-- Never write placeholder pricing like "investment TBD" or "confirmed after consultation" when approved economics are supplied.
+Pricing rules (initial proposal stage):
+- Do NOT include dollar amounts for our fees, activation retainers, total project fees, or balance due.
+- Do NOT include an INVESTMENT section or fee schedule — pricing is shared separately after the client reviews this document.
+- You may reference the client's own revenue or scale from the transcript when describing their situation (e.g. "$45M operator").
+- Describe the Engagement Activation Retainer (4–6 weeks) in terms of deliverables and outcomes only.
 
 Rules:
 - Use ONLY facts from the provided intake and transcript. Do not invent client metrics.
@@ -70,7 +71,7 @@ function buildUserPrompt(input: GeneratorInput): string {
   ];
 
   if (input.engagementQuote) {
-    parts.push('', buildPricingPromptContext(input.engagementQuote));
+    parts.push('', buildEngagementScopeHint(input.engagementQuote));
   }
 
   if (input.transcript?.trim()) {
