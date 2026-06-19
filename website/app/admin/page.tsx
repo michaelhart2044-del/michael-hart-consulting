@@ -22,6 +22,7 @@ import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
 import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
 import { site } from '@/lib/site';
+import { buildPricingSummaryBlock, effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
 
 interface RecentItem {
   id: string;
@@ -150,12 +151,12 @@ export default function AdminProposalGenerator() {
       transcript: transcript.trim() || undefined,
     };
 
-    const res = await generateInitialProposal(input);
+    const res = await generateInitialProposal(loadedSub.id, input);
     if (res.success && res.proposal) {
       const p = res.proposal as Generated;
       setProposal(p);
       setOutputText(p.fullProposal);
-      setStatus('Proposal generated with Grok (xAI). Review and edit before sending.');
+      setStatus('Proposal generated with Grok — saved engagement pricing injected. Review before sending.');
     } else {
       setStatus(res.error || 'Generation failed');
     }
@@ -681,9 +682,33 @@ Best regards,`;
           <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Layer 3</div>
           <h2 className="font-semibold text-lg mt-0.5">Initial Proposal</h2>
           <p className="text-sm text-[#94a3b8] mt-1">
-            After the 30-min call: generate with Grok → review → save → email client → confirm sent.
+            After the 30-min call: save engagement quote → generate with Grok → review → email client.
           </p>
         </div>
+
+        {loadedSub.engagementQuote?.savedAt ? (
+          <div className="rounded-lg border border-[#c5a46e]/30 bg-[#c5a46e]/5 px-4 py-3 text-sm text-[#e2e8f0] space-y-1">
+            <div className="text-[10px] uppercase tracking-wider text-[#c5a46e]">Pricing locked for this proposal</div>
+            {(() => {
+              const fees = effectiveQuoteFees(loadedSub.engagementQuote!);
+              return (
+                <>
+                  <div>
+                    {formatUsd(fees.activationFee)} activation → {formatUsd(fees.totalFee)} total
+                    <span className="text-[#64748b]"> · {loadedSub.engagementQuote!.tierLabel} tier</span>
+                  </div>
+                  <pre className="text-xs text-[#94a3b8] whitespace-pre-wrap font-mono mt-2">
+                    {buildPricingSummaryBlock(loadedSub.engagementQuote!)}
+                  </pre>
+                </>
+              );
+            })()}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-950/20 px-4 py-3 text-sm text-amber-100">
+            Save the engagement quote in <span className="font-medium">Engagement Economics</span> above before generating — Grok will inject those exact fees into the proposal and PDF.
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium mb-2 text-[#cbd5e1]">Supplemental notes (optional)</label>
@@ -699,7 +724,11 @@ Best regards,`;
         <div className="flex flex-col sm:flex-row flex-wrap gap-3">
           <button
             onClick={handleGenerate}
-            disabled={isGenerating || consult30Transcript.trim().length < 80}
+            disabled={
+              isGenerating ||
+              consult30Transcript.trim().length < 80 ||
+              !loadedSub.engagementQuote?.savedAt
+            }
             className="px-8 py-3.5 text-base font-semibold bg-[#8f6f3d] hover:bg-[#b89a6e] text-black rounded-full disabled:opacity-60 transition-all active:scale-[0.985]"
           >
             {isGenerating ? 'Generating with Grok…' : '1. Generate Initial Proposal (Grok)'}

@@ -8,6 +8,7 @@ import {
   type GeneratedProposal,
   type GeneratorInput,
 } from '@/lib/proposal-generator';
+import { buildPricingPromptContext } from '@/lib/proposal-pricing';
 
 const XAI_CHAT_URL = 'https://api.x.ai/v1/chat/completions';
 
@@ -37,6 +38,11 @@ RECOMMENDED APPROACH must include:
 - Clear next steps (artifacts to share, kickoff timing)
 - Sign off: Michael Hart (no em dash or prefix)
 
+Pricing rules:
+- When APPROVED ENGAGEMENT ECONOMICS are provided, do NOT invent dollar amounts or alternate fee structures.
+- Describe the activation retainer and deliverables qualitatively; exact fees are inserted automatically after generation.
+- Never write placeholder pricing like "investment TBD" or "confirmed after consultation" when approved economics are supplied.
+
 Rules:
 - Use ONLY facts from the provided intake and transcript. Do not invent client metrics.
 - If the transcript lacks numbers, use ranges and label them as illustrative.
@@ -51,7 +57,7 @@ function buildUserPrompt(input: GeneratorInput): string {
     .map((c) => `- ${c}`)
     .join('\n');
 
-  return [
+  const parts = [
     `Client name: ${input.name}`,
     `Industry: ${input.industry || 'Not specified'}`,
     `Main and additional challenges:\n${challenges || '- See transcript'}`,
@@ -61,10 +67,17 @@ function buildUserPrompt(input: GeneratorInput): string {
     '',
     '--- 30-MINUTE CONSULT TRANSCRIPT / NOTES (primary source for proposal) ---',
     input.consult30Transcript?.trim() || '(missing)',
-    input.transcript?.trim()
-      ? `\n--- SUPPLEMENTAL NOTES ---\n${input.transcript.trim()}`
-      : '',
-  ].join('\n');
+  ];
+
+  if (input.engagementQuote) {
+    parts.push('', buildPricingPromptContext(input.engagementQuote));
+  }
+
+  if (input.transcript?.trim()) {
+    parts.push('', '--- SUPPLEMENTAL NOTES ---', input.transcript.trim());
+  }
+
+  return parts.join('\n');
 }
 
 function splitSections(raw: string): GeneratedProposal {

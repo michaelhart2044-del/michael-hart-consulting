@@ -9,6 +9,8 @@
  * No external calls. 100% private.
  */
 
+import type { EngagementQuoteStored } from '@/lib/engagement-pricing';
+
 export interface GeneratorInput {
   name: string;
   industry: string;
@@ -21,6 +23,8 @@ export interface GeneratorInput {
   consult30Transcript?: string;
   /** Optional supplemental notes beyond the consult transcript. */
   transcript?: string;
+  /** Admin-saved engagement quote — injected into Grok context and post-processed into output. */
+  engagementQuote?: EngagementQuoteStored;
 }
 
 /** Client-facing second section header (replaces legacy "CLIENT PITCH" label). */
@@ -132,7 +136,6 @@ export function generateProposal(input: GeneratorInput): GeneratedProposal {
   pitch += `- Initial controls & compliance health check (SOX/audit readiness where relevant)\n`;
   pitch += `- Hands-on support delivering 1–2 tangible improvements during the activation window\n`;
   pitch += `- Executive summary + working materials ready for leadership or PE review\n\n`;
-  pitch += `This retainer is designed to stand alone or serve as the on-ramp to a broader ongoing advisory relationship. Investment and exact scope are confirmed after the initial consultation and data review.\n\n`;
 
   // Clear next steps
   pitch += `Clear Next Steps\n`;

@@ -54,6 +54,10 @@ import {
   verifyClientPassword,
 } from '@/lib/client-password';
 import { sendProposalEmailToClient } from '@/lib/send-proposal-email';
+import {
+  applyEngagementPricingToFullText,
+  applyEngagementPricingToProposal,
+} from '@/lib/proposal-pricing';
 import { canClientSignIn, mustChangePortalPassword } from '@/lib/portal-access';
 
 /**
@@ -499,10 +503,20 @@ export async function sendProposalToClientForAdmin(submissionId: string, proposa
 
   await saveProposalDraft(submissionId, trimmed);
 
+  const quote = sub.engagementQuote;
+  const clientProposalText =
+    quote?.savedAt != null
+      ? applyEngagementPricingToFullText(trimmed, quote)
+      : trimmed;
+
+  if (clientProposalText !== trimmed) {
+    await saveProposalDraft(submissionId, clientProposalText);
+  }
+
   const sent = await sendProposalEmailToClient({
     clientEmail: sub.email,
     clientName: sub.name,
-    proposalText: trimmed,
+    proposalText: clientProposalText,
   });
 
   if (!sent.success) {
@@ -548,9 +562,22 @@ export async function saveConsultTranscriptsForAdmin(
 }
 
 // Server-side proposal generation (xAI Grok — post–30-min consult)
-export async function generateInitialProposal(input: GeneratorInput) {
+export async function generateInitialProposal(submissionId: string, input: GeneratorInput) {
   if (!(await requireAdmin())) {
     return { success: false, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false, error: 'Submission not found.' };
+  }
+
+  if (!sub.engagementQuote?.savedAt) {
+    return {
+      success: false,
+      error:
+        'Save the engagement quote in Engagement Economics (above) before generating the proposal.',
+    };
   }
 
   const transcript = input.consult30Transcript?.trim() || '';
@@ -569,9 +596,15 @@ export async function generateInitialProposal(input: GeneratorInput) {
     };
   }
 
+  const quote = sub.engagementQuote;
+
   try {
-    const proposal = await generateProposalWithXai(input);
-    return { success: true, proposal, source: 'xai' as const };
+    const proposal = await generateProposalWithXai({
+      ...input,
+      engagementQuote: quote,
+    });
+    const withPricing = applyEngagementPricingToProposal(proposal, quote);
+    return { success: true, proposal: withPricing, source: 'xai' as const };
   } catch (e) {
     console.error('xAI proposal generation failed:', e);
     const message = e instanceof Error ? e.message : 'Generation failed';
