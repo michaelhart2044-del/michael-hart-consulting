@@ -889,17 +889,30 @@ export async function getPandaDocIntegrationStatusForAdmin() {
  */
 export async function createPandaDocRetainerForAdmin(
   submissionId: string,
-  clientDetails: {
-    company: string;
-    streetAddress?: string;
-    city?: string;
-    state?: string;
-    postalCode?: string;
-  },
+  clientDetailsInput:
+    | string
+    | {
+        company: string;
+        streetAddress?: string;
+        city?: string;
+        state?: string;
+        postalCode?: string;
+      },
 ) {
   if (!(await requireAdmin())) {
     return { success: false as const, error: 'Unauthorized' };
   }
+
+  const clientDetails =
+    typeof clientDetailsInput === 'string'
+      ? { company: clientDetailsInput }
+      : {
+          company: clientDetailsInput?.company ?? '',
+          streetAddress: clientDetailsInput?.streetAddress,
+          city: clientDetailsInput?.city,
+          state: clientDetailsInput?.state,
+          postalCode: clientDetailsInput?.postalCode,
+        };
 
   const sub = await getSubmissionById(submissionId);
   if (!sub) {

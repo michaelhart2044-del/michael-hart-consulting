@@ -186,9 +186,13 @@ export async function buildRetainerDocumentRequest(
   }
 
   const company =
-    clientDetails.company.trim() ||
+    clientDetails.company?.trim() ||
     submission.clientCompany?.trim() ||
-    submission.industry.trim();
+    submission.industry?.trim() ||
+    '';
+  if (!company) {
+    throw new Error('Client company is required before creating a PandaDoc retainer.');
+  }
   const streetAddress = clientDetails.streetAddress?.trim() || submission.clientStreetAddress;
   const city = clientDetails.city?.trim() || submission.clientCity;
   const state = clientDetails.state?.trim() || submission.clientState;
