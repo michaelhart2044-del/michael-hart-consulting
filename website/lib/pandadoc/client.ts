@@ -27,6 +27,17 @@ export interface PandaDocDocumentSummary {
   date_modified?: string;
 }
 
+export interface PandaDocTemplateImage {
+  name: string | null;
+  block_uuid?: string;
+}
+
+export interface PandaDocTemplateDetails {
+  id: string;
+  name: string;
+  images?: PandaDocTemplateImage[];
+}
+
 class PandaDocApiError extends Error {
   constructor(
     message: string,
@@ -87,6 +98,13 @@ export async function getDocumentStatus(
   return pandadocFetch(config, `/documents/${documentId}`, { method: 'GET' });
 }
 
+export async function getTemplateDetails(
+  config: PandaDocConfig,
+  templateUuid: string,
+): Promise<PandaDocTemplateDetails> {
+  return pandadocFetch(config, `/templates/${templateUuid}/details`, { method: 'GET' });
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -133,6 +151,9 @@ export function formatPandaDocError(err: unknown): string {
     const raw = err.detail ? `${err.message}: ${err.detail}` : err.message;
     if (raw.includes('Role') && raw.includes('does not exist')) {
       return `${raw} — Your template uses roles like Contractor and Customer. If you set PANDADOC_CLIENT_ROLE or PANDADOC_CONTRACTOR_ROLE in Vercel to something else, remove them or set Contractor / Customer.`;
+    }
+    if (raw.includes('Invalid block names') && raw.includes('images')) {
+      return `${raw} — Your template has no Image block with that name. In PandaDoc: Insert → Image, name it (e.g. MH Logo), then set PANDADOC_LOGO_IMAGE_BLOCK_NAME in Vercel to match — or leave unset and we auto-detect when a block exists.`;
     }
     return raw;
   }

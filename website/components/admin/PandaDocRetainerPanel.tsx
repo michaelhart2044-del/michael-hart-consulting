@@ -167,7 +167,7 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
       )}
 
       <ol className="text-xs text-[#64748b] list-decimal list-inside space-y-1">
-        <li>Logo and website fill from your MH site; retainer amount uses several token names for the template</li>
+        <li>Website and retainer tokens fill automatically; logo fills only if the template has an Image block</li>
         <li>Sign your contractor fields once in PandaDoc (signature fields cannot be filled by API)</li>
         <li>Confirm Collect payment amount matches the retainer above</li>
         <li>Send to client — they sign and pay in PandaDoc</li>

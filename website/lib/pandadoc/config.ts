@@ -6,7 +6,8 @@ export interface PandaDocConfig {
   clientRole: string;
   contractorRole: string;
   contractorEmail: string;
-  logoImageBlockName: string;
+  /** When set, must match an Image block name in the PandaDoc template. */
+  logoImageBlockName?: string;
   signatureImageBlockName?: string;
   contractorDateFieldName?: string;
   tokenNames: {
@@ -47,7 +48,7 @@ export function getPandaDocConfigStatus(): PandaDocConfigStatus {
       clientRole: process.env.PANDADOC_CLIENT_ROLE?.trim() || 'Customer',
       contractorRole: process.env.PANDADOC_CONTRACTOR_ROLE?.trim() || 'Contractor',
       contractorEmail: process.env.PANDADOC_CONTRACTOR_EMAIL?.trim() || site.email,
-      logoImageBlockName: process.env.PANDADOC_LOGO_IMAGE_BLOCK_NAME?.trim() || 'Image 1',
+      logoImageBlockName: process.env.PANDADOC_LOGO_IMAGE_BLOCK_NAME?.trim() || undefined,
       signatureImageBlockName: process.env.PANDADOC_SIGNATURE_IMAGE_BLOCK_NAME?.trim() || undefined,
       contractorDateFieldName: process.env.PANDADOC_CONTRACTOR_DATE_FIELD?.trim() || undefined,
       tokenNames: {

@@ -3,7 +3,11 @@ import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
 import { splitFullName } from '@/lib/split-full-name';
 import { site } from '@/lib/site';
 import type { PandaDocConfig } from '@/lib/pandadoc/config';
-import type { PandaDocCreateDocumentBody } from '@/lib/pandadoc/client';
+import type {
+  PandaDocCreateDocumentBody,
+  PandaDocTemplateImage,
+} from '@/lib/pandadoc/client';
+import { getTemplateDetails } from '@/lib/pandadoc/client';
 
 function formatProposalDate(date = new Date()): string {
   return date.toLocaleDateString('en-US', {
@@ -66,11 +70,66 @@ function buildTokens(
   return entries;
 }
 
-export function buildRetainerDocumentRequest(
+function namedTemplateImages(images: PandaDocTemplateImage[] = []): string[] {
+  return images.map((img) => img.name?.trim()).filter((name): name is string => Boolean(name));
+}
+
+function pickLogoBlockName(
+  templateImages: PandaDocTemplateImage[],
+  explicitName?: string,
+): string | undefined {
+  const names = namedTemplateImages(templateImages);
+  if (names.length === 0) return undefined;
+
+  if (explicitName) {
+    return names.includes(explicitName) ? explicitName : undefined;
+  }
+
+  const logoMatch = names.find((name) => /logo|brand|mh/i.test(name));
+  return logoMatch ?? names[0];
+}
+
+async function buildRetainerImages(
+  config: PandaDocConfig,
+): Promise<Array<{ name: string; urls: string[] }>> {
+  let templateImages: PandaDocTemplateImage[] = [];
+  try {
+    const template = await getTemplateDetails(config, config.templateUuid);
+    templateImages = template.images ?? [];
+  } catch {
+    // Template details unavailable — skip images rather than fail draft creation.
+    return [];
+  }
+
+  const templateImageNames = new Set(namedTemplateImages(templateImages));
+  const images: Array<{ name: string; urls: string[] }> = [];
+
+  const logoBlockName = pickLogoBlockName(templateImages, config.logoImageBlockName);
+  if (logoBlockName && templateImageNames.has(logoBlockName)) {
+    images.push({
+      name: logoBlockName,
+      urls: [absoluteAssetUrl(site.logo)],
+    });
+  }
+
+  if (
+    config.signatureImageBlockName &&
+    templateImageNames.has(config.signatureImageBlockName)
+  ) {
+    images.push({
+      name: config.signatureImageBlockName,
+      urls: [absoluteAssetUrl('/brand/signature-michael-hart.png')],
+    });
+  }
+
+  return images;
+}
+
+export async function buildRetainerDocumentRequest(
   submission: PrepSubmission,
   config: PandaDocConfig,
   clientCompany: string,
-): PandaDocCreateDocumentBody {
+): Promise<PandaDocCreateDocumentBody> {
   if (!submission.engagementQuote?.savedAt) {
     throw new Error('Save the engagement quote in Engagement Economics before creating a PandaDoc retainer.');
   }
@@ -86,19 +145,7 @@ export function buildRetainerDocumentRequest(
   const retainerFormatted = formatUsd(activationFee);
   const retainerNumeric = String(activationFee);
 
-  const images: Array<{ name: string; urls: string[] }> = [
-    {
-      name: config.logoImageBlockName,
-      urls: [absoluteAssetUrl(site.logo)],
-    },
-  ];
-
-  if (config.signatureImageBlockName) {
-    images.push({
-      name: config.signatureImageBlockName,
-      urls: [absoluteAssetUrl('/brand/signature-michael-hart.png')],
-    });
-  }
+  const images = await buildRetainerImages(config);
 
   const fields: Record<string, { value: string | number | boolean }> = {};
   if (config.contractorDateFieldName) {
@@ -138,7 +185,7 @@ export function buildRetainerDocumentRequest(
       { name: 'RETAINER AMOUNT NUMERIC', value: retainerNumeric },
     ]),
     fields: Object.keys(fields).length > 0 ? fields : undefined,
-    images,
+    images: images.length > 0 ? images : undefined,
     metadata: {
       mh_submission_id: submission.id,
       mh_client_email: submission.email,

@@ -915,7 +915,7 @@ export async function createPandaDocRetainerForAdmin(submissionId: string, clien
   const { effectiveQuoteFees } = await import('@/lib/engagement-pricing');
 
   try {
-    const body = buildRetainerDocumentRequest(sub, configStatus.config, clientCompany);
+    const body = await buildRetainerDocumentRequest(sub, configStatus.config, clientCompany);
     const created = await createDocumentFromTemplate(configStatus.config, body);
     const activationFee = effectiveQuoteFees(sub.engagementQuote!).activationFee;
 
