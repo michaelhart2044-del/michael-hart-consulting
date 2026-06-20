@@ -887,7 +887,16 @@ export async function getPandaDocIntegrationStatusForAdmin() {
  * Pre-fills client name, company, proposal date, and activation retainer amount.
  * Does not send — open in PandaDoc to pre-sign, confirm payment, then send.
  */
-export async function createPandaDocRetainerForAdmin(submissionId: string, clientCompany: string) {
+export async function createPandaDocRetainerForAdmin(
+  submissionId: string,
+  clientDetails: {
+    company: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+) {
   if (!(await requireAdmin())) {
     return { success: false as const, error: 'Unauthorized' };
   }
@@ -915,7 +924,7 @@ export async function createPandaDocRetainerForAdmin(submissionId: string, clien
   const { effectiveQuoteFees } = await import('@/lib/engagement-pricing');
 
   try {
-    const body = await buildRetainerDocumentRequest(sub, configStatus.config, clientCompany);
+    const body = await buildRetainerDocumentRequest(sub, configStatus.config, clientDetails);
     const created = await createDocumentFromTemplate(configStatus.config, body);
     const activationFee = effectiveQuoteFees(sub.engagementQuote!).activationFee;
 
@@ -944,7 +953,7 @@ export async function createPandaDocRetainerForAdmin(submissionId: string, clien
       editUrl: pandaDocDocumentEditUrl(created.id),
     };
 
-    const updated = await savePandaDocRetainer(submissionId, retainer, clientCompany);
+    const updated = await savePandaDocRetainer(submissionId, retainer, clientDetails);
     if (!updated) {
       return { success: false as const, error: 'Retainer created in PandaDoc but failed to save on client record.' };
     }

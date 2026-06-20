@@ -77,6 +77,11 @@ export interface PrepSubmission {
   consult60Transcript?: string;
   /** Client legal entity / company name for agreements (admin or PandaDoc step). */
   clientCompany?: string;
+  /** Client mailing address for PandaDoc agreement tokens (optional). */
+  clientStreetAddress?: string;
+  clientCity?: string;
+  clientState?: string;
+  clientPostalCode?: string;
   /** Phase 2C — PandaDoc engagement retainer draft linked to this client. */
   pandadocRetainer?: {
     documentId: string;
@@ -638,16 +643,32 @@ export async function saveConsultTranscripts(
 export async function savePandaDocRetainer(
   id: string,
   retainer: NonNullable<PrepSubmission['pandadocRetainer']>,
-  clientCompany?: string,
+  clientDetails?: {
+    company?: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
 ): Promise<PrepSubmission | null> {
   const all = await loadAll();
   const idx = all.findIndex((s) => s.id === id);
   if (idx === -1) return null;
 
+  const trim = (v?: string) => v?.trim() || undefined;
+
   all[idx] = {
     ...all[idx],
     pandadocRetainer: retainer,
-    ...(clientCompany !== undefined ? { clientCompany: clientCompany.trim() || undefined } : {}),
+    ...(clientDetails?.company !== undefined ? { clientCompany: trim(clientDetails.company) } : {}),
+    ...(clientDetails?.streetAddress !== undefined
+      ? { clientStreetAddress: trim(clientDetails.streetAddress) }
+      : {}),
+    ...(clientDetails?.city !== undefined ? { clientCity: trim(clientDetails.city) } : {}),
+    ...(clientDetails?.state !== undefined ? { clientState: trim(clientDetails.state) } : {}),
+    ...(clientDetails?.postalCode !== undefined
+      ? { clientPostalCode: trim(clientDetails.postalCode) }
+      : {}),
   };
   await persist(all);
   return all[idx];

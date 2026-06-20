@@ -3,6 +3,7 @@ import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
 import { splitFullName } from '@/lib/split-full-name';
 import { site } from '@/lib/site';
 import type { PandaDocConfig } from '@/lib/pandadoc/config';
+import type { PandaDocClientDetails } from '@/lib/pandadoc/client-details';
 import type {
   PandaDocCreateDocumentBody,
   PandaDocTemplateImage,
@@ -40,6 +41,10 @@ function buildTokens(
     lastName: string;
     company: string;
     email: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
     website: string;
     proposalDate: string;
     retainerAmount: string;
@@ -54,10 +59,41 @@ function buildTokens(
     }
   };
 
-  add(tokenVariants(config.tokenNames.clientFirstName, ['Customer.FirstName']), values.firstName);
-  add(tokenVariants(config.tokenNames.clientLastName, ['Customer.LastName']), values.lastName);
-  add(tokenVariants(config.tokenNames.clientCompany, ['Customer.Company', 'Client.Company']), values.company);
-  add(['Client.Email', 'Customer.Email'], values.email);
+  const addIf = (names: string[], value: string | undefined) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return;
+    add(names, trimmed);
+  };
+
+  add(
+    tokenVariants(config.tokenNames.clientFirstName, [
+      'Customer.FirstName',
+      'Client.FirstName',
+      '[Client.FirstName]',
+    ]),
+    values.firstName,
+  );
+  add(
+    tokenVariants(config.tokenNames.clientLastName, [
+      'Customer.LastName',
+      'Client.LastName',
+      '[Client.LastName]',
+    ]),
+    values.lastName,
+  );
+  add(
+    tokenVariants(config.tokenNames.clientCompany, [
+      'Customer.Company',
+      'Client.Company',
+      '[Client.Company]',
+    ]),
+    values.company,
+  );
+  add(['Client.Email', 'Customer.Email', '[Client.Email]'], values.email);
+  addIf(['Client.StreetAddress', '[Client.StreetAddress]'], values.streetAddress);
+  addIf(['Client.City', '[Client.City]'], values.city);
+  addIf(['Client.State', '[Client.State]'], values.state);
+  addIf(['Client.PostalCode', '[Client.PostalCode]'], values.postalCode);
   add(
     tokenVariants(config.tokenNames.companyWebsite, ['Company website', '[Company website]']),
     values.website,
@@ -137,7 +173,7 @@ async function buildRetainerImages(
 export async function buildRetainerDocumentRequest(
   submission: PrepSubmission,
   config: PandaDocConfig,
-  clientCompany: string,
+  clientDetails: PandaDocClientDetails,
 ): Promise<PandaDocCreateDocumentBody> {
   if (!submission.engagementQuote?.savedAt) {
     throw new Error('Save the engagement quote in Engagement Economics before creating a PandaDoc retainer.');
@@ -149,7 +185,14 @@ export async function buildRetainerDocumentRequest(
     throw new Error('Activation retainer amount must be greater than $0.');
   }
 
-  const company = clientCompany.trim() || submission.clientCompany?.trim() || submission.industry.trim();
+  const company =
+    clientDetails.company.trim() ||
+    submission.clientCompany?.trim() ||
+    submission.industry.trim();
+  const streetAddress = clientDetails.streetAddress?.trim() || submission.clientStreetAddress;
+  const city = clientDetails.city?.trim() || submission.clientCity;
+  const state = clientDetails.state?.trim() || submission.clientState;
+  const postalCode = clientDetails.postalCode?.trim() || submission.clientPostalCode;
   const documentName = `Engagement Activation Retainer — ${submission.name}`;
   const retainerPlain = formatRetainerAmount(activationFee);
   const retainerFormatted = formatUsd(activationFee);
@@ -188,6 +231,10 @@ export async function buildRetainerDocumentRequest(
       lastName: lastName || ' ',
       company,
       email: submission.email,
+      streetAddress,
+      city,
+      state,
+      postalCode,
       website: site.url,
       proposalDate: formatProposalDate(),
       retainerAmount: retainerPlain,
