@@ -917,16 +917,31 @@ export async function createPandaDocRetainerForAdmin(submissionId: string, clien
   try {
     const body = buildRetainerDocumentRequest(sub, configStatus.config, clientCompany);
     const created = await createDocumentFromTemplate(configStatus.config, body);
-    const draft = await waitForDocumentDraft(configStatus.config, created.id);
     const activationFee = effectiveQuoteFees(sub.engagementQuote!).activationFee;
 
+    let status = created.status;
+    let readyMessage =
+      `PandaDoc retainer draft ready for ${sub.name}. Open in PandaDoc to pre-sign, confirm payment amount, then send.`;
+
+    try {
+      const draft = await waitForDocumentDraft(configStatus.config, created.id, {
+        maxAttempts: 8,
+        intervalMs: 1500,
+      });
+      status = draft.status;
+    } catch {
+      readyMessage =
+        `PandaDoc is still building the draft for ${sub.name} (this can take 30–60 seconds). Use Open in PandaDoc — refresh PandaDoc if the document is not editable yet.`;
+      status = created.status || 'document.uploaded';
+    }
+
     const retainer = {
-      documentId: draft.id,
-      documentName: draft.name || body.name,
-      status: draft.status,
+      documentId: created.id,
+      documentName: created.name || body.name,
+      status,
       createdAt: new Date().toISOString(),
       activationFee,
-      editUrl: pandaDocDocumentEditUrl(draft.id),
+      editUrl: pandaDocDocumentEditUrl(created.id),
     };
 
     const updated = await savePandaDocRetainer(submissionId, retainer, clientCompany);
@@ -938,8 +953,7 @@ export async function createPandaDocRetainerForAdmin(submissionId: string, clien
       success: true as const,
       submission: updated,
       editUrl: retainer.editUrl,
-      message:
-        `PandaDoc retainer draft ready for ${sub.name}. Open in PandaDoc to pre-sign, confirm payment amount, then send.`,
+      message: readyMessage,
     };
   } catch (err) {
     return { success: false as const, error: formatPandaDocError(err) };

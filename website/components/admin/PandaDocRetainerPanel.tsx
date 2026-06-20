@@ -21,6 +21,8 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
   const [creating, setCreating] = useState(false);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [missingEnv, setMissingEnv] = useState<string[]>([]);
+  const [panelMessage, setPanelMessage] = useState('');
+  const [panelIsError, setPanelIsError] = useState(false);
 
   useEffect(() => {
     queueMicrotask(async () => {
@@ -47,14 +49,29 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
   async function handleCreate() {
     if (!canCreate) return;
     setCreating(true);
-    const res = await createPandaDocRetainerForAdmin(submission.id, company);
-    setCreating(false);
+    setPanelMessage('');
+    setPanelIsError(false);
 
-    if (res.success) {
-      onUpdated(res.submission);
-      onStatus(res.message);
-    } else {
-      onStatus(res.error, true);
+    try {
+      const res = await createPandaDocRetainerForAdmin(submission.id, company);
+      if (res.success) {
+        onUpdated(res.submission);
+        setPanelMessage(res.message);
+        setPanelIsError(false);
+        onStatus(res.message);
+      } else {
+        const err = res.error || 'PandaDoc request failed.';
+        setPanelMessage(err);
+        setPanelIsError(true);
+        onStatus(err, true);
+      }
+    } catch {
+      const err = 'Request failed — try again. If env vars were just added in Vercel, redeploy first.';
+      setPanelMessage(err);
+      setPanelIsError(true);
+      onStatus(err, true);
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -71,8 +88,20 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
 
       {configured === false && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-900/10 px-4 py-3 text-sm text-amber-100">
-          Add these in Vercel → Settings → Environment Variables, then redeploy:{' '}
+          Add these in Vercel → Settings → Environment Variables, then <strong>Redeploy</strong> (required):{' '}
           <span className="font-mono text-xs">{missingEnv.join(', ')}</span>
+        </div>
+      )}
+
+      {panelMessage && (
+        <div
+          className={`rounded-lg border px-4 py-3 text-sm ${
+            panelIsError
+              ? 'border-red-500/40 bg-red-900/20 text-red-100'
+              : 'border-emerald-500/40 bg-emerald-900/20 text-emerald-100'
+          }`}
+        >
+          {panelMessage}
         </div>
       )}
 

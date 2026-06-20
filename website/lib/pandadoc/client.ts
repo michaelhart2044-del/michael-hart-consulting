@@ -61,12 +61,7 @@ async function pandadocFetch<T>(
   }
 
   if (!res.ok) {
-    const detail =
-      payload && typeof payload === 'object' && 'detail' in payload
-        ? String((payload as { detail: unknown }).detail)
-        : typeof payload === 'string'
-          ? payload
-          : JSON.stringify(payload);
+    const detail = formatPandaDocApiPayload(payload);
     throw new PandaDocApiError(`PandaDoc API error (${res.status})`, res.status, detail);
   }
 
@@ -115,10 +110,31 @@ export async function waitForDocumentDraft(
   throw new Error('Timed out waiting for PandaDoc to finish creating the document (document.draft).');
 }
 
+function formatPandaDocApiPayload(payload: unknown): string {
+  if (typeof payload === 'string') return payload;
+  if (!payload || typeof payload !== 'object') return 'Unknown PandaDoc response';
+
+  const obj = payload as Record<string, unknown>;
+  if (typeof obj.detail === 'string') return obj.detail;
+  if (obj.detail && typeof obj.detail === 'object') {
+    return JSON.stringify(obj.detail);
+  }
+  if (typeof obj.info_message === 'string') return obj.info_message;
+  if (typeof obj.type === 'string') {
+    return obj.type;
+  }
+  return JSON.stringify(payload);
+}
+
 export function formatPandaDocError(err: unknown): string {
   if (err instanceof PandaDocApiError) {
     return err.detail ? `${err.message}: ${err.detail}` : err.message;
   }
-  if (err instanceof Error) return err.message;
+  if (err instanceof Error) {
+    if (err.message.includes('fetch failed') || err.message.includes('ECONNRESET')) {
+      return 'Could not reach PandaDoc — check your connection or try again in a moment.';
+    }
+    return err.message;
+  }
   return 'Unknown PandaDoc error';
 }

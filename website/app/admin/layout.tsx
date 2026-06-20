@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+export const maxDuration = 60;
+
 export const metadata: Metadata = {
   title: 'Internal — Engagement Hub',
   description: 'Private tool — Michael Hart Consulting',
