@@ -142,7 +142,8 @@ export function generateProposal(input: GeneratorInput): GeneratedProposal {
   pitch += `1. Complete the 30-minute initial consultation (already scheduled).\n`;
   pitch += `2. Share a small set of sample artifacts (recent close package, org chart for finance team, high-level system list, or any current pain examples).\n`;
   pitch += `3. We schedule a short kickoff (within 5 business days of the call) and begin the Activation Retainer.\n`;
-  pitch += `4. You receive the DEFINE + roadmap + first delivered improvements within the agreed window.\n\n`;
+  pitch += `4. You receive the DEFINE + roadmap + first delivered improvements within the agreed window.\n`;
+  pitch += `5. After agreement and activation payment, you receive access to a private client portal to complete brief prep questions and schedule your 1-hour team meeting.\n\n`;
 
   pitch += `I’m looking forward to helping you turn these challenges into a faster, cleaner, more strategic finance operation.\n\n`;
   pitch += `Michael Hart\n`;

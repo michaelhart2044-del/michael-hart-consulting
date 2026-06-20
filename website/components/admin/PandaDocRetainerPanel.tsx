@@ -7,6 +7,7 @@ import {
   createPandaDocRetainerForAdmin,
   getPandaDocIntegrationStatusForAdmin,
 } from '@/app/actions';
+import { PANDADOC_RETAINER_SEND_MESSAGE } from '@/lib/pandadoc/send-message';
 
 interface Props {
   submission: PrepSubmission;
@@ -222,6 +223,15 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
           </a>
         )}
       </div>
+
+      {submission.pandadocRetainer && (
+        <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-sm space-y-2">
+          <div className="text-[10px] uppercase tracking-wider text-[#64748b]">
+            Paste into PandaDoc when you send
+          </div>
+          <p className="text-[#cbd5e1] leading-relaxed">{PANDADOC_RETAINER_SEND_MESSAGE}</p>
+        </div>
+      )}
 
       {submission.pandadocRetainer && (
         <div className="rounded-lg border border-emerald-500/20 bg-emerald-900/10 px-4 py-3 text-xs text-emerald-100 space-y-1">
