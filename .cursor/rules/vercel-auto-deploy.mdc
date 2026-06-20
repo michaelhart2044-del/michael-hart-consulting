@@ -1,0 +1,25 @@
+---
+description: Commit and push website changes to trigger Vercel deployment
+alwaysApply: true
+---
+
+# Vercel auto-deploy
+
+After completing any substantive change to this project (especially under `website/`), **commit and push to `main`** to trigger the Vercel deployment. Do not wait for the user to ask.
+
+## Workflow
+
+1. Finish the requested code change and verify the build when practical (`npm run build` in `website/`).
+2. Stage only files related to the task — never `.env`, secrets, or unrelated local edits.
+3. Commit with a clear message focused on why the change was made.
+4. Push to `origin main` unless the user specifies a different branch.
+
+## Git safety (still applies)
+
+- Never update git config, force-push to `main`, or skip hooks unless explicitly requested.
+- Never commit secrets (`.env`, credentials, API keys).
+- If push is blocked or requires approval, retry with approval after explaining what will be deployed.
+
+## Scope
+
+This preference overrides “only commit when asked” for this repository. Question-only or review-only tasks with no file changes do not require a commit or push.
