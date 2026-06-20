@@ -40,8 +40,8 @@ export function getPandaDocConfigStatus(): PandaDocConfigStatus {
     config: {
       apiKey: apiKey!,
       templateUuid: templateUuid!,
-      clientRole: process.env.PANDADOC_CLIENT_ROLE?.trim() || 'Client Signer',
-      contractorRole: process.env.PANDADOC_CONTRACTOR_ROLE?.trim() || 'Michael Hart',
+      clientRole: process.env.PANDADOC_CLIENT_ROLE?.trim() || 'Customer',
+      contractorRole: process.env.PANDADOC_CONTRACTOR_ROLE?.trim() || 'Contractor',
       contractorEmail: process.env.PANDADOC_CONTRACTOR_EMAIL?.trim() || site.email,
       tokenNames: {
         clientFirstName: readTokenName('PANDADOC_TOKEN_CLIENT_FIRST_NAME', 'Client.FirstName'),

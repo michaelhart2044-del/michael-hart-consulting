@@ -128,7 +128,11 @@ function formatPandaDocApiPayload(payload: unknown): string {
 
 export function formatPandaDocError(err: unknown): string {
   if (err instanceof PandaDocApiError) {
-    return err.detail ? `${err.message}: ${err.detail}` : err.message;
+    const raw = err.detail ? `${err.message}: ${err.detail}` : err.message;
+    if (raw.includes('Role') && raw.includes('does not exist')) {
+      return `${raw} — Your template uses roles like Contractor and Customer. If you set PANDADOC_CLIENT_ROLE or PANDADOC_CONTRACTOR_ROLE in Vercel to something else, remove them or set Contractor / Customer.`;
+    }
+    return raw;
   }
   if (err instanceof Error) {
     if (err.message.includes('fetch failed') || err.message.includes('ECONNRESET')) {
