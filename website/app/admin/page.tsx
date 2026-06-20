@@ -917,8 +917,8 @@ Best regards,`;
           <div>
             <h2 className="font-semibold text-lg text-[#c5a46e]">Steps 8–9 — Engagement & Portal Access</h2>
             <p className="text-sm text-[#94a3b8] mt-1">
-              After the client signs and pays in PandaDoc: Mark Step 8, then grant portal access — the client receives an
-              email with a temporary password and a link to sign in.
+              After the client signs and pays in PandaDoc: Mark Step 8, then grant portal access within 48 hours — the
+              client receives an email with a temporary password and a link to sign in.
             </p>
           </div>
           <div className="text-sm">
