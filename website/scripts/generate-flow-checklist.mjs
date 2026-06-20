@@ -152,7 +152,7 @@ const doc = new Document({
             row([
               cell('9'),
               cell('Michael'),
-              cell('Click Grant Portal Access. Client receives welcome email with temp password + /portal/login link.'),
+              cell('Click Grant Portal Access within 48 hours of Step 8. Client receives welcome email with temp password + /portal/login link.'),
               cell('Badge: PORTAL — AWAITING LOGIN. Resend if email missing.'),
             ]),
             row([

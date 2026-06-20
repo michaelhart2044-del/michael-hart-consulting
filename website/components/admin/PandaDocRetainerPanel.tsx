@@ -8,6 +8,7 @@ import {
   getPandaDocIntegrationStatusForAdmin,
 } from '@/app/actions';
 import { PANDADOC_RETAINER_SEND_MESSAGE } from '@/lib/pandadoc/send-message';
+import { PORTAL_ACCESS_SLA } from '@/lib/portal-client-copy';
 
 interface Props {
   submission: PrepSubmission;
@@ -250,7 +251,7 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
         <li>Sign your contractor fields in PandaDoc before sending (signatures cannot be filled by API)</li>
         <li>Confirm Collect payment amount matches the retainer above</li>
         <li>Send to client — they sign and pay in PandaDoc</li>
-        <li>Mark Step 8 below when complete (Step 2 will automate this)</li>
+        <li>Mark Step 8 below when complete, then grant portal access within {PORTAL_ACCESS_SLA} (Step 2 will automate Step 8)</li>
       </ol>
     </section>
   );

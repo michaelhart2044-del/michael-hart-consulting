@@ -10,6 +10,7 @@ import {
   getClientEngagementData,
 } from '@/app/actions';
 import { site } from '@/lib/site';
+import { PORTAL_LOGIN_NO_ACCESS_NOTE, PORTAL_PASSWORD_SETUP_LABEL } from '@/lib/portal-client-copy';
 
 type Step = 'checking' | 'sign-in' | 'create-password' | 'entering';
 
@@ -99,7 +100,7 @@ export default function ClientPortalLogin() {
             {site.name} • Client Portal
           </h1>
           {isFirstTime && (
-            <p className="text-[#c5a46e] text-sm mt-2 font-medium">Step 2 of 2 — Create your password</p>
+            <p className="text-[#c5a46e] text-sm mt-2 font-medium">{PORTAL_PASSWORD_SETUP_LABEL}</p>
           )}
         </div>
 
@@ -188,7 +189,7 @@ export default function ClientPortalLogin() {
           <p className="text-center text-xs text-[#64748b] leading-relaxed">
             New to {site.name}? Complete the intake at{' '}
             <a href="/prepare-analysis" className="text-[#c5a46e] hover:underline">/prepare-analysis</a>
-            {' '}first. Portal access is granted after agreement and payment.
+            {' '}first. {PORTAL_LOGIN_NO_ACCESS_NOTE}
           </p>
         )}
       </div>

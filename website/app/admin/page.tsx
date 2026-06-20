@@ -22,6 +22,7 @@ import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
 import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
 import PandaDocRetainerPanel from '@/components/admin/PandaDocRetainerPanel';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
+import { ADMIN_PORTAL_DISABLED_UNTIL_STEP8, ADMIN_STEP89_INSTRUCTION } from '@/lib/portal-client-copy';
 import { site } from '@/lib/site';
 import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
 
@@ -917,8 +918,7 @@ Best regards,`;
           <div>
             <h2 className="font-semibold text-lg text-[#c5a46e]">Steps 8–9 — Engagement & Portal Access</h2>
             <p className="text-sm text-[#94a3b8] mt-1">
-              After the client signs and pays in PandaDoc: Mark Step 8, then grant portal access within 48 hours — the
-              client receives an email with a temporary password and a link to sign in.
+              {ADMIN_STEP89_INSTRUCTION}
             </p>
           </div>
           <div className="text-sm">
@@ -988,7 +988,7 @@ Best regards,`;
           </div>
           {!loadedSub.engagementCommittedAt && (
             <p className="text-xs text-[#64748b]">
-              Portal access is disabled until Step 8 is marked. Clients receive a temporary password by email after you grant access.
+              {ADMIN_PORTAL_DISABLED_UNTIL_STEP8}
             </p>
           )}
           <div className="pt-4 border-t border-white/10 space-y-2">

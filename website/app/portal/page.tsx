@@ -5,6 +5,11 @@ import Script from 'next/script';
 export const dynamic = 'force-dynamic';
 import ClientPreMeetingForm from './ClientPreMeetingForm';
 import PortalComprehensiveBooking from './PortalComprehensiveBooking';
+import {
+  PORTAL_PREP_COMPLETE_SUBTITLE,
+  PORTAL_PREP_HEADING,
+  PORTAL_WELCOME_SUBTITLE,
+} from '@/lib/portal-client-copy';
 export default async function ClientPortal() {
   const session = await getClientEngagementData();
 
@@ -48,7 +53,7 @@ export default async function ClientPortal() {
               <div className="mb-8">
                 <h1 className="text-3xl font-semibold tracking-tight">Welcome, {sub.name.split(' ')[0]}.</h1>
                 <p className="text-[#94a3b8] mt-2 max-w-prose">
-                  A few quick questions help us prepare. The detailed work happens on your 1-hour team meeting.
+                  {PORTAL_WELCOME_SUBTITLE}
                 </p>
               </div>
 
@@ -67,7 +72,7 @@ export default async function ClientPortal() {
               </section>
 
               <section className="border border-white/10 bg-[#0f172a] p-6 rounded-2xl">
-                <h2 className="font-semibold text-lg mb-2">Step 2 — Quick Prep (2 minutes)</h2>
+                <h2 className="font-semibold text-lg mb-2">{PORTAL_PREP_HEADING}</h2>
                 <ClientPreMeetingForm initialData={{ name: sub.name, email: sub.email }} />
               </section>
             </>
@@ -75,7 +80,7 @@ export default async function ClientPortal() {
             <div className="space-y-6">
               <div>
                 <h1 className="text-3xl font-semibold tracking-tight">Thank you, {sub.name.split(' ')[0]}.</h1>
-                <p className="text-[#94a3b8] mt-2">Your prep answers are saved. Schedule your 1-hour meeting below.</p>
+                <p className="text-[#94a3b8] mt-2">{PORTAL_PREP_COMPLETE_SUBTITLE}</p>
               </div>
 
               <section className="border border-white/10 bg-[#0f172a] p-6 rounded-2xl">

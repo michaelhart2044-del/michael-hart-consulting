@@ -60,6 +60,10 @@ import {
   finalizeProposalText,
 } from '@/lib/proposal-pricing';
 import { canClientSignIn, mustChangePortalPassword } from '@/lib/portal-access';
+import {
+  PORTAL_WELCOME_EMAIL_INTRO,
+  PORTAL_WELCOME_EMAIL_NEXT_STEPS,
+} from '@/lib/portal-client-copy';
 
 /**
  * Simple in-memory rate limiter (per-IP and per-email).
@@ -691,11 +695,11 @@ async function sendPortalAccessEmail(
       subject: `Your private client portal access — ${site.name}`,
       html: `
         <p>Hi ${greeting},</p>
-        <p>Your private client portal access with ${site.name} is now active.</p>
+        <p>${PORTAL_WELCOME_EMAIL_INTRO}</p>
         <p><strong>Email:</strong> ${escapeHtml(email)}<br />
         <strong>Temporary password:</strong> ${escapeHtml(tempPassword)}</p>
         <p><strong><a href="${portalUrl}">Sign in to your client portal</a></strong></p>
-        <p>On your first sign-in you will be asked to set your own permanent password.</p>
+        <p>${PORTAL_WELCOME_EMAIL_NEXT_STEPS}</p>
         <p>If you did not expect this email, you can safely ignore it.</p>
         <p>Best regards,<br />Michael Hart<br />${site.name}</p>
       `,

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { savePreMeetingDiscovery } from '@/app/actions';
+import { PORTAL_PREP_INTRO } from '@/lib/portal-client-copy';
 import { portalPrepQuestions } from '@/lib/portal-prep-questions';
 
 interface Props {
@@ -58,7 +59,7 @@ export default function ClientPreMeetingForm({ initialData }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <p className="text-sm text-[#94a3b8]">
-        Quick selections only — most detail will be captured together on your 1-hour call.
+        {PORTAL_PREP_INTRO}
       </p>
 
       {portalPrepQuestions.map((q) => (
