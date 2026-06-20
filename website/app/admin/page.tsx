@@ -20,6 +20,7 @@ import {
 import type { PrepSubmission } from '@/lib/submissions-store';
 import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
 import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
+import PandaDocRetainerPanel from '@/components/admin/PandaDocRetainerPanel';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
 import { site } from '@/lib/site';
 import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
@@ -716,6 +717,7 @@ Best regards,`;
 
       {loadedSub && (
         <EngagementEconomicsPanel
+          key={loadedSub.id}
           submission={loadedSub}
           consult30Transcript={consult30Transcript}
           onSaved={(sub) => setLoadedSub(sub)}
@@ -900,14 +902,23 @@ Best regards,`;
       </section>
       )}
 
+      {loadedSub && (
+        <PandaDocRetainerPanel
+          key={loadedSub.id}
+          submission={loadedSub}
+          onUpdated={(sub) => setLoadedSub(sub)}
+          onStatus={(message, isError) => showStatus(message, isError)}
+        />
+      )}
+
       {/* Steps 8–9 — Engagement commitment + portal invite */}
       {loadedSub && (
         <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-4">
           <div>
             <h2 className="font-semibold text-lg text-[#c5a46e]">Steps 8–9 — Engagement & Portal Access</h2>
             <p className="text-sm text-[#94a3b8] mt-1">
-              Step 8: Mark agreement + payment. Step 9: Grant portal access — the client receives an email with a
-              temporary password and a link to sign in. On first login they set their own permanent password.
+              After the client signs and pays in PandaDoc: Mark Step 8, then grant portal access — the client receives an
+              email with a temporary password and a link to sign in.
             </p>
           </div>
           <div className="text-sm">

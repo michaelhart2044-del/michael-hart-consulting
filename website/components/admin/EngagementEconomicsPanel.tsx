@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { PrepSubmission } from '@/lib/submissions-store';
 import {
   computeEngagementQuote,
@@ -46,19 +46,15 @@ export default function EngagementEconomicsPanel({
     [submission, consult30Transcript],
   );
 
-  const [activationOverride, setActivationOverride] = useState('');
-  const [totalOverride, setTotalOverride] = useState('');
-  const [notes, setNotes] = useState('');
+  const saved = submission.engagementQuote;
+  const [activationOverride, setActivationOverride] = useState(() =>
+    saved?.activationFeeOverride != null ? String(saved.activationFeeOverride) : '',
+  );
+  const [totalOverride, setTotalOverride] = useState(() =>
+    saved?.totalFeeOverride != null ? String(saved.totalFeeOverride) : '',
+  );
+  const [notes, setNotes] = useState(() => saved?.notes ?? '');
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    const saved = submission.engagementQuote;
-    setActivationOverride(
-      saved?.activationFeeOverride != null ? String(saved.activationFeeOverride) : '',
-    );
-    setTotalOverride(saved?.totalFeeOverride != null ? String(saved.totalFeeOverride) : '');
-    setNotes(saved?.notes ?? '');
-  }, [submission.id, submission.engagementQuote]);
 
   const draftQuote: EngagementQuoteStored = useMemo(() => {
     const activationFeeOverride = activationOverride.trim()

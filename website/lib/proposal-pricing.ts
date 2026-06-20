@@ -1,6 +1,6 @@
 /**
  * Client-facing proposal text — strip fees at initial proposal stage.
- * Engagement economics stay in admin (EAI panel) until agreement / PandaDoc (Phase 2C).
+ * Engagement economics stay in admin (EAI panel) until PandaDoc retainer (Phase 2C Step 1 in admin).
  */
 
 import type { GeneratedProposal } from '@/lib/proposal-generator';

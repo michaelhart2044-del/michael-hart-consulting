@@ -23,6 +23,7 @@ import {
   saveProposalDraft,
   saveEngagementQuote,
   saveConsultTranscripts,
+  savePandaDocRetainer,
   type PrepSubmission,
   setClientPasswordHash,
   updatePreMeetingDiscovery,
@@ -854,6 +855,95 @@ export async function deleteClientForAdmin(submissionId: string) {
     success: true,
     message: `Deleted all records for ${sub.name} (${sub.email}).`,
   };
+}
+
+/** Admin — PandaDoc integration configured? (never exposes secrets). */
+export async function getPandaDocIntegrationStatusForAdmin() {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const { getPandaDocConfigStatus } = await import('@/lib/pandadoc/config');
+  const status = getPandaDocConfigStatus();
+  if (!status.configured) {
+    return {
+      success: true as const,
+      configured: false as const,
+      missing: status.missing,
+    };
+  }
+
+  return {
+    success: true as const,
+    configured: true as const,
+    clientRole: status.config.clientRole,
+    contractorRole: status.config.contractorRole,
+    templateConfigured: true,
+  };
+}
+
+/**
+ * Phase 2C Step 1 — create a PandaDoc retainer draft from the saved template.
+ * Pre-fills client name, company, proposal date, and activation retainer amount.
+ * Does not send — open in PandaDoc to pre-sign, confirm payment, then send.
+ */
+export async function createPandaDocRetainerForAdmin(submissionId: string, clientCompany: string) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false as const, error: 'Submission not found.' };
+  }
+
+  const { getPandaDocConfigStatus, pandaDocDocumentEditUrl } = await import('@/lib/pandadoc/config');
+  const configStatus = getPandaDocConfigStatus();
+  if (!configStatus.configured) {
+    return {
+      success: false as const,
+      error: `PandaDoc is not configured. Add ${configStatus.missing.join(', ')} in Vercel, then redeploy.`,
+    };
+  }
+
+  const { buildRetainerDocumentRequest } = await import('@/lib/pandadoc/build-retainer-request');
+  const {
+    createDocumentFromTemplate,
+    waitForDocumentDraft,
+    formatPandaDocError,
+  } = await import('@/lib/pandadoc/client');
+  const { effectiveQuoteFees } = await import('@/lib/engagement-pricing');
+
+  try {
+    const body = buildRetainerDocumentRequest(sub, configStatus.config, clientCompany);
+    const created = await createDocumentFromTemplate(configStatus.config, body);
+    const draft = await waitForDocumentDraft(configStatus.config, created.id);
+    const activationFee = effectiveQuoteFees(sub.engagementQuote!).activationFee;
+
+    const retainer = {
+      documentId: draft.id,
+      documentName: draft.name || body.name,
+      status: draft.status,
+      createdAt: new Date().toISOString(),
+      activationFee,
+      editUrl: pandaDocDocumentEditUrl(draft.id),
+    };
+
+    const updated = await savePandaDocRetainer(submissionId, retainer, clientCompany);
+    if (!updated) {
+      return { success: false as const, error: 'Retainer created in PandaDoc but failed to save on client record.' };
+    }
+
+    return {
+      success: true as const,
+      submission: updated,
+      editUrl: retainer.editUrl,
+      message:
+        `PandaDoc retainer draft ready for ${sub.name}. Open in PandaDoc to pre-sign, confirm payment amount, then send.`,
+    };
+  } catch (err) {
+    return { success: false as const, error: formatPandaDocError(err) };
+  }
 }
 
 /** Client password sign-in — requires admin-granted portal access. */

@@ -75,6 +75,17 @@ export interface PrepSubmission {
   consult30Transcript?: string;
   /** Admin — 60-minute deep-dive transcript / meeting notes */
   consult60Transcript?: string;
+  /** Client legal entity / company name for agreements (admin or PandaDoc step). */
+  clientCompany?: string;
+  /** Phase 2C — PandaDoc engagement retainer draft linked to this client. */
+  pandadocRetainer?: {
+    documentId: string;
+    documentName: string;
+    status: string;
+    createdAt: string;
+    activationFee: number;
+    editUrl: string;
+  };
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -618,6 +629,25 @@ export async function saveConsultTranscripts(
     ...(transcripts.consult60Transcript !== undefined
       ? { consult60Transcript: transcripts.consult60Transcript }
       : {}),
+  };
+  await persist(all);
+  return all[idx];
+}
+
+/** Admin — link a PandaDoc retainer draft to the client record. */
+export async function savePandaDocRetainer(
+  id: string,
+  retainer: NonNullable<PrepSubmission['pandadocRetainer']>,
+  clientCompany?: string,
+): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  all[idx] = {
+    ...all[idx],
+    pandadocRetainer: retainer,
+    ...(clientCompany !== undefined ? { clientCompany: clientCompany.trim() || undefined } : {}),
   };
   await persist(all);
   return all[idx];
