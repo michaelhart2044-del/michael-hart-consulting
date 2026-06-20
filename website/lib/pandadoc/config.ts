@@ -6,10 +6,14 @@ export interface PandaDocConfig {
   clientRole: string;
   contractorRole: string;
   contractorEmail: string;
+  logoImageBlockName: string;
+  signatureImageBlockName?: string;
+  contractorDateFieldName?: string;
   tokenNames: {
     clientFirstName: string;
     clientLastName: string;
     clientCompany: string;
+    companyWebsite: string;
     proposalDate: string;
     retainerAmount: string;
   };
@@ -43,10 +47,14 @@ export function getPandaDocConfigStatus(): PandaDocConfigStatus {
       clientRole: process.env.PANDADOC_CLIENT_ROLE?.trim() || 'Customer',
       contractorRole: process.env.PANDADOC_CONTRACTOR_ROLE?.trim() || 'Contractor',
       contractorEmail: process.env.PANDADOC_CONTRACTOR_EMAIL?.trim() || site.email,
+      logoImageBlockName: process.env.PANDADOC_LOGO_IMAGE_BLOCK_NAME?.trim() || 'Image 1',
+      signatureImageBlockName: process.env.PANDADOC_SIGNATURE_IMAGE_BLOCK_NAME?.trim() || undefined,
+      contractorDateFieldName: process.env.PANDADOC_CONTRACTOR_DATE_FIELD?.trim() || undefined,
       tokenNames: {
         clientFirstName: readTokenName('PANDADOC_TOKEN_CLIENT_FIRST_NAME', 'Client.FirstName'),
         clientLastName: readTokenName('PANDADOC_TOKEN_CLIENT_LAST_NAME', 'Client.LastName'),
         clientCompany: readTokenName('PANDADOC_TOKEN_CLIENT_COMPANY', 'Client.Company'),
+        companyWebsite: readTokenName('PANDADOC_TOKEN_COMPANY_WEBSITE', '[Company website]'),
         proposalDate: readTokenName('PANDADOC_TOKEN_PROPOSAL_DATE', 'PROPOSAL DATE'),
         retainerAmount: readTokenName('PANDADOC_TOKEN_RETAINER_AMOUNT', 'RETAINER AMOUNT'),
       },

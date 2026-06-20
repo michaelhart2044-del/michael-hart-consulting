@@ -1,6 +1,7 @@
 import type { PrepSubmission } from '@/lib/submissions-store';
 import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
 import { splitFullName } from '@/lib/split-full-name';
+import { site } from '@/lib/site';
 import type { PandaDocConfig } from '@/lib/pandadoc/config';
 import type { PandaDocCreateDocumentBody } from '@/lib/pandadoc/client';
 
@@ -10,6 +11,59 @@ function formatProposalDate(date = new Date()): string {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+function absoluteAssetUrl(path: string): string {
+  const base = site.url.replace(/\/$/, '');
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${normalized}`;
+}
+
+/** PandaDoc token names must match the template exactly — send common aliases. */
+function tokenVariants(primary: string, aliases: string[]): string[] {
+  return [...new Set([primary, ...aliases].filter(Boolean))];
+}
+
+function buildTokens(
+  config: PandaDocConfig,
+  values: {
+    firstName: string;
+    lastName: string;
+    company: string;
+    website: string;
+    proposalDate: string;
+    retainerAmount: string;
+  },
+): Array<{ name: string; value: string }> {
+  const entries: Array<{ name: string; value: string }> = [];
+
+  const add = (names: string[], value: string) => {
+    for (const name of names) {
+      entries.push({ name, value });
+    }
+  };
+
+  add(tokenVariants(config.tokenNames.clientFirstName, ['Customer.FirstName']), values.firstName);
+  add(tokenVariants(config.tokenNames.clientLastName, ['Customer.LastName']), values.lastName);
+  add(tokenVariants(config.tokenNames.clientCompany, ['Customer.Company']), values.company);
+  add(
+    tokenVariants(config.tokenNames.companyWebsite, ['Company website', '[Company website]']),
+    values.website,
+  );
+  add(
+    tokenVariants(config.tokenNames.proposalDate, ['[PROPOSAL DATE]', 'Proposal Date']),
+    values.proposalDate,
+  );
+  add(
+    tokenVariants(config.tokenNames.retainerAmount, [
+      '[RETAINER AMOUNT]',
+      'Retainer Amount',
+      'retainer amount',
+    ]),
+    values.retainerAmount,
+  );
+
+  return entries;
 }
 
 export function buildRetainerDocumentRequest(
@@ -29,6 +83,29 @@ export function buildRetainerDocumentRequest(
 
   const company = clientCompany.trim() || submission.clientCompany?.trim() || submission.industry.trim();
   const documentName = `Engagement Activation Retainer — ${submission.name}`;
+  const retainerFormatted = formatUsd(activationFee);
+  const retainerNumeric = String(activationFee);
+
+  const images: Array<{ name: string; urls: string[] }> = [
+    {
+      name: config.logoImageBlockName,
+      urls: [absoluteAssetUrl(site.logo)],
+    },
+  ];
+
+  if (config.signatureImageBlockName) {
+    images.push({
+      name: config.signatureImageBlockName,
+      urls: [absoluteAssetUrl('/brand/signature-michael-hart.png')],
+    });
+  }
+
+  const fields: Record<string, { value: string | number | boolean }> = {};
+  if (config.contractorDateFieldName) {
+    fields[config.contractorDateFieldName] = {
+      value: new Date().toISOString(),
+    };
+  }
 
   return {
     name: documentName,
@@ -49,13 +126,19 @@ export function buildRetainerDocumentRequest(
         signing_order: 2,
       },
     ],
-    tokens: [
-      { name: config.tokenNames.clientFirstName, value: firstName || submission.name },
-      { name: config.tokenNames.clientLastName, value: lastName || ' ' },
-      { name: config.tokenNames.clientCompany, value: company },
-      { name: config.tokenNames.proposalDate, value: formatProposalDate() },
-      { name: config.tokenNames.retainerAmount, value: formatUsd(activationFee) },
-    ],
+    tokens: buildTokens(config, {
+      firstName: firstName || submission.name,
+      lastName: lastName || ' ',
+      company,
+      website: site.url,
+      proposalDate: formatProposalDate(),
+      retainerAmount: retainerFormatted,
+    }).concat([
+      // Some templates use a plain numeric token for payment display.
+      { name: 'RETAINER AMOUNT NUMERIC', value: retainerNumeric },
+    ]),
+    fields: Object.keys(fields).length > 0 ? fields : undefined,
+    images,
     metadata: {
       mh_submission_id: submission.id,
       mh_client_email: submission.email,

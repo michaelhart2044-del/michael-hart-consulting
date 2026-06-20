@@ -13,6 +13,8 @@ export interface PandaDocCreateDocumentBody {
     signing_order?: number;
   }>;
   tokens: Array<{ name: string; value: string }>;
+  fields?: Record<string, { value: string | number | boolean }>;
+  images?: Array<{ name: string; urls: string[] }>;
   metadata?: Record<string, string>;
   tags?: string[];
 }

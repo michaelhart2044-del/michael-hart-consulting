@@ -81,8 +81,9 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
         <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 2C — Step 1</div>
         <h2 className="font-semibold text-lg mt-0.5">PandaDoc Retainer Agreement</h2>
         <p className="text-sm text-[#94a3b8] mt-1">
-          Creates a draft from your saved template with client name, company, proposal date, and activation retainer
-          pre-filled. Open in PandaDoc to pre-sign, confirm payment, then send — the site does not send automatically.
+          Creates a draft from your saved template with client name, company, website, logo, proposal date, and
+          activation retainer pre-filled. Open in PandaDoc to add your signature (if not already on the template),
+          confirm payment, then send — the site does not send automatically.
         </p>
       </div>
 
@@ -122,6 +123,7 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
           <div className="text-[10px] uppercase tracking-wider text-[#64748b]">Will pre-fill</div>
           <div className="text-[#e2e8f0]">{submission.name}</div>
           <div className="text-[#94a3b8]">{submission.email}</div>
+          <div className="text-[#94a3b8]">Website: michaelhartconsulting.com</div>
           {fees ? (
             <div className="text-[#c5a46e]">Retainer: {formatUsd(fees.activationFee)}</div>
           ) : (
@@ -165,7 +167,8 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
       )}
 
       <ol className="text-xs text-[#64748b] list-decimal list-inside space-y-1">
-        <li>Pre-sign your fields in PandaDoc (Draft)</li>
+        <li>Logo and website fill from your MH site; retainer amount uses several token names for the template</li>
+        <li>Sign your contractor fields once in PandaDoc (signature fields cannot be filled by API)</li>
         <li>Confirm Collect payment amount matches the retainer above</li>
         <li>Send to client — they sign and pay in PandaDoc</li>
         <li>Mark Step 8 below when complete (Step 2 will automate this)</li>
