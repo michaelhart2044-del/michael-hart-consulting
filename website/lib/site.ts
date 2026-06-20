@@ -1,7 +1,7 @@
 export const site = {
   name: "Michael Hart Consulting Group LLC",
   legalName: "Michael Hart Consulting Group LLC",
-  url: "https://michaelhartconsulting.com",
+  url: "https://www.michaelhartconsulting.com",
   email: "michael@michaelhartconsulting.com",
   // Verified Resend sender for all outbound transactional email
   resendFromEmail: "onboarding@michaelhartconsulting.com",

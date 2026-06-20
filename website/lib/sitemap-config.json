@@ -1,0 +1,26 @@
+{
+  "marketing": [
+    { "path": "", "priority": "1.0", "changefreq": "monthly" },
+    { "path": "/about", "priority": "0.8", "changefreq": "monthly" },
+    { "path": "/prepare-analysis", "priority": "0.9", "changefreq": "monthly" },
+    { "path": "/contact", "priority": "0.7", "changefreq": "monthly" },
+    { "path": "/privacy-policy", "priority": "0.3", "changefreq": "yearly" },
+    { "path": "/terms-of-service", "priority": "0.3", "changefreq": "yearly" },
+    { "path": "/services", "priority": "0.7", "changefreq": "monthly" },
+    { "path": "/industries", "priority": "0.7", "changefreq": "monthly" }
+  ],
+  "serviceSlugs": [
+    "forensic-accounting-litigation-support",
+    "business-setup-structuring",
+    "mergers-acquisitions-advisory",
+    "financial-forecasting-strategy",
+    "ai-automation-solutions",
+    "website-design-development",
+    "revenue-accounting-compliance",
+    "month-end-close-reporting",
+    "sox-controls-audit-support",
+    "process-automation-finance-transformation",
+    "ai-assisted-software-development",
+    "finance-function-transformation"
+  ]
+}
