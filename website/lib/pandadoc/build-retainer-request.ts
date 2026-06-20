@@ -28,15 +28,22 @@ function tokenVariants(primary: string, aliases: string[]): string[] {
   return [...new Set([primary, ...aliases].filter(Boolean))];
 }
 
+function formatRetainerAmount(amount: number): string {
+  // Template already includes "$" before the token — send digits only.
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(amount);
+}
+
 function buildTokens(
   config: PandaDocConfig,
   values: {
     firstName: string;
     lastName: string;
     company: string;
+    email: string;
     website: string;
     proposalDate: string;
     retainerAmount: string;
+    retainerAmountWithCurrency: string;
   },
 ): Array<{ name: string; value: string }> {
   const entries: Array<{ name: string; value: string }> = [];
@@ -49,7 +56,8 @@ function buildTokens(
 
   add(tokenVariants(config.tokenNames.clientFirstName, ['Customer.FirstName']), values.firstName);
   add(tokenVariants(config.tokenNames.clientLastName, ['Customer.LastName']), values.lastName);
-  add(tokenVariants(config.tokenNames.clientCompany, ['Customer.Company']), values.company);
+  add(tokenVariants(config.tokenNames.clientCompany, ['Customer.Company', 'Client.Company']), values.company);
+  add(['Client.Email', 'Customer.Email'], values.email);
   add(
     tokenVariants(config.tokenNames.companyWebsite, ['Company website', '[Company website]']),
     values.website,
@@ -66,6 +74,7 @@ function buildTokens(
     ]),
     values.retainerAmount,
   );
+  add(['RETAINER AMOUNT WITH $', 'Retainer Amount (formatted)'], values.retainerAmountWithCurrency);
 
   return entries;
 }
@@ -142,6 +151,7 @@ export async function buildRetainerDocumentRequest(
 
   const company = clientCompany.trim() || submission.clientCompany?.trim() || submission.industry.trim();
   const documentName = `Engagement Activation Retainer — ${submission.name}`;
+  const retainerPlain = formatRetainerAmount(activationFee);
   const retainerFormatted = formatUsd(activationFee);
   const retainerNumeric = String(activationFee);
 
@@ -177,11 +187,12 @@ export async function buildRetainerDocumentRequest(
       firstName: firstName || submission.name,
       lastName: lastName || ' ',
       company,
+      email: submission.email,
       website: site.url,
       proposalDate: formatProposalDate(),
-      retainerAmount: retainerFormatted,
+      retainerAmount: retainerPlain,
+      retainerAmountWithCurrency: retainerFormatted,
     }).concat([
-      // Some templates use a plain numeric token for payment display.
       { name: 'RETAINER AMOUNT NUMERIC', value: retainerNumeric },
     ]),
     fields: Object.keys(fields).length > 0 ? fields : undefined,
