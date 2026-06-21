@@ -205,7 +205,12 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
           {company.trim() && <div className="text-[#94a3b8]">{company.trim()}</div>}
           <div className="text-[#94a3b8]">Website: michaelhartconsulting.com</div>
           {fees ? (
-            <div className="text-[#c5a46e]">Retainer: {formatUsd(fees.activationFee)}</div>
+            <>
+              <div className="text-[#c5a46e]">Retainer: {formatUsd(fees.activationFee)}</div>
+              <div className="text-[#94a3b8]">Total Phase 1: {formatUsd(fees.totalFee)}</div>
+              <div className="text-[#94a3b8]">Balance at delivery: {formatUsd(fees.balanceDue)}</div>
+              <div className="text-[#64748b]">{fees.creditPercent}% activation credited</div>
+            </>
           ) : (
             <div className="text-amber-200">Save Engagement Economics quote first</div>
           )}

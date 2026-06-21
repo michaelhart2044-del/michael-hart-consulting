@@ -29,9 +29,13 @@ function tokenVariants(primary: string, aliases: string[]): string[] {
   return [...new Set([primary, ...aliases].filter(Boolean))];
 }
 
-function formatRetainerAmount(amount: number): string {
+function formatDollarTokenAmount(amount: number): string {
   // Template already includes "$" before the token — send digits only.
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(amount);
+}
+
+function formatRetainerAmount(amount: number): string {
+  return formatDollarTokenAmount(amount);
 }
 
 function buildTokens(
@@ -49,6 +53,9 @@ function buildTokens(
     proposalDate: string;
     retainerAmount: string;
     retainerAmountWithCurrency: string;
+    totalPhase1Fee: string;
+    balanceDueAtDelivery: string;
+    activationCredited: string;
   },
 ): Array<{ name: string; value: string }> {
   const entries: Array<{ name: string; value: string }> = [];
@@ -111,6 +118,23 @@ function buildTokens(
     values.retainerAmount,
   );
   add(['RETAINER AMOUNT WITH $', 'Retainer Amount (formatted)'], values.retainerAmountWithCurrency);
+  add(
+    tokenVariants('TOTAL PHASE 1 FEE', ['[TOTAL PHASE 1 FEE]', 'Total Phase 1 Fee']),
+    values.totalPhase1Fee,
+  );
+  add(
+    tokenVariants('BALANCE DUE AT DELIVERY', [
+      '[BALANCE DUE AT DELIVERY]',
+      'Balance Due at Delivery',
+    ]),
+    values.balanceDueAtDelivery,
+  );
+  add(
+    tokenVariants('ACTIVATION CREDITED', ['[ACTIVATION CREDITED]', 'Activation Credited']),
+    values.activationCredited,
+  );
+  add(['Contractor.FirstName', '[Contractor.FirstName]'], 'Michael');
+  add(['Contractor.LastName', '[Contractor.LastName]'], 'Hart');
 
   return entries;
 }
@@ -181,9 +205,14 @@ export async function buildRetainerDocumentRequest(
   }
 
   const { firstName, lastName } = splitFullName(submission.name);
-  const { activationFee } = effectiveQuoteFees(submission.engagementQuote);
+  const { activationFee, totalFee, balanceDue, creditPercent } = effectiveQuoteFees(
+    submission.engagementQuote,
+  );
   if (!Number.isFinite(activationFee) || activationFee <= 0) {
     throw new Error('Activation retainer amount must be greater than $0.');
+  }
+  if (!Number.isFinite(totalFee) || totalFee <= 0) {
+    throw new Error('Total Phase 1 fee must be greater than $0.');
   }
 
   const company =
@@ -202,6 +231,9 @@ export async function buildRetainerDocumentRequest(
   const retainerPlain = formatRetainerAmount(activationFee);
   const retainerFormatted = formatUsd(activationFee);
   const retainerNumeric = String(activationFee);
+  const totalPhase1Plain = formatDollarTokenAmount(totalFee);
+  const balanceDuePlain = formatDollarTokenAmount(balanceDue);
+  const activationCredited = `${creditPercent}%`;
 
   const images = await buildRetainerImages(config);
 
@@ -244,6 +276,9 @@ export async function buildRetainerDocumentRequest(
       proposalDate: formatProposalDate(),
       retainerAmount: retainerPlain,
       retainerAmountWithCurrency: retainerFormatted,
+      totalPhase1Fee: totalPhase1Plain,
+      balanceDueAtDelivery: balanceDuePlain,
+      activationCredited,
     }).concat([
       { name: 'RETAINER AMOUNT NUMERIC', value: retainerNumeric },
     ]),
