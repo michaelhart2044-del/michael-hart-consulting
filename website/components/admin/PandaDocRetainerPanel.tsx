@@ -74,6 +74,15 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
         setPanelMessage(res.message);
         setPanelIsError(false);
         onStatus(res.message);
+        if (res.editUrl) {
+          const opened = window.open(res.editUrl, '_blank', 'noopener,noreferrer');
+          if (!opened) {
+            const popupNote =
+              ' Popup blocked — use Open latest draft in PandaDoc below.';
+            setPanelMessage(res.message + popupNote);
+            onStatus(res.message + popupNote);
+          }
+        }
       } else {
         const err = res.error || 'PandaDoc request failed.';
         setPanelMessage(err);
@@ -100,7 +109,7 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
         <h2 className="font-semibold text-lg mt-0.5">PandaDoc Retainer Agreement</h2>
         <p className="text-sm text-[#94a3b8] mt-1">
           Creates a draft from your saved template with client name, company, address, website, and activation
-          retainer pre-filled. Open in PandaDoc to sign, confirm payment, then send — the site does not send
+          retainer pre-filled, then opens PandaDoc in a new tab. Sign, confirm payment, then send — the site does not send
           automatically.
         </p>
       </div>
