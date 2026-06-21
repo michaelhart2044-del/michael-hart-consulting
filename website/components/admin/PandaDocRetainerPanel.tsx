@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { PrepSubmission } from '@/lib/submissions-store';
 import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
 import {
+  createPandaDocFinalBalanceForAdmin,
   createPandaDocRetainerForAdmin,
+  getPandaDocBalanceIntegrationStatusForAdmin,
   getPandaDocIntegrationStatusForAdmin,
 } from '@/app/actions';
 import { PANDADOC_RETAINER_SEND_MESSAGE } from '@/lib/pandadoc/send-message';
@@ -27,17 +29,27 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
   const [state, setState] = useState(() => submission.clientState || '');
   const [postalCode, setPostalCode] = useState(() => submission.clientPostalCode || '');
   const [creating, setCreating] = useState(false);
+  const [creatingBalance, setCreatingBalance] = useState(false);
   const [configured, setConfigured] = useState<boolean | null>(null);
+  const [balanceConfigured, setBalanceConfigured] = useState<boolean | null>(null);
   const [missingEnv, setMissingEnv] = useState<string[]>([]);
+  const [balanceMissingEnv, setBalanceMissingEnv] = useState<string[]>([]);
   const [panelMessage, setPanelMessage] = useState('');
   const [panelIsError, setPanelIsError] = useState(false);
 
   useEffect(() => {
     queueMicrotask(async () => {
-      const res = await getPandaDocIntegrationStatusForAdmin();
-      if (res.success) {
-        setConfigured(res.configured);
-        setMissingEnv(res.configured ? [] : res.missing || []);
+      const [retainerRes, balanceRes] = await Promise.all([
+        getPandaDocIntegrationStatusForAdmin(),
+        getPandaDocBalanceIntegrationStatusForAdmin(),
+      ]);
+      if (retainerRes.success) {
+        setConfigured(retainerRes.configured);
+        setMissingEnv(retainerRes.configured ? [] : retainerRes.missing || []);
+      }
+      if (balanceRes.success) {
+        setBalanceConfigured(balanceRes.configured);
+        setBalanceMissingEnv(balanceRes.configured ? [] : balanceRes.missing || []);
       }
     });
   }, []);
@@ -53,7 +65,34 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
     !!fees &&
     fees.activationFee > 0 &&
     !creating &&
+    !creatingBalance &&
     company.trim().length > 0;
+
+  const canCreateBalance =
+    balanceConfigured === true &&
+    configured === true &&
+    !!submission.engagementQuote?.savedAt &&
+    !!submission.engagementCommittedAt &&
+    !!fees &&
+    fees.balanceDue > 0 &&
+    !creating &&
+    !creatingBalance &&
+    company.trim().length > 0;
+
+  function clientDetailsPayload() {
+    return { company, streetAddress, city, state, postalCode };
+  }
+
+  function openPandaDocTab(editUrl: string, baseMessage: string) {
+    const opened = window.open(editUrl, '_blank', 'noopener,noreferrer');
+    if (!opened) {
+      const popupNote = ' Popup blocked — use Open in PandaDoc below.';
+      setPanelMessage(baseMessage + popupNote);
+      onStatus(baseMessage + popupNote);
+      return baseMessage + popupNote;
+    }
+    return baseMessage;
+  }
 
   async function handleCreate() {
     if (!canCreate) return;
@@ -62,27 +101,15 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
     setPanelIsError(false);
 
     try {
-      const res = await createPandaDocRetainerForAdmin(submission.id, {
-        company,
-        streetAddress,
-        city,
-        state,
-        postalCode,
-      });
+      const res = await createPandaDocRetainerForAdmin(submission.id, clientDetailsPayload());
       if (res.success) {
         onUpdated(res.submission);
-        setPanelMessage(res.message);
+        const message = res.editUrl
+          ? openPandaDocTab(res.editUrl, res.message)
+          : res.message;
+        setPanelMessage(message);
         setPanelIsError(false);
-        onStatus(res.message);
-        if (res.editUrl) {
-          const opened = window.open(res.editUrl, '_blank', 'noopener,noreferrer');
-          if (!opened) {
-            const popupNote =
-              ' Popup blocked — use Open latest draft in PandaDoc below.';
-            setPanelMessage(res.message + popupNote);
-            onStatus(res.message + popupNote);
-          }
-        }
+        onStatus(message);
       } else {
         const err = res.error || 'PandaDoc request failed.';
         setPanelMessage(err);
@@ -99,14 +126,49 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
     }
   }
 
+  async function handleCreateBalance() {
+    if (!canCreateBalance) return;
+    setCreatingBalance(true);
+    setPanelMessage('');
+    setPanelIsError(false);
+
+    try {
+      const res = await createPandaDocFinalBalanceForAdmin(
+        submission.id,
+        clientDetailsPayload(),
+      );
+      if (res.success) {
+        onUpdated(res.submission);
+        const message = res.editUrl
+          ? openPandaDocTab(res.editUrl, res.message)
+          : res.message;
+        setPanelMessage(message);
+        setPanelIsError(false);
+        onStatus(message);
+      } else {
+        const err = res.error || 'PandaDoc invoice request failed.';
+        setPanelMessage(err);
+        setPanelIsError(true);
+        onStatus(err, true);
+      }
+    } catch {
+      const err = 'Request failed — try again. If env vars were just added in Vercel, redeploy first.';
+      setPanelMessage(err);
+      setPanelIsError(true);
+      onStatus(err, true);
+    } finally {
+      setCreatingBalance(false);
+    }
+  }
+
   const inputClass =
     'w-full bg-[#111827] border border-white/20 rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#c5a46e]';
 
   return (
     <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-5">
       <div>
-        <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 2C — Step 1</div>
-        <h2 className="font-semibold text-lg mt-0.5">PandaDoc Retainer Agreement</h2>
+        <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 2C — PandaDoc</div>
+        <h2 className="font-semibold text-lg mt-0.5">Retainer & Final Balance</h2>
         <p className="text-sm text-[#94a3b8] mt-1">
           Creates a draft from your saved template with client name, company, address, website, and activation
           retainer pre-filled, then opens PandaDoc in a new tab. Sign, confirm payment, then send — the site does not send
@@ -118,6 +180,14 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
         <div className="rounded-lg border border-amber-500/30 bg-amber-900/10 px-4 py-3 text-sm text-amber-100">
           Add these in Vercel → Settings → Environment Variables, then <strong>Redeploy</strong> (required):{' '}
           <span className="font-mono text-xs">{missingEnv.join(', ')}</span>
+        </div>
+      )}
+
+      {balanceConfigured === false && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-900/10 px-4 py-3 text-sm text-amber-100">
+          Final balance invoice: add{' '}
+          <span className="font-mono text-xs">{balanceMissingEnv.join(', ')}</span> in Vercel, then{' '}
+          <strong>Redeploy</strong>.
         </div>
       )}
 
@@ -224,7 +294,7 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
           disabled={!canCreate}
           className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
         >
-          {creating ? 'Creating in PandaDoc…' : 'Create retainer draft in PandaDoc'}
+          {creating ? 'Creating…' : '1. Create Activation Retainer'}
         </button>
 
         {submission.pandadocRetainer && (
@@ -234,8 +304,41 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
             rel="noopener noreferrer"
             className="px-5 py-2 text-sm rounded-full border border-[#c5a46e]/50 text-[#c5a46e] hover:bg-[#c5a46e]/10"
           >
-            Open latest draft in PandaDoc
+            Open retainer draft
           </a>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-white/10">
+        <button
+          type="button"
+          onClick={handleCreateBalance}
+          disabled={!canCreateBalance}
+          className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
+          title={
+            !submission.engagementCommittedAt
+              ? 'Mark Step 8 first'
+              : !fees?.balanceDue
+                ? 'Balance due must be greater than $0'
+                : undefined
+          }
+        >
+          {creatingBalance ? 'Creating…' : '2. Generate Final Balance Invoice'}
+        </button>
+
+        {submission.pandadocFinalBalance && (
+          <a
+            href={submission.pandadocFinalBalance.editUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-2 text-sm rounded-full border border-[#c5a46e]/50 text-[#c5a46e] hover:bg-[#c5a46e]/10"
+          >
+            Open invoice draft
+          </a>
+        )}
+
+        {!submission.engagementCommittedAt && (
+          <span className="text-xs text-[#64748b]">Requires Step 8 (retainer signed & paid)</span>
         )}
       </div>
 
@@ -260,12 +363,26 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
         </div>
       )}
 
+      {submission.pandadocFinalBalance && (
+        <div className="rounded-lg border border-sky-500/20 bg-sky-900/10 px-4 py-3 text-xs text-sky-100 space-y-1">
+          <div>
+            Invoice linked — {new Date(submission.pandadocFinalBalance.createdAt).toLocaleString()}
+          </div>
+          <div className="text-[#94a3b8]">
+            {formatUsd(submission.pandadocFinalBalance.balanceDue)} · status{' '}
+            {submission.pandadocFinalBalance.status}
+          </div>
+          <div className="text-[#64748b] font-mono break-all">
+            {submission.pandadocFinalBalance.documentId}
+          </div>
+        </div>
+      )}
+
       <ol className="text-xs text-[#64748b] list-decimal list-inside space-y-1">
-        <li>Template variables must use [Client.Company] format (same as [Company website])</li>
-        <li>Sign your contractor fields in PandaDoc before sending (signatures cannot be filled by API)</li>
-        <li>Confirm Collect payment amount matches the retainer above</li>
-        <li>Send to client — they sign and pay in PandaDoc</li>
-        <li>Mark Step 8 below when complete, then grant portal access within {PORTAL_ACCESS_SLA} (Step 2 will automate Step 8)</li>
+        <li>Retainer: sign contractor fields, confirm Collect = activation fee, send to client</li>
+        <li>Mark Step 8 when retainer is signed and paid</li>
+        <li>After delivery: Generate Final Balance — confirm Collect = balance due, then send</li>
+        <li>Grant portal access within {PORTAL_ACCESS_SLA} after Step 8 (Step 2 will automate)</li>
       </ol>
     </section>
   );

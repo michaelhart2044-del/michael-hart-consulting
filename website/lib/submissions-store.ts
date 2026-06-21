@@ -91,6 +91,15 @@ export interface PrepSubmission {
     activationFee: number;
     editUrl: string;
   };
+  /** Phase 2C — final balance services invoice (balance due at delivery). */
+  pandadocFinalBalance?: {
+    documentId: string;
+    documentName: string;
+    status: string;
+    createdAt: string;
+    balanceDue: number;
+    editUrl: string;
+  };
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -660,6 +669,76 @@ export async function savePandaDocRetainer(
   all[idx] = {
     ...all[idx],
     pandadocRetainer: retainer,
+    ...(clientDetails?.company !== undefined ? { clientCompany: trim(clientDetails.company) } : {}),
+    ...(clientDetails?.streetAddress !== undefined
+      ? { clientStreetAddress: trim(clientDetails.streetAddress) }
+      : {}),
+    ...(clientDetails?.city !== undefined ? { clientCity: trim(clientDetails.city) } : {}),
+    ...(clientDetails?.state !== undefined ? { clientState: trim(clientDetails.state) } : {}),
+    ...(clientDetails?.postalCode !== undefined
+      ? { clientPostalCode: trim(clientDetails.postalCode) }
+      : {}),
+  };
+  await persist(all);
+  return all[idx];
+}
+
+/** Admin — link a PandaDoc final balance invoice draft to the client record. */
+export async function savePandaDocFinalBalance(
+  id: string,
+  invoice: NonNullable<PrepSubmission['pandadocFinalBalance']>,
+  clientDetails?: {
+    company?: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  const trim = (v?: string) => v?.trim() || undefined;
+
+  all[idx] = {
+    ...all[idx],
+    pandadocFinalBalance: invoice,
+    ...(clientDetails?.company !== undefined ? { clientCompany: trim(clientDetails.company) } : {}),
+    ...(clientDetails?.streetAddress !== undefined
+      ? { clientStreetAddress: trim(clientDetails.streetAddress) }
+      : {}),
+    ...(clientDetails?.city !== undefined ? { clientCity: trim(clientDetails.city) } : {}),
+    ...(clientDetails?.state !== undefined ? { clientState: trim(clientDetails.state) } : {}),
+    ...(clientDetails?.postalCode !== undefined
+      ? { clientPostalCode: trim(clientDetails.postalCode) }
+      : {}),
+  };
+  await persist(all);
+  return all[idx];
+}
+
+/** Admin — link a PandaDoc final balance invoice draft to the client record. */
+export async function savePandaDocFinalBalance(
+  id: string,
+  invoice: NonNullable<PrepSubmission['pandadocFinalBalance']>,
+  clientDetails?: {
+    company?: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  const trim = (v?: string) => v?.trim() || undefined;
+
+  all[idx] = {
+    ...all[idx],
+    pandadocFinalBalance: invoice,
     ...(clientDetails?.company !== undefined ? { clientCompany: trim(clientDetails.company) } : {}),
     ...(clientDetails?.streetAddress !== undefined
       ? { clientStreetAddress: trim(clientDetails.streetAddress) }

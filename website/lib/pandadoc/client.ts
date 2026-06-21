@@ -15,6 +15,15 @@ export interface PandaDocCreateDocumentBody {
   tokens: Array<{ name: string; value: string }>;
   fields?: Record<string, { value: string | number | boolean }>;
   images?: Array<{ name: string; urls: string[] }>;
+  pricing_tables?: Array<{
+    name: string;
+    data_merge?: boolean;
+    sections: Array<{
+      title: string;
+      default: boolean;
+      rows: Array<{ data: Record<string, string | number> }>;
+    }>;
+  }>;
   metadata?: Record<string, string>;
   tags?: string[];
 }

@@ -66,3 +66,44 @@ export function getPandaDocConfigStatus(): PandaDocConfigStatus {
 export function pandaDocDocumentEditUrl(documentId: string): string {
   return `https://app.pandadoc.com/a/#/documents/${documentId}`;
 }
+
+export interface PandaDocBalanceConfig {
+  apiKey: string;
+  templateUuid: string;
+  senderRole: string;
+  clientRole: string;
+  senderEmail: string;
+  pricingTableName: string;
+  logoImageBlockName?: string;
+}
+
+export type PandaDocBalanceConfigStatus =
+  | { configured: true; config: PandaDocBalanceConfig }
+  | { configured: false; missing: string[] };
+
+export function getPandaDocBalanceConfigStatus(): PandaDocBalanceConfigStatus {
+  const missing: string[] = [];
+  const apiKey = process.env.PANDADOC_API_KEY?.trim();
+  const templateUuid = process.env.PANDADOC_TEMPLATE_BALANCE_UUID?.trim();
+
+  if (!apiKey) missing.push('PANDADOC_API_KEY');
+  if (!templateUuid) missing.push('PANDADOC_TEMPLATE_BALANCE_UUID');
+
+  if (missing.length > 0) {
+    return { configured: false, missing };
+  }
+
+  return {
+    configured: true,
+    config: {
+      apiKey: apiKey!,
+      templateUuid: templateUuid!,
+      senderRole: process.env.PANDADOC_INVOICE_SENDER_ROLE?.trim() || 'Sender',
+      clientRole: process.env.PANDADOC_INVOICE_CLIENT_ROLE?.trim() || 'Client',
+      senderEmail: process.env.PANDADOC_CONTRACTOR_EMAIL?.trim() || site.email,
+      pricingTableName:
+        process.env.PANDADOC_BALANCE_PRICING_TABLE_NAME?.trim() || 'Pricing Table 1',
+      logoImageBlockName: process.env.PANDADOC_LOGO_IMAGE_BLOCK_NAME?.trim() || undefined,
+    },
+  };
+}

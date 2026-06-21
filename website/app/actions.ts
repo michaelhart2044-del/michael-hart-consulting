@@ -24,6 +24,7 @@ import {
   saveEngagementQuote,
   saveConsultTranscripts,
   savePandaDocRetainer,
+  savePandaDocFinalBalance,
   type PrepSubmission,
   setClientPasswordHash,
   updatePreMeetingDiscovery,
@@ -886,6 +887,31 @@ export async function getPandaDocIntegrationStatusForAdmin() {
   };
 }
 
+/** Admin — PandaDoc Services Invoice / final balance template configured? */
+export async function getPandaDocBalanceIntegrationStatusForAdmin() {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const { getPandaDocBalanceConfigStatus } = await import('@/lib/pandadoc/config');
+  const status = getPandaDocBalanceConfigStatus();
+  if (!status.configured) {
+    return {
+      success: true as const,
+      configured: false as const,
+      missing: status.missing,
+    };
+  }
+
+  return {
+    success: true as const,
+    configured: true as const,
+    senderRole: status.config.senderRole,
+    clientRole: status.config.clientRole,
+    templateConfigured: true,
+  };
+}
+
 /**
  * Phase 2C Step 1 — create a PandaDoc retainer draft from the saved template.
  * Pre-fills client name, company, proposal date, and activation retainer amount.
@@ -979,6 +1005,113 @@ export async function createPandaDocRetainerForAdmin(
       success: true as const,
       submission: updated,
       editUrl: retainer.editUrl,
+      message: readyMessage,
+    };
+  } catch (err) {
+    return { success: false as const, error: formatPandaDocError(err) };
+  }
+}
+
+/**
+ * Phase 2C — create a PandaDoc Services Invoice draft for the final balance due at delivery.
+ * Requires Step 8 and a saved engagement quote. Opens in PandaDoc for review and Collect setup.
+ */
+export async function createPandaDocFinalBalanceForAdmin(
+  submissionId: string,
+  clientDetailsInput: {
+    company: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const clientDetails = {
+    company: clientDetailsInput?.company ?? '',
+    streetAddress: clientDetailsInput?.streetAddress,
+    city: clientDetailsInput?.city,
+    state: clientDetailsInput?.state,
+    postalCode: clientDetailsInput?.postalCode,
+  };
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false as const, error: 'Submission not found.' };
+  }
+
+  const { getPandaDocConfigStatus, getPandaDocBalanceConfigStatus, pandaDocDocumentEditUrl } =
+    await import('@/lib/pandadoc/config');
+  const baseConfig = getPandaDocConfigStatus();
+  const balanceConfig = getPandaDocBalanceConfigStatus();
+
+  if (!baseConfig.configured) {
+    return {
+      success: false as const,
+      error: `PandaDoc API key missing. Add ${baseConfig.missing.join(', ')} in Vercel, then redeploy.`,
+    };
+  }
+
+  if (!balanceConfig.configured) {
+    return {
+      success: false as const,
+      error: `Final balance template not configured. Add ${balanceConfig.missing.join(', ')} in Vercel, then redeploy.`,
+    };
+  }
+
+  const { buildBalanceDocumentRequest } = await import('@/lib/pandadoc/build-balance-request');
+  const {
+    createDocumentFromTemplate,
+    waitForDocumentDraft,
+    formatPandaDocError,
+  } = await import('@/lib/pandadoc/client');
+  const { effectiveQuoteFees } = await import('@/lib/engagement-pricing');
+
+  try {
+    const body = await buildBalanceDocumentRequest(sub, balanceConfig.config, clientDetails);
+    const created = await createDocumentFromTemplate(baseConfig.config, body);
+    const { balanceDue } = effectiveQuoteFees(sub.engagementQuote!);
+
+    let status = created.status;
+    let readyMessage =
+      `Final balance invoice draft ready for ${sub.name}. Confirm Collect payment matches ${balanceDue} in PandaDoc, then send.`;
+
+    try {
+      const draft = await waitForDocumentDraft(baseConfig.config, created.id, {
+        maxAttempts: 8,
+        intervalMs: 1500,
+      });
+      status = draft.status;
+    } catch {
+      readyMessage =
+        `PandaDoc is still building the invoice for ${sub.name}. Refresh PandaDoc if the document is not editable yet.`;
+      status = created.status || 'document.uploaded';
+    }
+
+    const invoice = {
+      documentId: created.id,
+      documentName: created.name || body.name,
+      status,
+      createdAt: new Date().toISOString(),
+      balanceDue,
+      editUrl: pandaDocDocumentEditUrl(created.id),
+    };
+
+    const updated = await savePandaDocFinalBalance(submissionId, invoice, clientDetails);
+    if (!updated) {
+      return {
+        success: false as const,
+        error: 'Invoice created in PandaDoc but failed to save on client record.',
+      };
+    }
+
+    return {
+      success: true as const,
+      submission: updated,
+      editUrl: invoice.editUrl,
       message: readyMessage,
     };
   } catch (err) {
