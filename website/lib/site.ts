@@ -24,6 +24,8 @@ export const site = {
 
   // Brand logo (navbar, hero watermark, auth pages, favicon source)
   logo: "/mh-logo.png",
+  /** Smaller square logo for PandaDoc API image blocks (1024px site logo overflows cover MH_Logo). */
+  pandadocLogo: "/brand/mh-logo-pandadoc.png",
 
   // Open Graph image for metadata
   ogImage: "/og-image.png",

@@ -153,7 +153,8 @@ async function buildRetainerImages(
   if (logoBlockName && templateImageNames.has(logoBlockName)) {
     images.push({
       name: logoBlockName,
-      urls: [absoluteAssetUrl(site.logo)],
+      // PandaDoc scales from source pixel dimensions — use compact asset for cover MH_Logo.
+      urls: [absoluteAssetUrl(site.pandadocLogo)],
     });
   }
 
