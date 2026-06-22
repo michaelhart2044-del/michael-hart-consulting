@@ -10,6 +10,9 @@ import type {
 } from '@/lib/pandadoc/client';
 import { getTemplateDetails } from '@/lib/pandadoc/client';
 
+export const RETAINER_LINE_ITEM_NAME =
+  'Phase 1 activation retainer — Engagement Activation Retainer';
+
 function formatProposalDate(date = new Date()): string {
   return date.toLocaleDateString('en-US', {
     month: 'long',

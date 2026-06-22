@@ -958,7 +958,10 @@ export async function createPandaDocRetainerForAdmin(
     };
   }
 
-  const { buildRetainerDocumentRequest } = await import('@/lib/pandadoc/build-retainer-request');
+  const { buildRetainerDocumentRequest, RETAINER_LINE_ITEM_NAME } = await import(
+    '@/lib/pandadoc/build-retainer-request'
+  );
+  const { applyDocumentQuoteLineItem } = await import('@/lib/pandadoc/apply-document-quote-line-item');
   const {
     createDocumentFromTemplate,
     waitForDocumentDraft,
@@ -973,7 +976,7 @@ export async function createPandaDocRetainerForAdmin(
 
     let status = created.status;
     let readyMessage =
-      `PandaDoc retainer draft ready for ${sub.name}. Open in PandaDoc to pre-sign, confirm payment amount, then send.`;
+      `PandaDoc retainer draft ready for ${sub.name}. Collect amount should match ${activationFee} automatically — assign payer to Client, then send.`;
 
     try {
       const draft = await waitForDocumentDraft(configStatus.config, created.id, {
@@ -981,6 +984,22 @@ export async function createPandaDocRetainerForAdmin(
         intervalMs: 1500,
       });
       status = draft.status;
+
+      try {
+        const quoteApplied = await applyDocumentQuoteLineItem(
+          configStatus.config,
+          created.id,
+          RETAINER_LINE_ITEM_NAME,
+          activationFee,
+        );
+        if (!quoteApplied) {
+          readyMessage =
+            `PandaDoc retainer draft ready for ${sub.name}. Add a Quote/pricing table to the retainer template (like the invoice) so Collect auto-fills ${activationFee}, or enter it manually. Assign payer to Client before sending.`;
+        }
+      } catch {
+        readyMessage =
+          `PandaDoc retainer draft ready for ${sub.name}. Confirm Collect payment is ${activationFee} in PandaDoc (quote line may need manual entry), assign payer to Client, then send.`;
+      }
     } catch {
       readyMessage =
         `PandaDoc is still building the draft for ${sub.name} (this can take 30–60 seconds). Use Open in PandaDoc — refresh PandaDoc if the document is not editable yet.`;
@@ -1063,8 +1082,8 @@ export async function createPandaDocFinalBalanceForAdmin(
   }
 
   const { buildBalanceDocumentRequest } = await import('@/lib/pandadoc/build-balance-request');
+  const { applyDocumentQuoteLineItem } = await import('@/lib/pandadoc/apply-document-quote-line-item');
   const { BALANCE_LINE_ITEM_NAME } = await import('@/lib/pandadoc/build-balance-request');
-  const { applyBalanceQuoteLineItem } = await import('@/lib/pandadoc/apply-balance-quote');
   const {
     createDocumentFromTemplate,
     waitForDocumentDraft,
@@ -1089,12 +1108,16 @@ export async function createPandaDocFinalBalanceForAdmin(
       status = draft.status;
 
       try {
-        await applyBalanceQuoteLineItem(
+        const quoteApplied = await applyDocumentQuoteLineItem(
           baseConfig.config,
           created.id,
           BALANCE_LINE_ITEM_NAME,
           balanceDue,
         );
+        if (!quoteApplied) {
+          readyMessage =
+            `Final balance invoice draft ready for ${sub.name}. Confirm Collect payment is ${balanceDue} in PandaDoc, assign payer to Client, then send.`;
+        }
       } catch {
         readyMessage =
           `Final balance invoice draft ready for ${sub.name}. Line item may need manual entry in PandaDoc — confirm price is ${balanceDue}, then set Collect and send.`;
