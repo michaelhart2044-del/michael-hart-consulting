@@ -81,6 +81,50 @@ export type PandaDocBalanceConfigStatus =
   | { configured: true; config: PandaDocBalanceConfig }
   | { configured: false; missing: string[] };
 
+export interface PandaDocNdaConfig {
+  apiKey: string;
+  templateUuid: string;
+  /** PandaDoc default NDA roles — Owner (you) + Recipient (client). */
+  ownerRole: string;
+  recipientRole: string;
+  /** Fallback when template uses Contractor/Customer instead of Owner/Recipient. */
+  contractorRole: string;
+  clientRole: string;
+  contractorEmail: string;
+  logoImageBlockName?: string;
+}
+
+export type PandaDocNdaConfigStatus =
+  | { configured: true; config: PandaDocNdaConfig }
+  | { configured: false; missing: string[] };
+
+export function getPandaDocNdaConfigStatus(): PandaDocNdaConfigStatus {
+  const missing: string[] = [];
+  const apiKey = process.env.PANDADOC_API_KEY?.trim();
+  const templateUuid = process.env.PANDADOC_TEMPLATE_NDA_UUID?.trim();
+
+  if (!apiKey) missing.push('PANDADOC_API_KEY');
+  if (!templateUuid) missing.push('PANDADOC_TEMPLATE_NDA_UUID');
+
+  if (missing.length > 0) {
+    return { configured: false, missing };
+  }
+
+  return {
+    configured: true,
+    config: {
+      apiKey: apiKey!,
+      templateUuid: templateUuid!,
+      ownerRole: process.env.PANDADOC_NDA_OWNER_ROLE?.trim() || 'Owner',
+      recipientRole: process.env.PANDADOC_NDA_RECIPIENT_ROLE?.trim() || 'Recipient',
+      clientRole: process.env.PANDADOC_CLIENT_ROLE?.trim() || 'Customer',
+      contractorRole: process.env.PANDADOC_CONTRACTOR_ROLE?.trim() || 'Contractor',
+      contractorEmail: process.env.PANDADOC_CONTRACTOR_EMAIL?.trim() || site.email,
+      logoImageBlockName: process.env.PANDADOC_LOGO_IMAGE_BLOCK_NAME?.trim() || undefined,
+    },
+  };
+}
+
 export function getPandaDocBalanceConfigStatus(): PandaDocBalanceConfigStatus {
   const missing: string[] = [];
   const apiKey = process.env.PANDADOC_API_KEY?.trim();

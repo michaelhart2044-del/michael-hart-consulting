@@ -25,6 +25,7 @@ import {
   saveConsultTranscripts,
   savePandaDocRetainer,
   savePandaDocFinalBalance,
+  savePandaDocNda,
   type PrepSubmission,
   setClientPasswordHash,
   updatePreMeetingDiscovery,
@@ -910,6 +911,131 @@ export async function getPandaDocBalanceIntegrationStatusForAdmin() {
     clientRole: status.config.clientRole,
     templateConfigured: true,
   };
+}
+
+/** Admin — PandaDoc mutual NDA template configured? */
+export async function getPandaDocNdaIntegrationStatusForAdmin() {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const { getPandaDocNdaConfigStatus } = await import('@/lib/pandadoc/config');
+  const status = getPandaDocNdaConfigStatus();
+  if (!status.configured) {
+    return {
+      success: true as const,
+      configured: false as const,
+      missing: status.missing,
+    };
+  }
+
+  return {
+    success: true as const,
+    configured: true as const,
+    clientRole: status.config.recipientRole,
+    contractorRole: status.config.ownerRole,
+    templateConfigured: true,
+  };
+}
+
+/**
+ * Phase 2C — create a PandaDoc mutual NDA draft. Sign-only (no Collect payment).
+ * Send before or alongside proposal when sharing confidential materials.
+ */
+export async function createPandaDocNdaForAdmin(
+  submissionId: string,
+  clientDetailsInput: {
+    company: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const clientDetails = {
+    company: clientDetailsInput?.company ?? '',
+    streetAddress: clientDetailsInput?.streetAddress,
+    city: clientDetailsInput?.city,
+    state: clientDetailsInput?.state,
+    postalCode: clientDetailsInput?.postalCode,
+  };
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) {
+    return { success: false as const, error: 'Submission not found.' };
+  }
+
+  const { getPandaDocConfigStatus, getPandaDocNdaConfigStatus, pandaDocDocumentEditUrl } =
+    await import('@/lib/pandadoc/config');
+  const baseConfig = getPandaDocConfigStatus();
+  const ndaConfig = getPandaDocNdaConfigStatus();
+
+  if (!baseConfig.configured) {
+    return {
+      success: false as const,
+      error: `PandaDoc API key missing. Add ${baseConfig.missing.join(', ')} in Vercel, then redeploy.`,
+    };
+  }
+
+  if (!ndaConfig.configured) {
+    return {
+      success: false as const,
+      error: `NDA template not configured. Add ${ndaConfig.missing.join(', ')} in Vercel, then redeploy.`,
+    };
+  }
+
+  const { buildNdaDocumentRequest } = await import('@/lib/pandadoc/build-nda-request');
+  const {
+    createDocumentFromTemplate,
+    waitForDocumentDraft,
+    formatPandaDocError,
+  } = await import('@/lib/pandadoc/client');
+
+  try {
+    const body = await buildNdaDocumentRequest(sub, ndaConfig.config, clientDetails);
+    const created = await createDocumentFromTemplate(baseConfig.config, body);
+
+    let status = created.status;
+    let readyMessage = `NDA draft ready for ${sub.name}. Pre-sign as Owner, then send to Recipient — no payment step.`;
+
+    try {
+      const draft = await waitForDocumentDraft(baseConfig.config, created.id, {
+        maxAttempts: 8,
+        intervalMs: 1500,
+      });
+      status = draft.status;
+    } catch {
+      readyMessage =
+        `PandaDoc is still building the NDA for ${sub.name}. Refresh PandaDoc if the document is not editable yet.`;
+      status = created.status || 'document.uploaded';
+    }
+
+    const nda = {
+      documentId: created.id,
+      documentName: created.name || body.name,
+      status,
+      createdAt: new Date().toISOString(),
+      editUrl: pandaDocDocumentEditUrl(created.id),
+    };
+
+    const updated = await savePandaDocNda(submissionId, nda, clientDetails);
+    if (!updated) {
+      return { success: false as const, error: 'NDA created in PandaDoc but failed to save on client record.' };
+    }
+
+    return {
+      success: true as const,
+      submission: updated,
+      editUrl: nda.editUrl,
+      message: readyMessage,
+    };
+  } catch (err) {
+    return { success: false as const, error: formatPandaDocError(err) };
+  }
 }
 
 /**

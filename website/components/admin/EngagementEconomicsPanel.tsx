@@ -107,12 +107,12 @@ export default function EngagementEconomicsPanel({
   }
 
   return (
-    <section className="border border-[#c5a46e]/35 rounded-2xl bg-[#0a0f2c]/80 p-6 space-y-5">
+    <section id="phase-pricing" className="border border-[#c5a46e]/35 rounded-2xl bg-[#0a0f2c]/80 p-6 space-y-5 scroll-mt-24">
       <div>
-        <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Engagement Economics</div>
+        <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 2 — Pricing</div>
         <h2 className="font-semibold text-lg mt-0.5">Engagement Activation Index</h2>
         <p className="text-sm text-[#94a3b8] mt-1">
-          Auto-scored from Step 1 intake and Layer 2 transcript. Internal pricing — not included in the initial client proposal.
+          Auto-scored from intake and 30-min consult transcript. Internal pricing — not included in the initial client proposal.
         </p>
       </div>
 

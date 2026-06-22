@@ -233,7 +233,7 @@ function LayerCard({
     <div className={`rounded-xl border ${borderTone} bg-[#111827]/60 p-4`}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Layer {layer}</div>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase {layer}</div>
           <h3 className="font-semibold text-[#f1f5f9] mt-0.5">{title}</h3>
         </div>
         <StatusIcon status={summary} />
@@ -331,17 +331,17 @@ export default function ClientEvidenceTimeline({
   }
 
   return (
-    <section className="border border-[#c5a46e]/35 rounded-2xl bg-[#0f172a] p-6 space-y-5">
+    <section id="phase-intake" className="border border-[#c5a46e]/35 rounded-2xl bg-[#0f172a] p-6 space-y-5 scroll-mt-24">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h2 className="font-semibold text-lg text-[#c5a46e]">Client Evidence Timeline</h2>
+          <h2 className="font-semibold text-lg text-[#c5a46e]">Engagement Timeline</h2>
           <p className="text-sm text-[#94a3b8] mt-1 max-w-prose">
-            Five evidence layers for this engagement — intake through deep-dive. Paste Teams transcripts as they
+            Five phases for this engagement — intake through deep-dive. Paste Teams transcripts as they
             become available.
           </p>
         </div>
         <div className="text-xs text-[#64748b] shrink-0 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-          <span className="text-[#c5a46e] font-medium">{completedLayers}</span> of 5 layers complete
+          <span className="text-[#c5a46e] font-medium">{completedLayers}</span> of 5 phases complete
         </div>
       </div>
 
@@ -447,7 +447,7 @@ export default function ClientEvidenceTimeline({
             timestamp={formatTimestamp(submission.sentAt)}
           />
           <SubStep
-            label="Agreement signed & payment received (Step 8)"
+            label="Agreement signed & payment received"
             status={hasAccepted ? 'complete' : 'empty'}
             timestamp={formatTimestamp(submission.engagementCommittedAt)}
           />
@@ -515,7 +515,7 @@ export default function ClientEvidenceTimeline({
 
       <div className="pt-4 border-t border-[#c5a46e]/25 space-y-2">
         <p className="text-xs text-[#64748b] text-center max-w-prose mx-auto">
-          <span className="text-[#94a3b8] font-medium">Later in the engagement</span> — after Layers 4–5 (portal prep + 60-min deep dive).
+          <span className="text-[#94a3b8] font-medium">Later in the engagement</span> — after Phases 4–5 (portal prep + 60-min deep dive).
           Not part of the initial 30-min proposal flow.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

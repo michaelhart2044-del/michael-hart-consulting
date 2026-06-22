@@ -100,6 +100,14 @@ export interface PrepSubmission {
     balanceDue: number;
     editUrl: string;
   };
+  /** Phase 2C — mutual NDA draft (sign only, no payment). */
+  pandadocNda?: {
+    documentId: string;
+    documentName: string;
+    status: string;
+    createdAt: string;
+    editUrl: string;
+  };
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -669,6 +677,41 @@ export async function savePandaDocRetainer(
   all[idx] = {
     ...all[idx],
     pandadocRetainer: retainer,
+    ...(clientDetails?.company !== undefined ? { clientCompany: trim(clientDetails.company) } : {}),
+    ...(clientDetails?.streetAddress !== undefined
+      ? { clientStreetAddress: trim(clientDetails.streetAddress) }
+      : {}),
+    ...(clientDetails?.city !== undefined ? { clientCity: trim(clientDetails.city) } : {}),
+    ...(clientDetails?.state !== undefined ? { clientState: trim(clientDetails.state) } : {}),
+    ...(clientDetails?.postalCode !== undefined
+      ? { clientPostalCode: trim(clientDetails.postalCode) }
+      : {}),
+  };
+  await persist(all);
+  return all[idx];
+}
+
+/** Admin — link a PandaDoc mutual NDA draft to the client record. */
+export async function savePandaDocNda(
+  id: string,
+  nda: NonNullable<PrepSubmission['pandadocNda']>,
+  clientDetails?: {
+    company?: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  const trim = (v?: string) => v?.trim() || undefined;
+
+  all[idx] = {
+    ...all[idx],
+    pandadocNda: nda,
     ...(clientDetails?.company !== undefined ? { clientCompany: trim(clientDetails.company) } : {}),
     ...(clientDetails?.streetAddress !== undefined
       ? { clientStreetAddress: trim(clientDetails.streetAddress) }

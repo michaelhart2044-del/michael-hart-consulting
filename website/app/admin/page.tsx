@@ -19,6 +19,7 @@ import {
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
 import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
+import LoadedClientHeader from '@/components/admin/LoadedClientHeader';
 import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
 import PandaDocRetainerPanel from '@/components/admin/PandaDocRetainerPanel';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
@@ -85,8 +86,8 @@ export default function AdminProposalGenerator() {
     if (transcriptLen < 80) {
       blockers.push(
         transcriptLen === 0
-          ? 'Paste the 30-min transcript in Layer 2 (Client Evidence Timeline) — not the optional “Supplemental notes” box below.'
-          : `30-min transcript is too short (${transcriptLen} of 80 characters minimum). Use the Layer 2 field above Engagement Economics.`,
+          ? 'Paste the 30-min transcript in Phase 1 (Engagement Timeline) — not the optional “Supplemental notes” box below.'
+          : `30-min transcript is too short (${transcriptLen} of 80 characters minimum). Use the Phase 1 consult field above Engagement Economics.`,
       );
     }
     if (!loadedSub.engagementQuote?.savedAt) {
@@ -357,7 +358,7 @@ Best regards,`;
     setStatus('');
     const res = await markEngagementCommittedForAdmin(id);
     if (res.success) {
-      setStatus(res.message || 'Step 8 recorded.');
+      setStatus(res.message || 'Agreement & payment recorded.');
       if (loadedSub?.id === id) {
         setLoadedSub({
           ...loadedSub,
@@ -366,7 +367,7 @@ Best regards,`;
       }
       await refreshRecent();
     } else {
-      setStatus(res.error || 'Failed to mark Step 8');
+      setStatus(res.error || 'Failed to mark agreement & payment');
     }
     setBusyId(null);
     setTimeout(() => setStatus(''), 4000);
@@ -527,7 +528,7 @@ Best regards,`;
     }
     const res = await markPrepAsSent(loadedSub.id);
     if (res.success) {
-      setStatus('Marked as sent — Layer 3 updated.');
+      setStatus('Marked as sent — Phase 4 complete.');
       // refresh the recent list so the flag appears
       await refreshRecent();
       // update local loaded state
@@ -674,7 +675,7 @@ Best regards,`;
                   <span className="px-1.5 py-0.5 rounded bg-red-900/40 text-red-300 text-[10px]">1-HR CANCELED</span>
                 )}
                 {item.sentAt && <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">SENT</span>}
-                {item.engagementCommittedAt && <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">STEP 8</span>}
+                {item.engagementCommittedAt && <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">AGREEMENT</span>}
                 {item.portalAccessGrantedAt && item.mustChangePassword !== false && (
                   <span className="px-1.5 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[10px]">PORTAL — AWAITING LOGIN</span>
                 )}
@@ -706,6 +707,13 @@ Best regards,`;
       </section>
 
       {loadedSub && (
+        <LoadedClientHeader
+          submission={loadedSub}
+          consult30TranscriptLen={consult30Transcript.trim().length}
+        />
+      )}
+
+      {loadedSub && (
         <ClientEvidenceTimeline
           submission={loadedSub}
           consult30Transcript={consult30Transcript}
@@ -726,11 +734,20 @@ Best regards,`;
         />
       )}
 
-      {/* Layer 3 — Initial proposal (right after 30-min transcript) */}
       {loadedSub && (
-      <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-6">
+        <PandaDocRetainerPanel
+          key={loadedSub.id}
+          submission={loadedSub}
+          onUpdated={(sub) => setLoadedSub(sub)}
+          onStatus={(message, isError) => showStatus(message, isError)}
+        />
+      )}
+
+      {/* Phase 4 — Initial proposal */}
+      {loadedSub && (
+      <section id="phase-proposal" className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-6 scroll-mt-24">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Layer 3</div>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 4 — Proposal</div>
           <h2 className="font-semibold text-lg mt-0.5">Initial Proposal</h2>
           <p className="text-sm text-[#94a3b8] mt-1">
             After the 30-min call: generate with Grok → review → email client. Initial proposals are scope-only — no fees (pricing comes at agreement).
@@ -756,7 +773,7 @@ Best regards,`;
             onChange={(e) => setTranscript(e.target.value)}
             rows={3}
             className="w-full bg-[#111827] border border-white/20 rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-[#c5a46e] placeholder:text-[#64748b]"
-            placeholder="Optional — e.g. follow-up email context. Primary source is the Layer 2 transcript."
+            placeholder="Optional — e.g. follow-up email context. Primary source is the Phase 1 consult transcript."
           />
         </div>
 
@@ -767,7 +784,7 @@ Best regards,`;
               {loadedSub ? '✓' : '○'} Client loaded
             </li>
             <li className={consult30Transcript.trim().length >= 80 ? 'text-emerald-300' : 'text-amber-200'}>
-              {consult30Transcript.trim().length >= 80 ? '✓' : '○'} 30-min transcript in Layer 2 (
+              {consult30Transcript.trim().length >= 80 ? '✓' : '○'} 30-min transcript in Phase 1 (
               {consult30Transcript.trim().length}/80 chars)
             </li>
             <li className={loadedSub?.engagementQuote?.savedAt ? 'text-emerald-300' : 'text-[#64748b]'}>
@@ -865,7 +882,7 @@ Best regards,`;
                 </button>
               </div>
               <p className="text-[11px] text-[#64748b]">
-                <span className="text-[#94a3b8]">Recommended:</span> Send proposal to client — emails a PDF attachment, marks Layer 3 sent, and BCCs you.
+                <span className="text-[#94a3b8]">Recommended:</span> Send proposal to client — emails a PDF attachment, marks proposal sent, and BCCs you.
                 Use Outlook only if you prefer to send manually.
               </p>
             </div>
@@ -876,7 +893,7 @@ Best regards,`;
                   <>
                     <span className="font-medium text-emerald-200">Proposal sent</span>
                     <span className="block text-xs text-[#64748b] mt-0.5">
-                      {new Date(loadedSub.sentAt).toLocaleString()} — Layer 3 complete.
+                      {new Date(loadedSub.sentAt).toLocaleString()} — Phase 4 complete.
                     </span>
                   </>
                 ) : (
@@ -903,20 +920,12 @@ Best regards,`;
       </section>
       )}
 
+      {/* Portal access — after agreement & payment */}
       {loadedSub && (
-        <PandaDocRetainerPanel
-          key={loadedSub.id}
-          submission={loadedSub}
-          onUpdated={(sub) => setLoadedSub(sub)}
-          onStatus={(message, isError) => showStatus(message, isError)}
-        />
-      )}
-
-      {/* Steps 8–9 — Engagement commitment + portal invite */}
-      {loadedSub && (
-        <section className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-4">
+        <section id="phase-portal" className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-4 scroll-mt-24">
           <div>
-            <h2 className="font-semibold text-lg text-[#c5a46e]">Steps 8–9 — Engagement & Portal Access</h2>
+            <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 5 — Portal</div>
+            <h2 className="font-semibold text-lg mt-0.5 text-[#c5a46e]">Portal Access</h2>
             <p className="text-sm text-[#94a3b8] mt-1">
               {ADMIN_STEP89_INSTRUCTION}
             </p>
@@ -928,7 +937,7 @@ Best regards,`;
           <div className="flex flex-wrap items-center gap-3">
             {loadedSub.engagementCommittedAt ? (
               <span className="text-xs px-2 py-1 rounded bg-amber-900/40 text-amber-300">
-                Step 8 complete — {new Date(loadedSub.engagementCommittedAt).toLocaleString()}
+                Agreement & payment — {new Date(loadedSub.engagementCommittedAt).toLocaleString()}
               </span>
             ) : (
               <button
@@ -936,7 +945,7 @@ Best regards,`;
                 disabled={busyId === loadedSub.id}
                 className="px-5 py-2 text-sm rounded-full border border-amber-500/40 text-amber-200 hover:bg-amber-900/20 disabled:opacity-50"
               >
-                {busyId === loadedSub.id ? 'Saving…' : 'Mark Step 8 — Agreement & Payment Received'}
+                {busyId === loadedSub.id ? 'Saving…' : 'Mark agreement signed & paid'}
               </button>
             )}
             {loadedSub.portalAccessGrantedAt && loadedSub.mustChangePassword !== false && (
