@@ -5,6 +5,7 @@ import type { PandaDocNdaConfig, PandaDocConfig } from '@/lib/pandadoc/config';
 import type { PandaDocClientDetails } from '@/lib/pandadoc/client-details';
 import type {
   PandaDocCreateDocumentBody,
+  PandaDocCreateDocumentRecipient,
   PandaDocTemplateDetails,
   PandaDocTemplateImage,
 } from '@/lib/pandadoc/client';
@@ -179,6 +180,57 @@ function buildNdaTokens(values: {
   return mergeTemplateTokenNames(values.template ?? null, entries);
 }
 
+/** Role variables (Owner.* / Recipient.*) populate from recipient identity fields, not tokens alone. */
+export function buildNdaRecipients(
+  config: PandaDocNdaConfig,
+  values: {
+    ownerRole: string;
+    recipientRole: string;
+    clientFirstName: string;
+    clientLastName: string;
+    clientEmail: string;
+    company: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+): PandaDocCreateDocumentRecipient[] {
+  const owner: PandaDocCreateDocumentRecipient = {
+    email: config.contractorEmail,
+    first_name: contractorProfile.firstName,
+    last_name: contractorProfile.lastName,
+    role: values.ownerRole,
+    signing_order: 1,
+    company: contractorProfile.company,
+    street_address: contractorProfile.streetAddress,
+    city: contractorProfile.city,
+    state: contractorProfile.state,
+    postal_code: contractorProfile.postalCode,
+    phone: contractorProfile.phone,
+  };
+
+  const recipient: PandaDocCreateDocumentRecipient = {
+    email: values.clientEmail,
+    first_name: values.clientFirstName,
+    last_name: values.clientLastName,
+    role: values.recipientRole,
+    signing_order: 2,
+    company: values.company,
+  };
+
+  const street = values.streetAddress?.trim();
+  const city = values.city?.trim();
+  const state = values.state?.trim();
+  const postal = values.postalCode?.trim();
+  if (street) recipient.street_address = street;
+  if (city) recipient.city = city;
+  if (state) recipient.state = state;
+  if (postal) recipient.postal_code = postal;
+
+  return [owner, recipient];
+}
+
 function namedTemplateImages(images: PandaDocTemplateImage[] = []): string[] {
   return images.map((img) => img.name?.trim()).filter((name): name is string => Boolean(name));
 }
@@ -235,22 +287,18 @@ export async function buildNdaDocumentRequest(
   return {
     name: `Non-Disclosure Agreement — ${submission.name}`,
     template_uuid: config.templateUuid,
-    recipients: [
-      {
-        email: config.contractorEmail,
-        first_name: contractorProfile.firstName,
-        last_name: contractorProfile.lastName,
-        role: ownerRole,
-        signing_order: 1,
-      },
-      {
-        email: submission.email,
-        first_name: firstName || submission.name,
-        last_name: lastName || ' ',
-        role: recipientRole,
-        signing_order: 2,
-      },
-    ],
+    recipients: buildNdaRecipients(config, {
+      ownerRole,
+      recipientRole,
+      clientFirstName: firstName || submission.name,
+      clientLastName: lastName || ' ',
+      clientEmail: submission.email,
+      company,
+      streetAddress,
+      city,
+      state,
+      postalCode,
+    }),
     tokens: buildNdaTokens({
       template,
       clientFirstName: firstName || submission.name,

@@ -2,16 +2,25 @@ import type { PandaDocConfig } from '@/lib/pandadoc/config';
 
 const API_BASE = 'https://api.pandadoc.com/public/v1';
 
+export interface PandaDocCreateDocumentRecipient {
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  signing_order?: number;
+  company?: string;
+  job_title?: string;
+  street_address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  phone?: string;
+}
+
 export interface PandaDocCreateDocumentBody {
   name: string;
   template_uuid: string;
-  recipients: Array<{
-    email: string;
-    first_name: string;
-    last_name: string;
-    role: string;
-    signing_order?: number;
-  }>;
+  recipients: PandaDocCreateDocumentRecipient[];
   tokens: Array<{ name: string; value: string }>;
   fields?: Record<string, { value: string | number | boolean }>;
   images?: Array<{ name: string; urls: string[] }>;
