@@ -352,6 +352,11 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
             <div className="text-[10px] uppercase tracking-wider text-violet-300/80">NDA</div>
             <div className="font-semibold text-[#f1f5f9] mt-1">Mutual NDA</div>
             <p className="text-xs text-[#94a3b8] mt-1">Sign only — before sharing confidential materials</p>
+            <p className="text-[11px] text-violet-200/80 mt-2 leading-relaxed">
+              If PandaDoc shows a green <span className="text-violet-100">Set up payment</span> step, remove{' '}
+              <span className="text-violet-100">Collect payment</span> from the NDA template workflow — our API
+              does not add payment to NDAs.
+            </p>
           </div>
           {submission.pandadocNda ? (
             <div className="text-xs text-emerald-300/90">
@@ -469,7 +474,7 @@ export default function PandaDocRetainerPanel({ submission, onUpdated, onStatus 
       )}
 
       <ol className="text-xs text-[#64748b] list-decimal list-inside space-y-1">
-        <li>NDA: pre-sign Owner (Michael), send to Recipient — no payment</li>
+        <li>NDA: pre-sign Owner (Michael), send to Recipient — no payment (remove Collect payment from template if PandaDoc prompts)</li>
         <li>Retainer: confirm Collect = activation fee, send to client</li>
         <li>Mark agreement & payment when retainer is signed and paid</li>
         <li>After delivery: generate final balance invoice and send</li>
