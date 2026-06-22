@@ -104,6 +104,13 @@ function resolvePricingTableName(
   return exact?.name ?? tables[0]?.name ?? configuredName;
 }
 
+/** PandaDoc defaults to "Sample Section" when the quote section has no custom title. */
+function resolvePricingSectionTitle(template: PandaDocTemplateDetails | null): string {
+  const quoteSections = template?.pricing?.quotes?.flatMap((quote) => quote.sections ?? []) ?? [];
+  const named = quoteSections.map((section) => section.name?.trim()).find(Boolean);
+  return named || 'Sample Section';
+}
+
 function buildBalanceTokens(values: {
   clientFirstName: string;
   clientLastName: string;
@@ -201,6 +208,7 @@ export async function buildBalanceDocumentRequest(
 
   const template = await fetchBalanceTemplateDetails(config);
   const pricingTableName = resolvePricingTableName(template, config.pricingTableName);
+  const pricingSectionTitle = resolvePricingSectionTitle(template);
   const images = buildBalanceImagesFromTemplate(template, config);
 
   return {
@@ -243,10 +251,15 @@ export async function buildBalanceDocumentRequest(
         data_merge: false,
         sections: [
           {
-            title: 'Section 1',
+            title: pricingSectionTitle,
             default: true,
             rows: [
               {
+                options: {
+                  optional: true,
+                  optional_selected: true,
+                  qty_editable: false,
+                },
                 data: {
                   name: productName,
                   price: balanceDue,

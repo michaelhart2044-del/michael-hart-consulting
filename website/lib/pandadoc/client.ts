@@ -21,7 +21,14 @@ export interface PandaDocCreateDocumentBody {
     sections: Array<{
       title: string;
       default: boolean;
-      rows: Array<{ data: Record<string, string | number> }>;
+      rows: Array<{
+        options: {
+          optional?: boolean;
+          optional_selected?: boolean;
+          qty_editable?: boolean;
+        };
+        data: Record<string, string | number>;
+      }>;
     }>;
   }>;
   metadata?: Record<string, string>;
@@ -45,12 +52,17 @@ export interface PandaDocTemplatePricingTable {
   name: string;
 }
 
+export interface PandaDocTemplateQuoteSection {
+  name?: string;
+}
+
 export interface PandaDocTemplateDetails {
   id: string;
   name: string;
   images?: PandaDocTemplateImage[];
   pricing?: {
     tables?: PandaDocTemplatePricingTable[];
+    quotes?: Array<{ sections?: PandaDocTemplateQuoteSection[] }>;
   };
 }
 
@@ -173,6 +185,9 @@ export function formatPandaDocError(err: unknown): string {
     }
     if (raw.includes('Data merge is disabled') && raw.includes('pricing')) {
       return `${raw} — The API was told to use data merge on the pricing table, but PandaDoc reports merge is off for that table. We now send standard row fields (name/price/qty) instead. If this persists, open the template, click the quote table, confirm its name matches PANDADOC_BALANCE_PRICING_TABLE_NAME (default: Pricing Table 1), save the template, and retry.`;
+    }
+    if (raw.includes('pricing_tables') && raw.includes('options') && raw.includes('required')) {
+      return `${raw} — PandaDoc requires row options on each pricing-table line item. Retry after deploy; if it persists, confirm the quote section title in the template matches what the API expects (often "Sample Section").`;
     }
     return raw;
   }
