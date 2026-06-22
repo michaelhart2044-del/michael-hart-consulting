@@ -52,18 +52,75 @@ export interface PandaDocTemplatePricingTable {
   name: string;
 }
 
-export interface PandaDocTemplateQuoteSection {
-  name?: string;
+export interface PandaDocTemplateRole {
+  name: string;
 }
 
 export interface PandaDocTemplateDetails {
   id: string;
   name: string;
   images?: PandaDocTemplateImage[];
+  tokens?: Array<{ name: string; value?: string }>;
+  roles?: PandaDocTemplateRole[];
   pricing?: {
     tables?: PandaDocTemplatePricingTable[];
-    quotes?: Array<{ sections?: PandaDocTemplateQuoteSection[] }>;
+    quotes?: Array<{
+      id?: string;
+      sections?: Array<{
+        id?: string;
+        name?: string;
+        items?: Array<{ id?: string; sku?: string; description?: string }>;
+      }>;
+    }>;
   };
+}
+
+export interface PandaDocQuoteSectionItem {
+  id?: string;
+  sku?: string;
+  name?: string;
+  description?: string;
+  qty?: string;
+  price?: string;
+}
+
+export interface PandaDocQuoteSection {
+  id?: string;
+  name?: string;
+  items?: PandaDocQuoteSectionItem[];
+}
+
+export interface PandaDocQuote {
+  id: string;
+  sections?: PandaDocQuoteSection[];
+}
+
+export interface PandaDocDocumentDetails {
+  id: string;
+  pricing?: {
+    quotes?: PandaDocQuote[];
+    tables?: unknown[];
+  };
+}
+
+export interface PandaDocQuoteUpdateBody {
+  sections: Array<{
+    id?: string;
+    name?: string;
+    items: Array<{
+      id?: string;
+      sku?: string;
+      name: string;
+      description?: string;
+      qty: number;
+      price: number;
+      options: {
+        selected: boolean;
+        qty_editable: boolean;
+        optional: boolean;
+      };
+    }>;
+  }>;
 }
 
 class PandaDocApiError extends Error {
@@ -133,6 +190,25 @@ export async function getTemplateDetails(
   return pandadocFetch(config, `/templates/${templateUuid}/details`, { method: 'GET' });
 }
 
+export async function getDocumentDetails(
+  config: PandaDocConfig,
+  documentId: string,
+): Promise<PandaDocDocumentDetails> {
+  return pandadocFetch(config, `/documents/${documentId}/details`, { method: 'GET' });
+}
+
+export async function updateDocumentQuote(
+  config: PandaDocConfig,
+  documentId: string,
+  quoteId: string,
+  body: PandaDocQuoteUpdateBody,
+): Promise<PandaDocQuote> {
+  return pandadocFetch(config, `/documents/${documentId}/quotes/${quoteId}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -178,7 +254,10 @@ export function formatPandaDocError(err: unknown): string {
   if (err instanceof PandaDocApiError) {
     const raw = err.detail ? `${err.message}: ${err.detail}` : err.message;
     if (raw.includes('Role') && raw.includes('does not exist')) {
-      return `${raw} — Your template uses roles like Contractor and Customer. If you set PANDADOC_CLIENT_ROLE or PANDADOC_CONTRACTOR_ROLE in Vercel to something else, remove them or set Contractor / Customer.`;
+      if (raw.includes("'Sender'")) {
+        return `${raw} — The balance invoice template is missing a Sender signing role. In PandaDoc open the template → Manage roles (top bar, not the field sidebar) → add roles named Sender and Client → assign the Signature field to Client → Save. Do not use "+Add CC recipient"; CC roles (e.g. Client CC) cannot sign.`;
+      }
+      return `${raw} — The role name in the API request must exactly match a role on the template (Manage roles). For the retainer template use Contractor and Customer. CC roles like "Client CC" are view-only and cannot sign.`;
     }
     if (raw.includes('Invalid block names') && raw.includes('images')) {
       return `${raw} — Your template has no Image block with that name. In PandaDoc: Insert → Image, name it (e.g. MH Logo), then set PANDADOC_LOGO_IMAGE_BLOCK_NAME in Vercel to match — or leave unset and we auto-detect when a block exists.`;

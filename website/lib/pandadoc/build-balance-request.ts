@@ -13,6 +13,9 @@ import type {
 import { getTemplateDetails } from '@/lib/pandadoc/client';
 import { contractorProfile } from '@/lib/pandadoc/contractor';
 
+export const BALANCE_LINE_ITEM_NAME =
+  'Phase 1 balance — Engagement Activation Retainer (balance due at delivery)';
+
 function absoluteAssetUrl(path: string): string {
   const base = site.url.replace(/\/$/, '');
   const normalized = path.startsWith('/') ? path : `/${path}`;
@@ -104,6 +107,82 @@ function resolvePricingTableName(
   return exact?.name ?? tables[0]?.name ?? configuredName;
 }
 
+/** PandaDoc suffixes CC roles for carbon-copy recipients (no signature fields). */
+function isCcRole(roleName: string): boolean {
+  return /\sCC$/i.test(roleName.trim()) || /^cc\b/i.test(roleName.trim());
+}
+
+function resolveBalanceRecipientRoles(
+  template: PandaDocTemplateDetails | null,
+  config: PandaDocBalanceConfig,
+): { senderRole?: string; clientRole: string } {
+  const roleNames = (template?.roles ?? [])
+    .map((role) => role.name?.trim())
+    .filter((name): name is string => Boolean(name));
+
+  if (roleNames.length === 0) {
+    return { senderRole: config.senderRole, clientRole: config.clientRole };
+  }
+
+  const signerRoles = roleNames.filter((name) => !isCcRole(name));
+  if (signerRoles.length === 0) {
+    throw new Error(
+      `This template only has CC roles (${roleNames.join(', ')}). CC recipients cannot sign or pay. In PandaDoc: Manage roles → delete the CC role → create Client and Sender signing roles → assign Signature to Client → Save.`,
+    );
+  }
+
+  const senderRole =
+    roleNames.find((name) => name === config.senderRole) ??
+    roleNames.find((name) => /^sender$/i.test(name));
+
+  const clientRole =
+    roleNames.find((name) => name === config.clientRole) ??
+    signerRoles.find((name) => /^client$/i.test(name)) ??
+    signerRoles.find((name) => /client|customer|signer/i.test(name)) ??
+    signerRoles[0];
+
+  if (!clientRole || isCcRole(clientRole)) {
+    throw new Error(
+      `No signing Client role found on the balance template (roles: ${roleNames.join(', ')}). Use Manage roles to add Client — not "+Add CC recipient", which creates Client CC.`,
+    );
+  }
+
+  return { senderRole, clientRole };
+}
+
+function buildBalanceRecipients(values: {
+  senderRole?: string;
+  clientRole: string;
+  senderEmail: string;
+  clientEmail: string;
+  clientFirstName: string;
+  clientLastName: string;
+  clientDisplayName: string;
+}): PandaDocCreateDocumentBody['recipients'] {
+  const recipients: NonNullable<PandaDocCreateDocumentBody['recipients']> = [];
+  let signingOrder = 1;
+
+  if (values.senderRole) {
+    recipients.push({
+      email: values.senderEmail,
+      first_name: contractorProfile.firstName,
+      last_name: contractorProfile.lastName,
+      role: values.senderRole,
+      signing_order: signingOrder++,
+    });
+  }
+
+  recipients.push({
+    email: values.clientEmail,
+    first_name: values.clientFirstName || values.clientDisplayName,
+    last_name: values.clientLastName || ' ',
+    role: values.clientRole,
+    signing_order: signingOrder,
+  });
+
+  return recipients;
+}
+
 /** PandaDoc defaults to "Sample Section" when the quote section has no custom title. */
 function resolvePricingSectionTitle(template: PandaDocTemplateDetails | null): string {
   const quoteSections = template?.pricing?.quotes?.flatMap((quote) => quote.sections ?? []) ?? [];
@@ -111,7 +190,46 @@ function resolvePricingSectionTitle(template: PandaDocTemplateDetails | null): s
   return named || 'Sample Section';
 }
 
+function normalizeTokenKey(name: string): string {
+  return name.replace(/[\[\]]/g, '').toLowerCase().replace(/[._\s-]+/g, '');
+}
+
+/** Match API token names to template token names (handles bracket variants). */
+function mergeTemplateTokenNames(
+  template: PandaDocTemplateDetails | null,
+  entries: Array<{ name: string; value: string }>,
+): Array<{ name: string; value: string }> {
+  const templateTokens = template?.tokens ?? [];
+  if (templateTokens.length === 0) return entries;
+
+  const valueByKey = new Map<string, string>();
+  for (const entry of entries) {
+    valueByKey.set(normalizeTokenKey(entry.name), entry.value);
+  }
+
+  const seen = new Set<string>();
+  const merged: Array<{ name: string; value: string }> = [];
+
+  for (const entry of entries) {
+    if (seen.has(entry.name)) continue;
+    seen.add(entry.name);
+    merged.push(entry);
+  }
+
+  for (const token of templateTokens) {
+    const name = token.name?.trim();
+    if (!name || seen.has(name)) continue;
+    const value = valueByKey.get(normalizeTokenKey(name));
+    if (!value) continue;
+    seen.add(name);
+    merged.push({ name, value });
+  }
+
+  return merged;
+}
+
 function buildBalanceTokens(values: {
+  template?: PandaDocTemplateDetails | null;
   clientFirstName: string;
   clientLastName: string;
   company: string;
@@ -163,7 +281,7 @@ function buildBalanceTokens(values: {
     values.identifiedContract,
   );
 
-  return entries;
+  return mergeTemplateTokenNames(values.template ?? null, entries);
 }
 
 export async function buildBalanceDocumentRequest(
@@ -203,34 +321,27 @@ export async function buildBalanceDocumentRequest(
   const invoiceTerms = 'Net 15';
   const invoiceDueDate = addDueDate(15);
   const identifiedContract = formatContractReference(submission);
-  const productName =
-    'Phase 1 balance — Engagement Activation Retainer (balance due at delivery)';
 
   const template = await fetchBalanceTemplateDetails(config);
   const pricingTableName = resolvePricingTableName(template, config.pricingTableName);
   const pricingSectionTitle = resolvePricingSectionTitle(template);
   const images = buildBalanceImagesFromTemplate(template, config);
+  const { senderRole, clientRole } = resolveBalanceRecipientRoles(template, config);
 
   return {
     name: `Services Invoice — Final Balance — ${submission.name}`,
     template_uuid: config.templateUuid,
-    recipients: [
-      {
-        email: config.senderEmail,
-        first_name: contractorProfile.firstName,
-        last_name: contractorProfile.lastName,
-        role: config.senderRole,
-        signing_order: 1,
-      },
-      {
-        email: submission.email,
-        first_name: firstName || submission.name,
-        last_name: lastName || ' ',
-        role: config.clientRole,
-        signing_order: 2,
-      },
-    ],
+    recipients: buildBalanceRecipients({
+      senderRole,
+      clientRole,
+      senderEmail: config.senderEmail,
+      clientEmail: submission.email,
+      clientFirstName: firstName || submission.name,
+      clientLastName: lastName || ' ',
+      clientDisplayName: submission.name,
+    }),
     tokens: buildBalanceTokens({
+      template,
       clientFirstName: firstName || submission.name,
       clientLastName: lastName || ' ',
       company,
@@ -261,7 +372,7 @@ export async function buildBalanceDocumentRequest(
                   qty_editable: false,
                 },
                 data: {
-                  name: productName,
+                  name: BALANCE_LINE_ITEM_NAME,
                   price: balanceDue,
                   qty: 1,
                 },

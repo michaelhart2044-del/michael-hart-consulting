@@ -1063,6 +1063,8 @@ export async function createPandaDocFinalBalanceForAdmin(
   }
 
   const { buildBalanceDocumentRequest } = await import('@/lib/pandadoc/build-balance-request');
+  const { BALANCE_LINE_ITEM_NAME } = await import('@/lib/pandadoc/build-balance-request');
+  const { applyBalanceQuoteLineItem } = await import('@/lib/pandadoc/apply-balance-quote');
   const {
     createDocumentFromTemplate,
     waitForDocumentDraft,
@@ -1085,6 +1087,18 @@ export async function createPandaDocFinalBalanceForAdmin(
         intervalMs: 1500,
       });
       status = draft.status;
+
+      try {
+        await applyBalanceQuoteLineItem(
+          baseConfig.config,
+          created.id,
+          BALANCE_LINE_ITEM_NAME,
+          balanceDue,
+        );
+      } catch {
+        readyMessage =
+          `Final balance invoice draft ready for ${sub.name}. Line item may need manual entry in PandaDoc — confirm price is ${balanceDue}, then set Collect and send.`;
+      }
     } catch {
       readyMessage =
         `PandaDoc is still building the invoice for ${sub.name}. Refresh PandaDoc if the document is not editable yet.`;
