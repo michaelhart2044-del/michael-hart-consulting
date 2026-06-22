@@ -133,17 +133,19 @@ function resolveBalanceRecipientRoles(
 
   const senderRole =
     roleNames.find((name) => name === config.senderRole) ??
+    roleNames.find((name) => /^contractor$/i.test(name)) ??
     roleNames.find((name) => /^sender$/i.test(name));
 
   const clientRole =
     roleNames.find((name) => name === config.clientRole) ??
-    signerRoles.find((name) => /^client$/i.test(name)) ??
+    signerRoles.find((name) => /^customer$/i.test(name)) ??
+    signerRoles.find((name) => /^client(\s|$| signer)/i.test(name)) ??
     signerRoles.find((name) => /client|customer|signer/i.test(name)) ??
     signerRoles[0];
 
   if (!clientRole || isCcRole(clientRole)) {
     throw new Error(
-      `No signing Client role found on the balance template (roles: ${roleNames.join(', ')}). Use Manage roles to add Client — not "+Add CC recipient", which creates Client CC.`,
+      `No signing client role found on the balance template (roles: ${roleNames.join(', ')}). Use Contractor + Customer (same as retainer) or Sender + Client — not CC roles.`,
     );
   }
 
@@ -255,23 +257,41 @@ function buildBalanceTokens(values: {
 
   add(['Sender.FirstName', '[Sender.FirstName]'], contractorProfile.firstName);
   add(['Sender.LastName', '[Sender.LastName]'], contractorProfile.lastName);
+  add(['Contractor.FirstName', '[Contractor.FirstName]'], contractorProfile.firstName);
+  add(['Contractor.LastName', '[Contractor.LastName]'], contractorProfile.lastName);
   add(
     ['Sender.StreetAddress', '[Sender.StreetAddress]'],
     contractorProfile.streetAddress,
   );
+  add(
+    ['Contractor.StreetAddress', '[Contractor.StreetAddress]'],
+    contractorProfile.streetAddress,
+  );
   add(['Sender.City', '[Sender.City]'], contractorProfile.city);
+  add(['Contractor.City', '[Contractor.City]'], contractorProfile.city);
   add(['Sender.State', '[Sender.State]'], contractorProfile.state);
+  add(['Contractor.State', '[Contractor.State]'], contractorProfile.state);
   add(['Sender.PostalCode', '[Sender.PostalCode]'], contractorProfile.postalCode);
+  add(['Contractor.PostalCode', '[Contractor.PostalCode]'], contractorProfile.postalCode);
   add(['Sender.Phone', '[Sender.Phone]'], contractorProfile.phone);
+  add(['Contractor.Phone', '[Contractor.Phone]'], contractorProfile.phone);
 
   add(['Client.FirstName', '[Client.FirstName]'], values.clientFirstName);
   add(['Client.LastName', '[Client.LastName]'], values.clientLastName);
+  add(['Customer.FirstName', '[Customer.FirstName]'], values.clientFirstName);
+  add(['Customer.LastName', '[Customer.LastName]'], values.clientLastName);
   add(['Client.Company', '[Client.Company]'], values.company);
+  add(['Customer.Company', '[Customer.Company]'], values.company);
   add(['Client.Email', '[Client.Email]'], values.email);
+  add(['Customer.Email', '[Customer.Email]'], values.email);
   addIf(['Client.StreetAddress', '[Client.StreetAddress]'], values.streetAddress);
+  addIf(['Customer.StreetAddress', '[Customer.StreetAddress]'], values.streetAddress);
   addIf(['Client.City', '[Client.City]'], values.city);
+  addIf(['Customer.City', '[Customer.City]'], values.city);
   addIf(['Client.State', '[Client.State]'], values.state);
+  addIf(['Customer.State', '[Customer.State]'], values.state);
   addIf(['Client.PostalCode', '[Client.PostalCode]'], values.postalCode);
+  addIf(['Customer.PostalCode', '[Customer.PostalCode]'], values.postalCode);
 
   add(['Invoice.No', '[Invoice.No]', 'Invoce.No', '[Invoce.No]'], values.invoiceNo);
   add(['Invoice.Terms', '[Invoice.Terms]'], values.invoiceTerms);

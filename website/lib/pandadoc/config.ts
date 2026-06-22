@@ -98,8 +98,15 @@ export function getPandaDocBalanceConfigStatus(): PandaDocBalanceConfigStatus {
     config: {
       apiKey: apiKey!,
       templateUuid: templateUuid!,
-      senderRole: process.env.PANDADOC_INVOICE_SENDER_ROLE?.trim() || 'Sender',
-      clientRole: process.env.PANDADOC_INVOICE_CLIENT_ROLE?.trim() || 'Client',
+      // Default to Contractor/Customer to match Engagement Activation Retainer; override via env if needed.
+      senderRole:
+        process.env.PANDADOC_INVOICE_SENDER_ROLE?.trim() ||
+        process.env.PANDADOC_CONTRACTOR_ROLE?.trim() ||
+        'Contractor',
+      clientRole:
+        process.env.PANDADOC_INVOICE_CLIENT_ROLE?.trim() ||
+        process.env.PANDADOC_CLIENT_ROLE?.trim() ||
+        'Customer',
       senderEmail: process.env.PANDADOC_CONTRACTOR_EMAIL?.trim() || site.email,
       pricingTableName:
         process.env.PANDADOC_BALANCE_PRICING_TABLE_NAME?.trim() || 'Pricing Table 1',
