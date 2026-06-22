@@ -41,10 +41,17 @@ export interface PandaDocTemplateImage {
   block_uuid?: string;
 }
 
+export interface PandaDocTemplatePricingTable {
+  name: string;
+}
+
 export interface PandaDocTemplateDetails {
   id: string;
   name: string;
   images?: PandaDocTemplateImage[];
+  pricing?: {
+    tables?: PandaDocTemplatePricingTable[];
+  };
 }
 
 class PandaDocApiError extends Error {
@@ -163,6 +170,9 @@ export function formatPandaDocError(err: unknown): string {
     }
     if (raw.includes('Invalid block names') && raw.includes('images')) {
       return `${raw} — Your template has no Image block with that name. In PandaDoc: Insert → Image, name it (e.g. MH Logo), then set PANDADOC_LOGO_IMAGE_BLOCK_NAME in Vercel to match — or leave unset and we auto-detect when a block exists.`;
+    }
+    if (raw.includes('Data merge is disabled') && raw.includes('pricing')) {
+      return `${raw} — The API was told to use data merge on the pricing table, but PandaDoc reports merge is off for that table. We now send standard row fields (name/price/qty) instead. If this persists, open the template, click the quote table, confirm its name matches PANDADOC_BALANCE_PRICING_TABLE_NAME (default: Pricing Table 1), save the template, and retry.`;
     }
     return raw;
   }

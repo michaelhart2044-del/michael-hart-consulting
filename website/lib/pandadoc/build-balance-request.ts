@@ -7,6 +7,7 @@ import { getPandaDocConfigStatus } from '@/lib/pandadoc/config';
 import type { PandaDocClientDetails } from '@/lib/pandadoc/client-details';
 import type {
   PandaDocCreateDocumentBody,
+  PandaDocTemplateDetails,
   PandaDocTemplateImage,
 } from '@/lib/pandadoc/client';
 import { getTemplateDetails } from '@/lib/pandadoc/client';
@@ -60,19 +61,25 @@ function pickLogoBlockName(
   return names.find((name) => /logo|brand|mh/i.test(name)) ?? names[0];
 }
 
-async function buildBalanceImages(
+async function fetchBalanceTemplateDetails(
   config: PandaDocBalanceConfig,
-): Promise<Array<{ name: string; urls: string[] }>> {
+): Promise<PandaDocTemplateDetails | null> {
   const base = getPandaDocConfigStatus();
-  if (!base.configured) return [];
+  if (!base.configured) return null;
 
-  let templateImages: PandaDocTemplateImage[] = [];
   try {
-    const template = await getTemplateDetails(base.config, config.templateUuid);
-    templateImages = template.images ?? [];
+    return await getTemplateDetails(base.config, config.templateUuid);
   } catch {
-    return [];
+    return null;
   }
+}
+
+function buildBalanceImagesFromTemplate(
+  template: PandaDocTemplateDetails | null,
+  config: PandaDocBalanceConfig,
+): Array<{ name: string; urls: string[] }> {
+  const templateImages = template?.images ?? [];
+  if (templateImages.length === 0) return [];
 
   const logoBlockName = pickLogoBlockName(templateImages, config.logoImageBlockName);
   if (!logoBlockName) return [];
@@ -83,6 +90,18 @@ async function buildBalanceImages(
       urls: [absoluteAssetUrl(site.pandadocLogo)],
     },
   ];
+}
+
+/** Resolve pricing table name from template details; prefer explicit config when it matches. */
+function resolvePricingTableName(
+  template: PandaDocTemplateDetails | null,
+  configuredName: string,
+): string {
+  const tables = template?.pricing?.tables ?? [];
+  if (tables.length === 0) return configuredName;
+
+  const exact = tables.find((table) => table.name === configuredName);
+  return exact?.name ?? tables[0]?.name ?? configuredName;
 }
 
 function buildBalanceTokens(values: {
@@ -180,7 +199,9 @@ export async function buildBalanceDocumentRequest(
   const productName =
     'Phase 1 balance — Engagement Activation Retainer (balance due at delivery)';
 
-  const images = await buildBalanceImages(config);
+  const template = await fetchBalanceTemplateDetails(config);
+  const pricingTableName = resolvePricingTableName(template, config.pricingTableName);
+  const images = buildBalanceImagesFromTemplate(template, config);
 
   return {
     name: `Services Invoice — Final Balance — ${submission.name}`,
@@ -217,8 +238,9 @@ export async function buildBalanceDocumentRequest(
     }),
     pricing_tables: [
       {
-        name: config.pricingTableName,
-        data_merge: true,
+        name: pricingTableName,
+        // Standard row fields — no template data-merge toggle required (unlike Name/Price/QTY with data_merge: true).
+        data_merge: false,
         sections: [
           {
             title: 'Section 1',
@@ -226,9 +248,9 @@ export async function buildBalanceDocumentRequest(
             rows: [
               {
                 data: {
-                  Name: productName,
-                  Price: balanceDue,
-                  QTY: 1,
+                  name: productName,
+                  price: balanceDue,
+                  qty: 1,
                 },
               },
             ],
