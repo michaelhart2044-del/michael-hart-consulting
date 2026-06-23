@@ -15,6 +15,7 @@ import {
   deleteClientForAdmin,
   saveConsultTranscriptsForAdmin,
   getProposalAiStatusForAdmin,
+  getDocumentsBackendForAdmin,
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
@@ -22,6 +23,9 @@ import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
 import LoadedClientHeader from '@/components/admin/LoadedClientHeader';
 import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
 import EngagementDocumentsPanel from '@/components/admin/EngagementDocumentsPanel';
+import OwnedDocsWorkflow from '@/components/admin/OwnedDocsWorkflow';
+import type { ClientListBadge } from '@/lib/admin/client-journey';
+import { resolveDocumentsBackend } from '@/lib/admin/client-journey';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
 import SignWellIntegrationPanel from '@/components/admin/SignWellIntegrationPanel';
 import { ADMIN_PORTAL_DISABLED_UNTIL_STEP8, ADMIN_STEP89_INSTRUCTION } from '@/lib/portal-client-copy';
@@ -44,12 +48,20 @@ interface RecentItem {
   comprehensiveBookedAt?: string;
   calendly30CanceledAt?: string;
   comprehensiveCanceledAt?: string;
+  journeyBadges?: ClientListBadge[];
 }
 
 interface Generated {
   defineSection: string;
   pitchSection: string;
   fullProposal: string;
+}
+
+function journeyBadgeClass(tone: ClientListBadge['tone']): string {
+  if (tone === 'success') return 'bg-emerald-900/40 text-emerald-300';
+  if (tone === 'warning') return 'bg-amber-900/40 text-amber-300';
+  if (tone === 'info') return 'bg-sky-900/40 text-sky-300';
+  return 'bg-white/10 text-[#94a3b8]';
 }
 
 export default function AdminProposalGenerator() {
@@ -71,6 +83,13 @@ export default function AdminProposalGenerator() {
   const [layer3Status, setLayer3Status] = useState('');
   const [layer3StatusIsError, setLayer3StatusIsError] = useState(false);
   const [refreshingClient, setRefreshingClient] = useState(false);
+  const [configuredBackend, setConfiguredBackend] = useState<'owned' | 'pandadoc' | null>(null);
+
+  /** Per-client stack — owned SignWell data wins over legacy PandaDoc fields. */
+  const documentsBackend =
+    loadedSub && configuredBackend
+      ? resolveDocumentsBackend(loadedSub, configuredBackend)
+      : configuredBackend;
 
   function showLayer3Status(message: string, isError = false) {
     setLayer3Status(message);
@@ -130,6 +149,9 @@ export default function AdminProposalGenerator() {
       void refreshRecent();
       void getProposalAiStatusForAdmin().then((res) => {
         if (res.success) setAiConfigured(!!res.configured);
+      });
+      void getDocumentsBackendForAdmin().then((res) => {
+        if (res.success) setConfiguredBackend(res.backend);
       });
     });
   }, []);
@@ -694,7 +716,14 @@ Best regards,`;
                   <span className="px-1.5 py-0.5 rounded bg-red-900/40 text-red-300 text-[10px]">1-HR CANCELED</span>
                 )}
                 {item.sentAt && <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">SENT</span>}
-                {item.engagementCommittedAt && <span className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300 text-[10px]">AGREEMENT</span>}
+                {item.journeyBadges?.map((badge) => (
+                  <span
+                    key={badge.id}
+                    className={`px-1.5 py-0.5 rounded text-[10px] ${journeyBadgeClass(badge.tone)}`}
+                  >
+                    {badge.label}
+                  </span>
+                ))}
                 {item.portalAccessGrantedAt && item.mustChangePassword !== false && (
                   <span className="px-1.5 py-0.5 rounded bg-sky-900/40 text-sky-300 text-[10px]">PORTAL — AWAITING LOGIN</span>
                 )}
@@ -755,7 +784,7 @@ Best regards,`;
         />
       )}
 
-      {loadedSub && (
+      {loadedSub && documentsBackend === 'pandadoc' && (
         <EngagementDocumentsPanel
           key={loadedSub.id}
           submission={loadedSub}
@@ -764,14 +793,18 @@ Best regards,`;
         />
       )}
 
-      {/* Phase 4 — Initial proposal */}
-      {loadedSub && (
+      {loadedSub && documentsBackend === 'owned' && (
+        <OwnedDocsWorkflow
+          submission={loadedSub}
+          onUpdated={(sub) => setLoadedSub(sub)}
+          onStatus={(message, isError) => showStatus(message, isError)}
+        >
       <section id="phase-proposal" className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-6 scroll-mt-24">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 4 — Proposal</div>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 3 — Proposal</div>
           <h2 className="font-semibold text-lg mt-0.5">Initial Proposal</h2>
           <p className="text-sm text-[#94a3b8] mt-1">
-            After the 30-min call: generate with Grok → review → email client. Initial proposals are scope-only — no fees (pricing comes at agreement).
+            After NDA is signed: generate with Grok → review → email client. Scope-only — no fees on this PDF.
           </p>
         </div>
 
@@ -914,7 +947,7 @@ Best regards,`;
                   <>
                     <span className="font-medium text-emerald-200">Proposal sent</span>
                     <span className="block text-xs text-[#64748b] mt-0.5">
-                      {new Date(loadedSub.sentAt).toLocaleString()} — Phase 4 complete.
+                      {new Date(loadedSub.sentAt).toLocaleString()} — Proposal sent.
                     </span>
                   </>
                 ) : (
@@ -938,6 +971,20 @@ Best regards,`;
             </div>
           </div>
         )}
+      </section>
+        </OwnedDocsWorkflow>
+      )}
+
+      {loadedSub && documentsBackend === 'pandadoc' && (
+      <section id="phase-proposal" className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-6 scroll-mt-24">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 3 — Proposal</div>
+          <h2 className="font-semibold text-lg mt-0.5">Initial Proposal</h2>
+          <p className="text-sm text-[#94a3b8] mt-1">
+            After the 30-min call: generate with Grok → review → email client. Scope-only — no fees on this PDF.
+          </p>
+        </div>
+        <p className="text-xs text-amber-200/90">Legacy PandaDoc document stack — switch to SignWell (owned) for the current workflow.</p>
       </section>
       )}
 

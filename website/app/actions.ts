@@ -415,8 +415,10 @@ export async function getRecentPrepsForAdmin() {
     return { success: false, error: 'Unauthorized', items: [] };
   }
   try {
+    const { getDocumentsBackend } = await import('@/lib/documents/config');
+    const { buildClientListBadges } = await import('@/lib/admin/client-journey');
+    const configuredBackend = getDocumentsBackend();
     const items = await getRecentSubmissions(25);
-    // Never return full raw email bodies in list for extra caution — the UI only needs summary fields
     const safe = items.map((s) => ({
       id: s.id,
       createdAt: s.createdAt,
@@ -433,6 +435,7 @@ export async function getRecentPrepsForAdmin() {
       comprehensiveBookedAt: s.comprehensiveBookedAt,
       calendly30CanceledAt: s.calendly30CanceledAt,
       comprehensiveCanceledAt: s.comprehensiveCanceledAt,
+      journeyBadges: buildClientListBadges(s, configuredBackend),
     }));
     return { success: true, items: safe };
   } catch {

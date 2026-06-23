@@ -13,11 +13,19 @@ import {
 import { PAYMENT_POLICY_SHORT } from '@/lib/documents/payment-policy';
 import { PORTAL_ACCESS_SLA } from '@/lib/portal-client-copy';
 import { ownedSignWellStatusLabel, ownedSignWellStatusTone } from '@/lib/signwell/owned-doc-status';
+import {
+  useOwnedClientDetails,
+  type OwnedClientDetailsState,
+} from '@/components/admin/owned-docs/use-owned-client-details';
+
+export type OwnedDocumentsPanelPart = 'nda' | 'agreement' | 'full';
 
 interface Props {
   submission: PrepSubmission;
   onUpdated: (submission: PrepSubmission) => void;
   onStatus: (message: string, isError?: boolean) => void;
+  part?: OwnedDocumentsPanelPart;
+  clientDetails?: OwnedClientDetailsState;
 }
 
 function downloadBase64Pdf(base64: string, filename: string) {
@@ -48,16 +56,27 @@ function OwnedDocSignWellStatus({
   return <div className={signWellStatusClass(ownedSignWellStatusTone(doc))}>{label}</div>;
 }
 
-export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }: Props) {
-  const [company, setCompany] = useState(
-    () => submission.clientCompany || submission.industry || '',
-  );
-  const [streetAddress, setStreetAddress] = useState(
-    () => submission.clientStreetAddress || '',
-  );
-  const [city, setCity] = useState(() => submission.clientCity || '');
-  const [state, setState] = useState(() => submission.clientState || '');
-  const [postalCode, setPostalCode] = useState(() => submission.clientPostalCode || '');
+export default function OwnedDocumentsPanel({
+  submission,
+  onUpdated,
+  onStatus,
+  part = 'full',
+  clientDetails: clientDetailsProp,
+}: Props) {
+  const internalDetails = useOwnedClientDetails(submission);
+  const clientDetails = clientDetailsProp ?? internalDetails;
+  const {
+    company,
+    setCompany,
+    streetAddress,
+    setStreetAddress,
+    city,
+    setCity,
+    state,
+    setState,
+    postalCode,
+    setPostalCode,
+  } = clientDetails;
   const [creatingNda, setCreatingNda] = useState(false);
   const [creatingRetainer, setCreatingRetainer] = useState(false);
   const [generatingActivationPdf, setGeneratingActivationPdf] = useState(false);
@@ -117,7 +136,7 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
     company.trim().length > 0;
 
   function clientDetailsPayload() {
-    return { company, streetAddress, city, state, postalCode };
+    return clientDetails.payload();
   }
 
   function openSignWellTab(editUrl: string, baseMessage: string) {
@@ -256,19 +275,130 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
     'w-full bg-[#111827] border border-white/20 rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#c5a46e]';
 
   const owned = submission.ownedDocuments;
+  const showNda = part === 'nda' || part === 'full';
+  const showAgreement = part === 'agreement' || part === 'full';
+  const sectionId =
+    part === 'nda' ? 'phase-nda' : part === 'agreement' ? 'phase-agreement' : 'phase-documents';
+
+  const clientDetailsForm = (
+    <div className="grid gap-4 lg:grid-cols-2 text-sm">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-[#cbd5e1] mb-1.5" htmlFor={`owned-company-${part}`}>
+            Client company
+          </label>
+          <input
+            id={`owned-company-${part}`}
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            className={inputClass}
+            placeholder="Acme Manufacturing LLC"
+          />
+        </div>
+        <div>
+          <label className="block text-[#cbd5e1] mb-1.5" htmlFor={`owned-street-${part}`}>
+            Street address (optional)
+          </label>
+          <input
+            id={`owned-street-${part}`}
+            value={streetAddress}
+            onChange={(e) => setStreetAddress(e.target.value)}
+            className={inputClass}
+            placeholder="123 Main Street"
+          />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="sm:col-span-1">
+            <label className="block text-[#cbd5e1] mb-1.5" htmlFor={`owned-city-${part}`}>
+              City
+            </label>
+            <input
+              id={`owned-city-${part}`}
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className={inputClass}
+              placeholder="Atlanta"
+            />
+          </div>
+          <div>
+            <label className="block text-[#cbd5e1] mb-1.5" htmlFor={`owned-state-${part}`}>
+              State
+            </label>
+            <input
+              id={`owned-state-${part}`}
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              className={inputClass}
+              placeholder="GA"
+            />
+          </div>
+          <div>
+            <label className="block text-[#cbd5e1] mb-1.5" htmlFor={`owned-zip-${part}`}>
+              ZIP
+            </label>
+            <input
+              id={`owned-zip-${part}`}
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+              className={inputClass}
+              placeholder="30301"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 space-y-1 h-fit">
+        <div className="text-[10px] uppercase tracking-wider text-[#64748b]">Will pre-fill</div>
+        <div className="text-[#e2e8f0]">{submission.name}</div>
+        <div className="text-[#94a3b8]">{submission.email}</div>
+        {company.trim() && <div className="text-[#94a3b8]">{company.trim()}</div>}
+        {fees ? (
+          <>
+            <div className="text-[#c5a46e]">Activation: {formatUsd(fees.activationFee)}</div>
+            <div className="text-[#94a3b8]">Total Phase 1: {formatUsd(fees.totalFee)}</div>
+            <div className="text-[#94a3b8]">Balance at delivery: {formatUsd(fees.balanceDue)}</div>
+          </>
+        ) : (
+          <div className="text-amber-200">Save Engagement Economics quote first</div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <section id="phase-documents" className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-5 scroll-mt-24">
+    <section id={sectionId} className="border border-[#c5a46e]/40 rounded-2xl bg-[#0f172a] p-6 space-y-5 scroll-mt-24">
       <div>
-        <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 3 — Documents</div>
-        <h2 className="font-semibold text-lg mt-0.5">Owned documents — SignWell & QuickBooks</h2>
-        <p className="text-sm text-[#94a3b8] mt-1">
-          Your templates in SignWell for e-sign. Payments via QuickBooks invoice + remittance PDF only —{' '}
-          <span className="text-[#c5a46e]">{PAYMENT_POLICY_SHORT.toLowerCase()}</span>
-        </p>
+        {part === 'nda' && (
+          <>
+            <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Step A — Confidentiality</div>
+            <h2 className="font-semibold text-lg mt-0.5">Mutual NDA</h2>
+            <p className="text-sm text-[#94a3b8] mt-1">
+              After internal pricing is saved — generate, pre-sign as Owner, and send before the scope proposal.
+            </p>
+          </>
+        )}
+        {part === 'agreement' && (
+          <>
+            <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Step B — Activation agreement</div>
+            <h2 className="font-semibold text-lg mt-0.5">Retainer, invoice & payment</h2>
+            <p className="text-sm text-[#94a3b8] mt-1">
+              After the proposal is sent — SignWell retainer, QuickBooks invoice, and remittance PDF.{' '}
+              <span className="text-[#c5a46e]">{PAYMENT_POLICY_SHORT.toLowerCase()}</span>
+            </p>
+          </>
+        )}
+        {part === 'full' && (
+          <>
+            <div className="text-[10px] uppercase tracking-[0.14em] text-[#c5a46e]">Phase 4 — Documents</div>
+            <h2 className="font-semibold text-lg mt-0.5">Owned documents — SignWell & QuickBooks</h2>
+            <p className="text-sm text-[#94a3b8] mt-1">
+              Your templates in SignWell for e-sign. Payments via QuickBooks invoice + remittance PDF only —{' '}
+              <span className="text-[#c5a46e]">{PAYMENT_POLICY_SHORT.toLowerCase()}</span>
+            </p>
+          </>
+        )}
       </div>
 
-      {ndaConfigured === false && (
+      {ndaConfigured === false && showNda && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-900/10 px-4 py-3 text-sm text-amber-100">
           SignWell NDA: add{' '}
           <span className="font-mono text-xs">{ndaMissingEnv.join(', ')}</span> in Vercel, then{' '}
@@ -276,7 +406,7 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
         </div>
       )}
 
-      {retainerConfigured === false && (
+      {retainerConfigured === false && showAgreement && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-900/10 px-4 py-3 text-sm text-amber-100">
           SignWell retainer: add{' '}
           <span className="font-mono text-xs">{retainerMissingEnv.join(', ')}</span> in Vercel, then{' '}
@@ -284,7 +414,7 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
         </div>
       )}
 
-      {paymentConfigured === false && (
+      {paymentConfigured === false && showAgreement && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-900/10 px-4 py-3 text-sm text-amber-100">
           Wire/ACH details for remittance PDFs: add{' '}
           <span className="font-mono text-xs">{paymentMissingEnv.join(', ')}</span> in Vercel, then{' '}
@@ -304,89 +434,20 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2 text-sm">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-[#cbd5e1] mb-1.5" htmlFor="owned-company">
-              Client company
-            </label>
-            <input
-              id="owned-company"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              className={inputClass}
-              placeholder="Acme Manufacturing LLC"
-            />
-          </div>
-          <div>
-            <label className="block text-[#cbd5e1] mb-1.5" htmlFor="owned-street">
-              Street address (optional)
-            </label>
-            <input
-              id="owned-street"
-              value={streetAddress}
-              onChange={(e) => setStreetAddress(e.target.value)}
-              className={inputClass}
-              placeholder="123 Main Street"
-            />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="sm:col-span-1">
-              <label className="block text-[#cbd5e1] mb-1.5" htmlFor="owned-city">
-                City
-              </label>
-              <input
-                id="owned-city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className={inputClass}
-                placeholder="Atlanta"
-              />
-            </div>
-            <div>
-              <label className="block text-[#cbd5e1] mb-1.5" htmlFor="owned-state">
-                State
-              </label>
-              <input
-                id="owned-state"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                className={inputClass}
-                placeholder="GA"
-              />
-            </div>
-            <div>
-              <label className="block text-[#cbd5e1] mb-1.5" htmlFor="owned-zip">
-                ZIP
-              </label>
-              <input
-                id="owned-zip"
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
-                className={inputClass}
-                placeholder="30301"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 space-y-1 h-fit">
-          <div className="text-[10px] uppercase tracking-wider text-[#64748b]">Will pre-fill</div>
-          <div className="text-[#e2e8f0]">{submission.name}</div>
-          <div className="text-[#94a3b8]">{submission.email}</div>
-          {company.trim() && <div className="text-[#94a3b8]">{company.trim()}</div>}
-          {fees ? (
-            <>
-              <div className="text-[#c5a46e]">Activation: {formatUsd(fees.activationFee)}</div>
-              <div className="text-[#94a3b8]">Total Phase 1: {formatUsd(fees.totalFee)}</div>
-              <div className="text-[#94a3b8]">Balance at delivery: {formatUsd(fees.balanceDue)}</div>
-            </>
-          ) : (
-            <div className="text-amber-200">Save Engagement Economics quote first</div>
-          )}
-        </div>
-      </div>
+      {(part === 'nda' || part === 'full') && clientDetailsForm}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {part === 'agreement' && (
+        <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-sm text-[#94a3b8]">
+          Pre-fill uses client details from Step A —{' '}
+          <span className="text-[#e2e8f0]">{company.trim() || submission.name}</span>
+          {company.trim() ? '' : ' (add company in NDA step above)'}
+        </div>
+      )}
+
+      <div
+        className={`grid gap-4 ${showAgreement && !showNda ? 'md:grid-cols-2 lg:grid-cols-3' : showNda && !showAgreement ? 'max-w-md' : 'md:grid-cols-2 lg:grid-cols-4'}`}
+      >
+        {showNda && (
         <div className="rounded-xl border border-violet-500/25 bg-violet-950/10 p-4 flex flex-col gap-3">
           <div>
             <div className="text-[10px] uppercase tracking-wider text-violet-300/80">NDA</div>
@@ -417,7 +478,10 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
             </button>
           </div>
         </div>
+        )}
 
+        {showAgreement && (
+        <>
         <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/10 p-4 flex flex-col gap-3">
           <div>
             <div className="text-[10px] uppercase tracking-wider text-emerald-300/80">Agreement</div>
@@ -518,22 +582,27 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
             </button>
           </div>
         </div>
+        </>
+        )}
       </div>
 
-      {qboDraft && (
+      {qboDraft && showAgreement && (
         <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-xs font-mono text-[#94a3b8] whitespace-pre-wrap max-h-48 overflow-y-auto">
           {qboDraft}
         </div>
       )}
 
+      {part === 'full' && (
       <ol className="text-xs text-[#64748b] list-decimal list-inside space-y-1">
-        <li>NDA: pre-sign as Owner in SignWell, send to client</li>
+        <li>NDA: pre-sign as Owner in SignWell, send to client — before proposal</li>
+        <li>Send scope-only proposal (Phase 3)</li>
         <li>Retainer: pre-sign, send for signature — no card collection</li>
         <li>After retainer signed: send QBO invoice (card payments OFF) + remittance PDF</li>
         <li>Mark agreement & payment when activation funds arrive</li>
         <li>After delivery: QBO balance invoice + remittance PDF</li>
         <li>Grant portal access within {PORTAL_ACCESS_SLA} after agreement</li>
       </ol>
+      )}
     </section>
   );
 }

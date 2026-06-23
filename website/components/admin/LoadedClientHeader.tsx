@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import type { PrepSubmission } from '@/lib/submissions-store';
+import type { DocumentsBackendMode } from '@/lib/admin/client-journey';
+import { getDocumentsBackendForAdmin } from '@/app/actions';
 import {
   buildEngagementJourney,
   type JourneyPhase,
@@ -35,7 +38,21 @@ export default function LoadedClientHeader({
   onRefresh,
   refreshing,
 }: Props) {
-  const { phases, nextAction } = buildEngagementJourney(submission, consult30TranscriptLen);
+  const [documentsBackend, setDocumentsBackend] = useState<DocumentsBackendMode>('owned');
+
+  useEffect(() => {
+    queueMicrotask(async () => {
+      const res = await getDocumentsBackendForAdmin();
+      if (res.success) setDocumentsBackend(res.backend);
+    });
+  }, []);
+
+  const { phases, nextAction } = buildEngagementJourney(
+    submission,
+    consult30TranscriptLen,
+    documentsBackend,
+  );
+
   const company =
     companyLabel?.trim() ||
     submission.clientCompany?.trim() ||
