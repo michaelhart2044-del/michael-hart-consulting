@@ -151,8 +151,28 @@ export function resolveSignWellDocumentEditUrl(doc: SignWellDocumentResponse): s
   return signWellDocumentEditUrl(doc.id);
 }
 
+function signWellBodyMessages(body: unknown): string[] {
+  if (typeof body !== 'object' || body === null) return [];
+  const messages: string[] = [];
+  for (const value of Object.values(body as Record<string, unknown>)) {
+    if (typeof value === 'string' && value.trim()) messages.push(value.trim());
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (typeof item === 'string' && item.trim()) messages.push(item.trim());
+      }
+    }
+  }
+  return messages;
+}
+
 export function formatSignWellError(err: unknown): string {
   if (err instanceof SignWellApiError) {
+    const messages = signWellBodyMessages(err.body);
+    const trialLimit = messages.find((m) => /trials are limited|5 documents per day/i.test(m));
+    if (trialLimit) {
+      return `SignWell trial limit reached (5 documents per day). Use Open in SignWell for the existing draft, try again tomorrow, or contact support@signwell.com to upgrade.`;
+    }
+    if (messages.length > 0) return messages.join(' ');
     if (typeof err.body === 'object' && err.body !== null && 'errors' in err.body) {
       return `${err.message}: ${JSON.stringify((err.body as { errors: unknown }).errors)}`;
     }

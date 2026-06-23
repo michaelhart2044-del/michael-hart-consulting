@@ -377,8 +377,9 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
             <p className="text-xs text-[#94a3b8] mt-1">SignWell — sign only, no payment</p>
           </div>
           {owned?.nda ? (
-            <div className="text-xs text-emerald-300/90">
-              ✓ Draft linked · {new Date(owned.nda.createdAt).toLocaleDateString()}
+            <div className="text-xs text-emerald-300/90 space-y-1">
+              <div>✓ Draft linked · {new Date(owned.nda.createdAt).toLocaleDateString()}</div>
+              <div className="text-[#94a3b8]">Use Open in SignWell — Regenerate uses a new daily slot.</div>
             </div>
           ) : (
             <div className="text-xs text-[#64748b]">No draft yet</div>
@@ -390,7 +391,7 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
               disabled={!canCreateNda}
               className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
             >
-              {creatingNda ? 'Creating…' : 'Generate NDA'}
+              {creatingNda ? 'Creating…' : owned?.nda ? 'Regenerate NDA' : 'Generate NDA'}
             </button>
             {owned?.nda && (
               <a
@@ -414,8 +415,9 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
             </p>
           </div>
           {owned?.retainer ? (
-            <div className="text-xs text-emerald-300/90">
-              ✓ Draft linked · {formatUsd(owned.retainer.activationFee)}
+            <div className="text-xs text-emerald-300/90 space-y-1">
+              <div>✓ Draft linked · {formatUsd(owned.retainer.activationFee)}</div>
+              <div className="text-[#94a3b8]">Use Open in SignWell — Regenerate uses a new daily slot.</div>
             </div>
           ) : (
             <div className="text-xs text-[#64748b]">No draft yet</div>
@@ -427,7 +429,7 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
               disabled={!canCreateRetainer}
               className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
             >
-              {creatingRetainer ? 'Creating…' : 'Generate Retainer'}
+              {creatingRetainer ? 'Creating…' : owned?.retainer ? 'Regenerate Retainer' : 'Generate Retainer'}
             </button>
             {owned?.retainer && (
               <a
