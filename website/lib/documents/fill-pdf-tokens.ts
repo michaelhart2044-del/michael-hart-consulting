@@ -1,11 +1,28 @@
 import { ensurePdfJsNodeEnvironment } from '@/lib/documents/pdfjs-node-setup';
 import { PDFDocument, rgb, StandardFonts, type PDFFont } from 'pdf-lib';
 
-const TEXT_COLOR = rgb(0.07, 0.07, 0.07);
+/** Universal overlay typography — Helvetica at fixed sizes for every filled field. */
+const FONT_BODY = 10;
+const FONT_COMPACT = 9.5;
+const FONT_FOOTER = 8.5;
+const FONT_DATE_PILL = 9;
+const FONT_MIN = 7;
+
+const TEXT_COLOR = rgb(0.05, 0.05, 0.05);
 const DATE_TEXT_COLOR = rgb(1, 1, 1);
 const ERASE_WHITE = rgb(1, 1, 1);
 const ERASE_COVER = rgb(0.945, 0.945, 0.965);
 const ERASE_DATE_PILL = rgb(0.12, 0.45, 0.38);
+
+/** Cover page right column — uniform box width and x for Prepared for / Created by. */
+const COVER_COL = { x: 483, w: 118 };
+
+/** Signature page company columns — equal width so font size matches. */
+const SIG_LEFT = { x: 35, w: 248 };
+const SIG_RIGHT = { x: 312, w: 248 };
+
+/** Footer website — right-aligned within page margin. */
+const FOOTER_WEB = { x: 468, w: 142 };
 
 interface PdfTextItem {
   str: string;
@@ -16,17 +33,20 @@ interface PdfTextItem {
   key: string | null;
 }
 
+type TextAlign = 'left' | 'right';
+
 interface OverlaySpec {
   eraseX: number;
   eraseY: number;
   eraseW: number;
   eraseH: number;
   text: string;
-  textX: number;
   textY: number;
   fontSize: number;
   bgColor: ReturnType<typeof rgb>;
   textColor: ReturnType<typeof rgb>;
+  align: TextAlign;
+  padX: number;
 }
 
 /** Replace PandaDoc-style bracket / brace tokens inside a PDF byte stream. */
@@ -68,12 +88,30 @@ function parseItems(textContent: { items: unknown[] }): PdfTextItem[] {
   return out;
 }
 
-function fitFontSize(font: PDFFont, text: string, maxWidth: number, preferred: number, min = 6.5): number {
+function baseFontSize(item: PdfTextItem): number {
+  return item.height >= 11.5 ? FONT_BODY : FONT_COMPACT;
+}
+
+function fitFontSize(font: PDFFont, text: string, maxWidth: number, preferred: number, min = FONT_MIN): number {
   let size = preferred;
   while (size > min && font.widthOfTextAtSize(text, size) > maxWidth) {
     size -= 0.25;
   }
   return size;
+}
+
+function textXForAlign(
+  font: PDFFont,
+  text: string,
+  fontSize: number,
+  eraseX: number,
+  eraseW: number,
+  align: TextAlign,
+  padX: number,
+): number {
+  const textW = font.widthOfTextAtSize(text, fontSize);
+  if (align === 'right') return eraseX + eraseW - textW - padX;
+  return eraseX + padX;
 }
 
 function sameLine(a: PdfTextItem, b: PdfTextItem, tolerance = 1.5): boolean {
@@ -84,29 +122,36 @@ function findKey(items: PdfTextItem[], key: string): PdfTextItem | undefined {
   return items.find((item) => item.key === key);
 }
 
+function overlaySpec(
+  partial: Omit<OverlaySpec, 'align' | 'padX'> & { align?: TextAlign; padX?: number },
+): OverlaySpec {
+  return { align: 'left', padX: 2, ...partial };
+}
+
 function combineInlineNames(
   first: PdfTextItem,
   last: PdfTextItem,
   fullName: string,
   bgColor: ReturnType<typeof rgb>,
+  opts?: { eraseX?: number; eraseW?: number; align?: TextAlign; fontSize?: number },
 ): OverlaySpec {
-  const eraseX = first.x - 2;
+  const eraseX = opts?.eraseX ?? first.x - 2;
+  const eraseW = opts?.eraseW ?? last.x + last.width - eraseX + 4;
   const eraseY = first.y - 2;
-  const eraseW = last.x + last.width - eraseX + 4;
   const eraseH = first.height + 4;
-  const fontSize = Math.max(8, Math.min(11, first.height * 0.92));
-  return {
+  return overlaySpec({
     eraseX,
     eraseY,
     eraseW,
     eraseH,
     text: fullName,
-    textX: eraseX + 1,
     textY: first.y,
-    fontSize,
+    fontSize: opts?.fontSize ?? baseFontSize(first),
     bgColor,
     textColor: TEXT_COLOR,
-  };
+    align: opts?.align ?? 'left',
+    padX: 2,
+  });
 }
 
 function combineStackedNames(
@@ -114,26 +159,27 @@ function combineStackedNames(
   last: PdfTextItem,
   fullName: string,
   bgColor: ReturnType<typeof rgb>,
+  opts?: { eraseX?: number; eraseW?: number; align?: TextAlign },
 ): OverlaySpec {
   const top = first.y >= last.y ? first : last;
   const bottom = first.y >= last.y ? last : first;
-  const eraseX = Math.min(first.x, last.x) - 2;
+  const eraseX = opts?.eraseX ?? Math.min(first.x, last.x) - 2;
   const eraseY = bottom.y - 2;
-  const eraseW = Math.max(first.x + first.width, last.x + last.width) - eraseX + 4;
+  const eraseW = opts?.eraseW ?? Math.max(first.x + first.width, last.x + last.width) - eraseX + 4;
   const eraseH = top.y - bottom.y + top.height + 4;
-  const fontSize = Math.max(8, Math.min(10.5, top.height * 0.92));
-  return {
+  return overlaySpec({
     eraseX,
     eraseY,
     eraseW,
     eraseH,
     text: fullName,
-    textX: eraseX + 1,
     textY: top.y,
-    fontSize,
+    fontSize: baseFontSize(top),
     bgColor,
     textColor: TEXT_COLOR,
-  };
+    align: opts?.align ?? 'left',
+    padX: 2,
+  });
 }
 
 function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: Record<string, string>): OverlaySpec[] {
@@ -150,18 +196,19 @@ function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: R
     const eraseY = ownerState.y - 2;
     const eraseW =
       (stateWord ? stateWord.x + stateWord.width : ownerState.x + ownerState.width) - eraseX + 4;
-    overlays.push({
-      eraseX,
-      eraseY,
-      eraseW,
-      eraseH: ownerState.height + 4,
-      text: label.trim(),
-      textX: eraseX + 1,
-      textY: ownerState.y,
-      fontSize: Math.max(9, ownerState.height * 0.92),
-      bgColor: ERASE_WHITE,
-      textColor: TEXT_COLOR,
-    });
+    overlays.push(
+      overlaySpec({
+        eraseX,
+        eraseY,
+        eraseW,
+        eraseH: ownerState.height + 4,
+        text: label.trim(),
+        textY: ownerState.y,
+        fontSize: FONT_BODY,
+        bgColor: ERASE_WHITE,
+        textColor: TEXT_COLOR,
+      }),
+    );
     consumed.add(ownerState);
     if (ofItem) consumed.add(ofItem);
     if (stateWord) consumed.add(stateWord);
@@ -180,10 +227,15 @@ function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: R
     const fullName = tokenMap[fullKey]?.trim();
     if (!fullName) continue;
 
-    const bg = pageNum === 1 ? coverBg : ERASE_WHITE;
+    const onCover = pageNum === 1;
+    const bg = onCover ? coverBg : ERASE_WHITE;
+    const coverOpts = onCover
+      ? { eraseX: COVER_COL.x, eraseW: COVER_COL.w, align: 'right' as TextAlign }
+      : undefined;
+
     const overlay = sameLine(first, last)
-      ? combineInlineNames(first, last, fullName, bg)
-      : combineStackedNames(first, last, fullName, bg);
+      ? combineInlineNames(first, last, fullName, bg, coverOpts)
+      : combineStackedNames(first, last, fullName, bg, coverOpts);
 
     overlays.push(overlay);
     consumed.add(first);
@@ -197,47 +249,85 @@ function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: R
     if (!rawValue) continue;
 
     let text = rawValue;
-    let textX = item.x;
-    let textY = item.y;
     let eraseX = item.x - 2;
     let eraseY = item.y - 2;
     let eraseW = item.width + 4;
     let eraseH = item.height + 4;
-    let fontSize = Math.max(8, Math.min(11, item.height * 0.92));
+    let textY = item.y;
+    let fontSize = baseFontSize(item);
     let bgColor = pageNum === 1 && item.x > 400 ? coverBg : ERASE_WHITE;
     let textColor = TEXT_COLOR;
+    let align: TextAlign = 'left';
+    let padX = 2;
 
     if (item.key === 'Owner.State') {
       text = tokenMap['Owner.State'] || rawValue;
-      fontSize = Math.max(8, item.height * 0.92);
-    } else if (item.key === 'Date') {
-      textX = item.x - 22;
-      eraseX = textX - 2;
-      eraseW = Math.max(item.width + 26, 118);
-      fontSize = Math.max(7.5, Math.min(9.5, item.height * 0.88));
+      fontSize = FONT_BODY;
+    } else if (item.key === 'Date' && pageNum === 1) {
+      eraseX = 488;
+      eraseY = item.y - 3;
+      eraseW = 128;
+      eraseH = item.height + 6;
+      textY = item.y - 0.5;
+      fontSize = FONT_DATE_PILL;
       bgColor = ERASE_DATE_PILL;
       textColor = DATE_TEXT_COLOR;
+      align = 'right';
+      padX = 6;
     } else if (item.key === 'Company website') {
-      eraseW = Math.max(item.width + 8, 130);
-      fontSize = 8.5;
-    } else if (item.key === 'Owner.Company' || item.key === 'Recipient.Company') {
-      eraseW = Math.max(item.width + 6, item.width);
+      eraseX = FOOTER_WEB.x;
+      eraseY = item.y - 2;
+      eraseW = FOOTER_WEB.w;
+      eraseH = item.height + 4;
+      fontSize = FONT_FOOTER;
+      align = 'right';
+      padX = 2;
     } else if (item.key === 'Document.CreatedDate') {
-      eraseW = Math.max(item.width + 4, 120);
+      eraseW = Math.max(item.width + 2, 118);
+      fontSize = FONT_BODY;
+    } else if (item.key === 'Owner.Company' || item.key === 'Recipient.Company') {
+      if (pageNum === 1) {
+        eraseX = COVER_COL.x;
+        eraseW = COVER_COL.w;
+        bgColor = coverBg;
+        align = 'right';
+        padX = 3;
+        fontSize = FONT_COMPACT;
+      } else if (pageNum === 5) {
+        const col = item.key === 'Recipient.Company' ? SIG_LEFT : SIG_RIGHT;
+        eraseX = col.x;
+        eraseW = col.w;
+        textY = item.y;
+        fontSize = FONT_COMPACT;
+        align = 'left';
+        padX = 2;
+      } else {
+        eraseW = Math.max(item.width + 8, 160);
+        fontSize = FONT_COMPACT;
+      }
+    } else if (pageNum === 1 && item.x > 400) {
+      eraseX = COVER_COL.x;
+      eraseW = COVER_COL.w;
+      bgColor = coverBg;
+      align = 'right';
+      padX = 3;
     }
 
-    overlays.push({
-      eraseX,
-      eraseY,
-      eraseW,
-      eraseH,
-      text,
-      textX,
-      textY,
-      fontSize,
-      bgColor,
-      textColor,
-    });
+    overlays.push(
+      overlaySpec({
+        eraseX,
+        eraseY,
+        eraseW,
+        eraseH,
+        text,
+        textY,
+        fontSize,
+        bgColor,
+        textColor,
+        align,
+        padX,
+      }),
+    );
     consumed.add(item);
   }
 
@@ -276,10 +366,19 @@ export async function fillPdfTokenBuffer(
         borderWidth: 0,
       });
 
-      const fontSize = fitFontSize(font, overlay.text, overlay.eraseW - 4, overlay.fontSize, 6);
+      const fontSize = fitFontSize(font, overlay.text, overlay.eraseW - overlay.padX * 2, overlay.fontSize, FONT_MIN);
+      const textX = textXForAlign(
+        font,
+        overlay.text,
+        fontSize,
+        overlay.eraseX,
+        overlay.eraseW,
+        overlay.align,
+        overlay.padX,
+      );
 
       pdfLibPage.drawText(overlay.text, {
-        x: overlay.textX,
+        x: textX,
         y: overlay.textY,
         size: fontSize,
         font,
