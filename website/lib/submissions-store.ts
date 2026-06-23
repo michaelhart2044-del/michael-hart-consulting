@@ -955,27 +955,26 @@ export async function applySignWellDocumentEvent(params: {
     ? new Date(params.eventTime * 1000).toISOString()
     : new Date().toISOString();
 
-  let submissionId =
-    typeof params.metadata?.submissionId === 'string' ? params.metadata.submissionId : undefined;
-  let docKind: OwnedDocKind | undefined =
-    params.metadata?.docKind === 'nda' || params.metadata?.docKind === 'retainer'
-      ? params.metadata.docKind
-      : undefined;
+  let submissionId: string | undefined;
+  let docKind: OwnedDocKind | undefined;
 
-  let idx = submissionId ? all.findIndex((s) => s.id === submissionId) : -1;
+  // Always match the linked draft by SignWell document id — not metadata alone.
+  const idx = all.findIndex(
+    (s) =>
+      s.ownedDocuments?.nda?.signwellId === params.documentId ||
+      s.ownedDocuments?.retainer?.signwellId === params.documentId,
+  );
 
-  if (idx === -1) {
-    idx = all.findIndex(
-      (s) =>
-        s.ownedDocuments?.nda?.signwellId === params.documentId ||
-        s.ownedDocuments?.retainer?.signwellId === params.documentId,
-    );
-    if (idx !== -1) {
-      submissionId = all[idx].id;
-      docKind = resolveOwnedDocKindFromSubmission(all[idx], params.documentId);
-    }
-  } else if (!docKind) {
+  if (idx !== -1) {
+    submissionId = all[idx].id;
     docKind = resolveOwnedDocKindFromSubmission(all[idx], params.documentId);
+  } else {
+    submissionId =
+      typeof params.metadata?.submissionId === 'string' ? params.metadata.submissionId : undefined;
+    docKind =
+      params.metadata?.docKind === 'nda' || params.metadata?.docKind === 'retainer'
+        ? params.metadata.docKind
+        : undefined;
   }
 
   if (idx === -1 || !docKind) {
@@ -986,8 +985,8 @@ export async function applySignWellDocumentEvent(params: {
 
   if (docKind === 'nda') {
     const existing = owned.nda;
-    if (!existing) {
-      return { updated: false, submissionId, docKind, detail: 'no-owned-doc' };
+    if (!existing || existing.signwellId !== params.documentId) {
+      return { updated: false, submissionId, docKind, detail: 'doc-id-mismatch' };
     }
     const patch = applySignWellPatch(existing, params, eventAt);
     all[idx] = {
@@ -999,8 +998,8 @@ export async function applySignWellDocumentEvent(params: {
   }
 
   const existing = owned.retainer;
-  if (!existing) {
-    return { updated: false, submissionId, docKind, detail: 'no-owned-doc' };
+  if (!existing || existing.signwellId !== params.documentId) {
+    return { updated: false, submissionId, docKind, detail: 'doc-id-mismatch' };
   }
   const patch = applySignWellPatch(existing, params, eventAt);
   all[idx] = {

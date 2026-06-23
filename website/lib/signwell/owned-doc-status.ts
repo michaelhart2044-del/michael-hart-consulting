@@ -41,6 +41,7 @@ export function ownedSignWellStatusLabel(doc?: OwnedSignWellDocRecord): string |
   if (status === 'sent' || status === 'pending' || status === 'viewed' || status === 'in progress') {
     return 'Sent · awaiting signatures';
   }
+  if (status === 'created') return 'Sent · awaiting signatures';
   if (status === 'draft') return 'Draft in SignWell';
 
   return `Status: ${doc.status}`;

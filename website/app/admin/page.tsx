@@ -70,6 +70,7 @@ export default function AdminProposalGenerator() {
   const [isSendingProposal, setIsSendingProposal] = useState(false);
   const [layer3Status, setLayer3Status] = useState('');
   const [layer3StatusIsError, setLayer3StatusIsError] = useState(false);
+  const [refreshingClient, setRefreshingClient] = useState(false);
 
   function showLayer3Status(message: string, isError = false) {
     setLayer3Status(message);
@@ -149,6 +150,23 @@ export default function AdminProposalGenerator() {
     setProposal(null);
     setOutputText('');
     setStatus(`Loaded: ${sub.name} (${new Date(sub.createdAt).toLocaleDateString()})`);
+  }
+
+  async function handleRefreshLoadedClient() {
+    if (!loadedSub || refreshingClient) return;
+    setRefreshingClient(true);
+    try {
+      const res = await loadPrepForAdmin(loadedSub.id);
+      if (res.success && res.submission) {
+        const sub = res.submission as PrepSubmission;
+        setLoadedSub(sub);
+        showStatus('Client status refreshed from SignWell.');
+      } else {
+        showStatus(res.error || 'Could not refresh client', true);
+      }
+    } finally {
+      setRefreshingClient(false);
+    }
   }
 
   async function handleSaveConsultTranscripts() {
@@ -711,6 +729,8 @@ Best regards,`;
         <LoadedClientHeader
           submission={loadedSub}
           consult30TranscriptLen={consult30Transcript.trim().length}
+          onRefresh={handleRefreshLoadedClient}
+          refreshing={refreshingClient}
         />
       )}
 

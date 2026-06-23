@@ -78,8 +78,8 @@ export default function SignWellIntegrationPanel({ onMessage }: Props) {
       {open && (
         <div className="px-6 pb-6 space-y-4 border-t border-white/10 pt-4 text-sm">
           <p className="text-[#94a3b8]">
-            Register this URL in SignWell (Settings → Webhooks). When both parties sign, your admin
-            dossier updates automatically — no manual refresh needed.
+            Register this URL in SignWell (Settings → Webhooks). When both parties sign, click{' '}
+            <span className="text-[#e2e8f0]">Refresh status</span> on the client header to update journey chips.
           </p>
 
           <div className="rounded-xl border border-white/10 bg-[#111827] p-4 space-y-2">

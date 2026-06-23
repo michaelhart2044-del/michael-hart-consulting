@@ -506,8 +506,12 @@ export async function loadPrepForAdmin(id: string) {
   if (!(await requireAdmin())) {
     return { success: false, error: 'Unauthorized' };
   }
-  const sub = await getSubmissionById(id);
+  let sub = await getSubmissionById(id);
   if (!sub) return { success: false, error: 'Not found' };
+
+  const { syncOwnedSignWellDocsForSubmission } = await import('@/lib/signwell/sync-owned-doc');
+  sub = await syncOwnedSignWellDocsForSubmission(sub);
+
   return { success: true, submission: sub };
 }
 

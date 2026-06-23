@@ -10,6 +10,8 @@ interface Props {
   submission: PrepSubmission;
   consult30TranscriptLen: number;
   companyLabel?: string;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
 function phaseChipClass(phase: JourneyPhase): string {
@@ -30,6 +32,8 @@ export default function LoadedClientHeader({
   submission,
   consult30TranscriptLen,
   companyLabel,
+  onRefresh,
+  refreshing,
 }: Props) {
   const { phases, nextAction } = buildEngagementJourney(submission, consult30TranscriptLen);
   const company =
@@ -52,18 +56,30 @@ export default function LoadedClientHeader({
             </div>
             <div className="text-xs text-[#64748b]">{submission.email}</div>
           </div>
-          {nextAction && (
-            <button
-              type="button"
-              onClick={() => scrollToSection(nextAction.sectionId)}
-              className="shrink-0 text-left lg:text-right group"
-            >
-              <div className="text-[10px] uppercase tracking-wider text-[#64748b]">Next action</div>
-              <div className="text-sm font-medium text-[#c5a46e] group-hover:text-[#e8d5b5] transition-colors">
-                {nextAction.label} →
-              </div>
-            </button>
-          )}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 shrink-0">
+            {nextAction && (
+              <button
+                type="button"
+                onClick={() => scrollToSection(nextAction.sectionId)}
+                className="text-left sm:text-right group"
+              >
+                <div className="text-[10px] uppercase tracking-wider text-[#64748b]">Next action</div>
+                <div className="text-sm font-medium text-[#c5a46e] group-hover:text-[#e8d5b5] transition-colors">
+                  {nextAction.label} →
+                </div>
+              </button>
+            )}
+            {onRefresh && (
+              <button
+                type="button"
+                onClick={onRefresh}
+                disabled={refreshing}
+                className="text-xs px-3 py-1.5 rounded-full border border-white/20 text-[#cbd5e1] hover:bg-white/5 disabled:opacity-40 self-start sm:self-center"
+              >
+                {refreshing ? 'Refreshing…' : 'Refresh status'}
+              </button>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {phases.map((phase) => (
