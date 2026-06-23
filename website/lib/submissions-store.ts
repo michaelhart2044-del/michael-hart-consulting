@@ -909,7 +909,12 @@ function applySignWellPatch<T extends OwnedSignWellDocBase>(
     case 'document_signed':
       if (params.signerRole === 'owner') patch.ownerSignedAt = patch.ownerSignedAt || eventAt;
       if (params.signerRole === 'recipient') patch.recipientSignedAt = patch.recipientSignedAt || eventAt;
-      if (patch.status === 'draft' || patch.status === 'sent') patch.status = 'pending';
+      if (patch.ownerSignedAt && patch.recipientSignedAt) {
+        patch.status = 'completed';
+        patch.completedAt = patch.completedAt || eventAt;
+      } else if (patch.status === 'draft' || patch.status === 'sent') {
+        patch.status = 'pending';
+      }
       break;
     case 'document_completed':
       patch.status = 'completed';

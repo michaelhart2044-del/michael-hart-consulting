@@ -11,6 +11,15 @@ export function normalizeSignWellStatus(raw?: string): string {
   return (raw || 'unknown').trim().toLowerCase();
 }
 
+export function isOwnedSignWellDocComplete(doc?: OwnedSignWellDocRecord): boolean {
+  if (!doc) return false;
+
+  const status = normalizeSignWellStatus(doc.status);
+  if (status === 'completed' || doc.completedAt) return true;
+  if (doc.ownerSignedAt && doc.recipientSignedAt) return true;
+  return false;
+}
+
 /** Human-readable status for admin document cards. */
 export function ownedSignWellStatusLabel(doc?: OwnedSignWellDocRecord): string | null {
   if (!doc) return null;

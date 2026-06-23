@@ -1,4 +1,5 @@
 import type { PrepSubmission } from '@/lib/submissions-store';
+import { isOwnedSignWellDocComplete } from '@/lib/signwell/owned-doc-status';
 
 export type JourneyPhaseId =
   | 'intake'
@@ -27,6 +28,22 @@ function hasConsultProgress(sub: PrepSubmission, consult30Len: number): boolean 
   return !!sub.calendlyBookedAt || consult30Len >= 80 || (sub.consult30Transcript?.trim().length ?? 0) >= 80;
 }
 
+/** SignWell path: fully signed. Legacy PandaDoc: draft linked (no webhook in our stack). */
+function hasNdaComplete(sub: PrepSubmission): boolean {
+  const ownedNda = sub.ownedDocuments?.nda;
+  if (ownedNda) return isOwnedSignWellDocComplete(ownedNda);
+  if (sub.pandadocNda) return true;
+  return false;
+}
+
+/** SignWell path: fully signed. Legacy PandaDoc: draft linked. */
+function hasRetainerComplete(sub: PrepSubmission): boolean {
+  const ownedRetainer = sub.ownedDocuments?.retainer;
+  if (ownedRetainer) return isOwnedSignWellDocComplete(ownedRetainer);
+  if (sub.pandadocRetainer) return true;
+  return false;
+}
+
 export function buildEngagementJourney(
   sub: PrepSubmission,
   consult30TranscriptLen: number,
@@ -35,8 +52,8 @@ export function buildEngagementJourney(
   const hasConsult = hasConsultProgress(sub, consult30TranscriptLen);
   const hasPricing = !!sub.engagementQuote?.savedAt;
   const hasProposal = !!(sub.sentAt || (sub.proposalDraft && sub.proposalDraft.trim().length > 20));
-  const hasNda = !!sub.pandadocNda || !!sub.ownedDocuments?.nda;
-  const hasRetainer = !!sub.pandadocRetainer || !!sub.ownedDocuments?.retainer;
+  const hasNda = hasNdaComplete(sub);
+  const hasRetainer = hasRetainerComplete(sub);
   const hasAgreement = !!sub.engagementCommittedAt || hasRetainer;
   const hasPortal = !!sub.portalAccessGrantedAt && !sub.portalRevokedAt;
   const hasDeepDive = !!sub.comprehensiveBookedAt;
@@ -81,7 +98,10 @@ export function buildEngagementJourney(
   } else if (!hasPricing) {
     nextAction = { label: 'Save engagement pricing quote', sectionId: 'phase-pricing' };
   } else if (!hasNda) {
-    nextAction = { label: 'Generate mutual NDA', sectionId: 'phase-documents' };
+    const ndaInProgress = sub.ownedDocuments?.nda || sub.pandadocNda;
+    nextAction = ndaInProgress
+      ? { label: 'Finish NDA signing in SignWell', sectionId: 'phase-documents' }
+      : { label: 'Generate mutual NDA', sectionId: 'phase-documents' };
   } else if (!hasProposal) {
     nextAction = { label: 'Generate and send proposal', sectionId: 'phase-proposal' };
   } else if (!hasRetainer) {
