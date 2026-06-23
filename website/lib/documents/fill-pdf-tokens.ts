@@ -1,3 +1,4 @@
+import { ensurePdfJsNodeEnvironment } from '@/lib/documents/pdfjs-node-setup';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 /** Replace PandaDoc-style bracket / brace tokens inside a PDF byte stream. */
@@ -33,6 +34,7 @@ export async function fillPdfTokenBuffer(
   pdf: Buffer,
   tokenMap: Record<string, string>,
 ): Promise<Buffer> {
+  await ensurePdfJsNodeEnvironment();
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const data = new Uint8Array(pdf);
   const pdfjsDoc = await pdfjs.getDocument({ data, disableFontFace: true }).promise;
