@@ -99,8 +99,8 @@ export default function SignWellIntegrationPanel({ onMessage }: Props) {
           </div>
 
           <ol className="list-decimal list-inside space-y-1 text-[#94a3b8] text-sm">
-            <li>In SignWell → Settings → Webhooks → add the URL above</li>
-            <li>Copy the Webhook ID SignWell gives you into Vercel as <code className="text-xs">SIGNWELL_WEBHOOK_ID</code></li>
+            <li>In SignWell → Settings → API → Event Callback URL, paste the URL above</li>
+            <li>Click Save Callback URLs, then copy the webhook id (API → List Webhooks) into Vercel as <code className="text-xs">SIGNWELL_WEBHOOK_ID</code></li>
             <li>Redeploy, then send/sign a test document</li>
           </ol>
 
