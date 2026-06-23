@@ -130,6 +130,15 @@ export function mergeFieldsToPdfTokenMap(fields: DocumentMergeFields): Record<st
   addAliases(map, ['Contractor.FirstName'], fields.ownerFirstName);
   addAliases(map, ['Contractor.LastName'], fields.ownerLastName);
 
+  map['Company website'] = fields.website
+    .replace(/^https?:\/\/(www\.)?/i, '')
+    .replace(/\/$/, '');
+
+  // Combined display values for grouped PDF overlays
+  map['Recipient.FullName'] = `${fields.recipientFirstName} ${fields.recipientLastName}`.trim();
+  map['Owner.FullName'] = `${fields.ownerFirstName} ${fields.ownerLastName}`.trim();
+  map['Owner.StateLabel'] = `State: ${fields.ownerState}`;
+
   if (fields.recipientStreetAddress) {
     addAliases(map, ['Client.StreetAddress'], fields.recipientStreetAddress);
   }
