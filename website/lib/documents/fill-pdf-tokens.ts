@@ -182,10 +182,94 @@ function combineStackedNames(
   });
 }
 
+/**
+ * Page 2 intro: PandaDoc splits date / between / names across wide token boxes.
+ * Replace with two natural lines instead of per-token white boxes.
+ */
+function tryBuildPage2IntroOverlays(
+  pageNum: number,
+  items: PdfTextItem[],
+  tokenMap: Record<string, string>,
+): { overlays: OverlaySpec[]; consumed: Set<PdfTextItem> } | null {
+  if (pageNum !== 2) return null;
+
+  const dateItem = findKey(items, 'Document.CreatedDate') ?? findKey(items, 'Date');
+  const ownerFirst = findKey(items, 'Owner.FirstName');
+  const ownerLast = findKey(items, 'Owner.LastName');
+  const recipientFirst = findKey(items, 'Recipient.FirstName');
+  const recipientLast = findKey(items, 'Recipient.LastName');
+  if (!dateItem || !ownerFirst || !ownerLast || !recipientFirst || !recipientLast) return null;
+
+  const date = (tokenMap['Document.CreatedDate'] || tokenMap['Date'] || '').trim();
+  const ownerFull = (tokenMap['Owner.FullName'] || `${tokenMap['Owner.FirstName'] || ''} ${tokenMap['Owner.LastName'] || ''}`).trim();
+  const recipientFull = (
+    tokenMap['Recipient.FullName'] ||
+    `${tokenMap['Recipient.FirstName'] || ''} ${tokenMap['Recipient.LastName'] || ''}`
+  ).trim();
+  if (!date || !ownerFull || !recipientFull) return null;
+
+  const betweenItem = items.find((item) => item.str === 'between' && sameLine(item, dateItem));
+  const ownerAndItem = items.find((item) => item.str === '(Owner) and' && sameLine(item, ownerFirst));
+  const recipientLabel = items.find((item) => item.str.startsWith('(Recipient)'));
+
+  const consumed = new Set<PdfTextItem>([
+    dateItem,
+    ownerFirst,
+    ownerLast,
+    recipientFirst,
+    recipientLast,
+  ]);
+  if (betweenItem) consumed.add(betweenItem);
+  if (ownerAndItem) consumed.add(ownerAndItem);
+  if (recipientLabel) consumed.add(recipientLabel);
+
+  const dateLineEnd = betweenItem ? betweenItem.x + betweenItem.width : dateItem.x + dateItem.width;
+  const partiesLineBottom = recipientLabel?.y ?? ownerFirst.y;
+
+  const overlays: OverlaySpec[] = [
+    overlaySpec({
+      eraseX: dateItem.x - 2,
+      eraseY: dateItem.y - 2,
+      eraseW: dateLineEnd - dateItem.x + 6,
+      eraseH: dateItem.height + 4,
+      text: `${date} between`,
+      textY: dateItem.y,
+      fontSize: FONT_BODY,
+      bgColor: ERASE_WHITE,
+      textColor: TEXT_COLOR,
+    }),
+    overlaySpec({
+      eraseX: ownerFirst.x - 2,
+      eraseY: partiesLineBottom - 2,
+      eraseW:
+        Math.max(
+          recipientLast.x + recipientLast.width,
+          (recipientLabel?.x ?? 0) + (recipientLabel?.width ?? 0),
+        ) -
+        ownerFirst.x +
+        6,
+      eraseH: ownerFirst.y - partiesLineBottom + ownerFirst.height + 4,
+      text: `${ownerFull} (Owner) and ${recipientFull} (Recipient).`,
+      textY: ownerFirst.y,
+      fontSize: FONT_BODY,
+      bgColor: ERASE_WHITE,
+      textColor: TEXT_COLOR,
+    }),
+  ];
+
+  return { overlays, consumed };
+}
+
 function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: Record<string, string>): OverlaySpec[] {
   const overlays: OverlaySpec[] = [];
   const consumed = new Set<PdfTextItem>();
   const coverBg = ERASE_COVER;
+
+  const intro = tryBuildPage2IntroOverlays(pageNum, items, tokenMap);
+  if (intro) {
+    overlays.push(...intro.overlays);
+    for (const item of intro.consumed) consumed.add(item);
+  }
 
   const ownerState = findKey(items, 'Owner.State');
   if (ownerState && pageNum === 1) {
