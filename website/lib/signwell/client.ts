@@ -187,7 +187,7 @@ export function formatSignWellError(err: unknown): string {
     const messages = signWellBodyMessages(err.body);
     const trialLimit = messages.find((m) => /trials are limited|5 documents per day/i.test(m));
     if (trialLimit) {
-      return `SignWell trial limit reached (5 documents per day). Use Open in SignWell for the existing draft, try again tomorrow, or contact support@signwell.com to upgrade.`;
+      return `SignWell trial limit reached (5 documents per day). Try again tomorrow or contact support@signwell.com to upgrade.`;
     }
     if (messages.length > 0) return messages.join(' ');
     if (typeof err.body === 'object' && err.body !== null && 'errors' in err.body) {
