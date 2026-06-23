@@ -260,6 +260,46 @@ function tryBuildPage2IntroOverlays(
   return { overlays, consumed };
 }
 
+/**
+ * Page 5 jurisdiction: wide [Owner.State] token leaves a gap before ", furthermore all".
+ */
+function tryBuildPage5JurisdictionOverlay(
+  pageNum: number,
+  items: PdfTextItem[],
+  tokenMap: Record<string, string>,
+): { overlays: OverlaySpec[]; consumed: Set<PdfTextItem> } | null {
+  if (pageNum !== 5) return null;
+
+  const stateItem = findKey(items, 'Owner.State');
+  if (!stateItem) return null;
+
+  const state = (tokenMap['Owner.State'] || '').trim();
+  if (!state) return null;
+
+  const furthermoreItem = items.find(
+    (item) => item.str.startsWith(', furthermore') && sameLine(item, stateItem),
+  );
+  if (!furthermoreItem) return null;
+
+  const consumed = new Set<PdfTextItem>([stateItem, furthermoreItem]);
+
+  const overlays: OverlaySpec[] = [
+    overlaySpec({
+      eraseX: stateItem.x - 2,
+      eraseY: stateItem.y - 2,
+      eraseW: furthermoreItem.x + furthermoreItem.width - stateItem.x + 4,
+      eraseH: stateItem.height + 4,
+      text: `${state}, furthermore all`,
+      textY: stateItem.y,
+      fontSize: FONT_BODY,
+      bgColor: ERASE_WHITE,
+      textColor: TEXT_COLOR,
+    }),
+  ];
+
+  return { overlays, consumed };
+}
+
 function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: Record<string, string>): OverlaySpec[] {
   const overlays: OverlaySpec[] = [];
   const consumed = new Set<PdfTextItem>();
@@ -271,8 +311,14 @@ function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: R
     for (const item of intro.consumed) consumed.add(item);
   }
 
+  const jurisdiction = tryBuildPage5JurisdictionOverlay(pageNum, items, tokenMap);
+  if (jurisdiction) {
+    overlays.push(...jurisdiction.overlays);
+    for (const item of jurisdiction.consumed) consumed.add(item);
+  }
+
   const ownerState = findKey(items, 'Owner.State');
-  if (ownerState && pageNum === 1) {
+  if (ownerState && pageNum === 1 && !consumed.has(ownerState)) {
     const ofItem = items.find((item) => item.str === 'of' && sameLine(item, ownerState));
     const stateWord = items.find((item) => item.str === 'State' && sameLine(item, ownerState));
     const label = tokenMap['Owner.StateLabel'] || `State: ${tokenMap['Owner.State'] || ''}`;
@@ -345,8 +391,11 @@ function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: R
     let padX = 2;
 
     if (item.key === 'Owner.State') {
+      if (consumed.has(item)) continue;
       text = tokenMap['Owner.State'] || rawValue;
       fontSize = FONT_BODY;
+      // Tight inline state — avoid wide placeholder box gaps (non-page-5 fallbacks).
+      eraseW = Math.max(item.width + 4, 28);
     } else if (item.key === 'Date' && pageNum === 1) {
       eraseX = 488;
       eraseY = item.y - 3;
