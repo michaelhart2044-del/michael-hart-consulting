@@ -1412,6 +1412,8 @@ export async function createOwnedNdaForAdmin(
       return { success: false as const, error: 'NDA created in SignWell but failed to save on client record.' };
     }
 
+    revalidatePath('/admin');
+
     return {
       success: true as const,
       submission: updated,
@@ -1489,6 +1491,8 @@ export async function openOwnedSignWellDocumentForAdmin(
     if (!updated) {
       return { success: false as const, error: 'Could not save refreshed SignWell link.' };
     }
+
+    revalidatePath('/admin');
 
     return {
       success: true as const,
@@ -1575,6 +1579,8 @@ export async function createOwnedRetainerForAdmin(
         error: 'Retainer created in SignWell but failed to save on client record.',
       };
     }
+
+    revalidatePath('/admin');
 
     return {
       success: true as const,

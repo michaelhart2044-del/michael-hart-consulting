@@ -21,6 +21,10 @@ interface Props {
   onStatus: (message: string, isError?: boolean) => void;
 }
 
+function signWellDocRef(signwellId: string): string {
+  return signwellId.slice(0, 8);
+}
+
 function downloadBase64Pdf(base64: string, filename: string) {
   const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
   const blob = new Blob([bytes], { type: 'application/pdf' });
@@ -440,28 +444,43 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
                 ✓ Draft linked · {new Date(owned.nda.createdAt).toLocaleDateString()}
               </div>
               <OwnedDocSignWellStatus doc={owned.nda} />
-              <div className="text-[#94a3b8]">Use Open in SignWell — Regenerate uses a new daily slot.</div>
+              <div className="text-[#64748b] font-mono">Ref {signWellDocRef(owned.nda.signwellId)}</div>
+              <div className="text-[#94a3b8]">
+                Use <span className="text-violet-200">Open in SignWell</span> to continue the linked draft.
+                Regenerate only if you need a new copy (uses 1 daily slot).
+              </div>
             </div>
           ) : (
             <div className="text-xs text-[#64748b]">No draft yet</div>
           )}
           <div className="mt-auto flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={handleCreateNda}
-              disabled={!canCreateNda}
-              className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
-            >
-              {creatingNda ? 'Creating…' : owned?.nda ? 'Regenerate NDA' : 'Generate NDA'}
-            </button>
-            {owned?.nda && (
+            {owned?.nda ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleOpenSignWell('nda')}
+                  disabled={openingNda || busy}
+                  className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
+                >
+                  {openingNda ? 'Opening…' : 'Open in SignWell'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateNda}
+                  disabled={!canCreateNda}
+                  className="text-center px-4 py-2 text-xs rounded-full border border-violet-400/40 text-violet-200 hover:bg-violet-900/20 disabled:opacity-40"
+                >
+                  {creatingNda ? 'Creating…' : 'Regenerate draft'}
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
-                onClick={() => handleOpenSignWell('nda')}
-                disabled={openingNda || busy}
-                className="text-center px-4 py-2 text-xs rounded-full border border-violet-400/40 text-violet-200 hover:bg-violet-900/20 disabled:opacity-40"
+                onClick={handleCreateNda}
+                disabled={!canCreateNda}
+                className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
               >
-                {openingNda ? 'Opening…' : 'Open in SignWell'}
+                {creatingNda ? 'Creating…' : 'Generate & open in SignWell'}
               </button>
             )}
           </div>
@@ -479,28 +498,43 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
             <div className="text-xs space-y-1">
               <div className="text-emerald-300/90">✓ Draft linked · {formatUsd(owned.retainer.activationFee)}</div>
               <OwnedDocSignWellStatus doc={owned.retainer} />
-              <div className="text-[#94a3b8]">Use Open in SignWell — Regenerate uses a new daily slot.</div>
+              <div className="text-[#64748b] font-mono">Ref {signWellDocRef(owned.retainer.signwellId)}</div>
+              <div className="text-[#94a3b8]">
+                Use <span className="text-emerald-200">Open in SignWell</span> to continue the linked draft.
+                Regenerate only if you need a new copy (uses 1 daily slot).
+              </div>
             </div>
           ) : (
             <div className="text-xs text-[#64748b]">No draft yet</div>
           )}
           <div className="mt-auto flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={handleCreateRetainer}
-              disabled={!canCreateRetainer}
-              className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
-            >
-              {creatingRetainer ? 'Creating…' : owned?.retainer ? 'Regenerate Retainer' : 'Generate Retainer'}
-            </button>
-            {owned?.retainer && (
+            {owned?.retainer ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleOpenSignWell('retainer')}
+                  disabled={openingRetainer || busy}
+                  className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
+                >
+                  {openingRetainer ? 'Opening…' : 'Open in SignWell'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateRetainer}
+                  disabled={!canCreateRetainer}
+                  className="text-center px-4 py-2 text-xs rounded-full border border-emerald-400/40 text-emerald-200 hover:bg-emerald-900/20 disabled:opacity-40"
+                >
+                  {creatingRetainer ? 'Creating…' : 'Regenerate draft'}
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
-                onClick={() => handleOpenSignWell('retainer')}
-                disabled={openingRetainer || busy}
-                className="text-center px-4 py-2 text-xs rounded-full border border-emerald-400/40 text-emerald-200 hover:bg-emerald-900/20 disabled:opacity-40"
+                onClick={handleCreateRetainer}
+                disabled={!canCreateRetainer}
+                className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
               >
-                {openingRetainer ? 'Opening…' : 'Open in SignWell'}
+                {creatingRetainer ? 'Creating…' : 'Generate & open in SignWell'}
               </button>
             )}
           </div>
