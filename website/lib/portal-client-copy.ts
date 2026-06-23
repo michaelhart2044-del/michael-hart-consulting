@@ -8,10 +8,10 @@ export const PROPOSAL_PORTAL_NEXT_STEP = PORTAL_ACCESS_PROMISE;
 
 export const PANDADOC_RETAINER_SEND_MESSAGE = `Once signed and paid, you'll get portal access within ${PORTAL_ACCESS_SLA} to prep for our deep-dive session.`;
 
-/** Admin — Steps 8–9 section helper text. */
-export const ADMIN_STEP89_INSTRUCTION = `After the client signs and pays in PandaDoc: Mark Step 8, then grant portal access within ${PORTAL_ACCESS_SLA} — the client receives an email with a temporary password and a link to sign in.`;
+/** Admin — portal section helper text (SignWell + QuickBooks flow). */
+export const ADMIN_STEP89_INSTRUCTION = `After the retainer is signed and activation payment clears: mark agreement signed & paid below, then grant portal access within ${PORTAL_ACCESS_SLA}. The client receives email with a temporary password and sign-in link.`;
 
-export const ADMIN_PORTAL_DISABLED_UNTIL_STEP8 = `Portal access is disabled until Step 8 is marked. Grant access within ${PORTAL_ACCESS_SLA} of signing — clients receive a temporary password by email.`;
+export const ADMIN_PORTAL_DISABLED_UNTIL_STEP8 = `Portal access is disabled until agreement and payment are marked. Grant access within ${PORTAL_ACCESS_SLA} — clients receive a temporary password by email.`;
 
 /** Portal login — footer for prospects who land without access. */
 export const PORTAL_LOGIN_NO_ACCESS_NOTE = `Portal access is granted after agreement and activation payment, typically within ${PORTAL_ACCESS_SLA}.`;

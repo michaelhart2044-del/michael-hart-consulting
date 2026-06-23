@@ -22,3 +22,4 @@ export {
 
 export { buildClientJourney, buildEngagementJourney } from '@/lib/admin/client-journey/build-journey';
 export { buildClientListBadges } from '@/lib/admin/client-journey/list-badges';
+export { JOURNEY_PHASE_SECTION_IDS } from '@/lib/admin/client-journey/phase-sections';

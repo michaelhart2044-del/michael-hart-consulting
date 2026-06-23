@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { PrepSubmission } from '@/lib/submissions-store';
 import type { DocumentsBackendMode } from '@/lib/admin/client-journey';
+import { JOURNEY_PHASE_SECTION_IDS } from '@/lib/admin/client-journey';
 import { getDocumentsBackendForAdmin } from '@/app/actions';
 import {
   buildEngagementJourney,
@@ -19,12 +20,12 @@ interface Props {
 
 function phaseChipClass(phase: JourneyPhase): string {
   if (phase.status === 'complete') {
-    return 'border-emerald-500/40 bg-emerald-950/30 text-emerald-200';
+    return 'border-emerald-500/40 bg-emerald-950/30 text-emerald-200 hover:bg-emerald-950/50';
   }
   if (phase.status === 'active') {
-    return 'border-[#c5a46e]/50 bg-[#c5a46e]/10 text-[#e8d5b5]';
+    return 'border-[#c5a46e]/50 bg-[#c5a46e]/10 text-[#e8d5b5] hover:bg-[#c5a46e]/20';
   }
-  return 'border-white/10 bg-black/20 text-[#64748b]';
+  return 'border-white/10 bg-black/20 text-[#64748b] hover:bg-white/5 hover:text-[#94a3b8]';
 }
 
 function scrollToSection(sectionId: string) {
@@ -47,7 +48,7 @@ export default function LoadedClientHeader({
     });
   }, []);
 
-  const { phases, nextAction } = buildEngagementJourney(
+  const { phases } = buildEngagementJourney(
     submission,
     consult30TranscriptLen,
     documentsBackend,
@@ -73,40 +74,29 @@ export default function LoadedClientHeader({
             </div>
             <div className="text-xs text-[#64748b]">{submission.email}</div>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 shrink-0">
-            {nextAction && (
-              <button
-                type="button"
-                onClick={() => scrollToSection(nextAction.sectionId)}
-                className="text-left sm:text-right group"
-              >
-                <div className="text-[10px] uppercase tracking-wider text-[#64748b]">Next action</div>
-                <div className="text-sm font-medium text-[#c5a46e] group-hover:text-[#e8d5b5] transition-colors">
-                  {nextAction.label} →
-                </div>
-              </button>
-            )}
-            {onRefresh && (
-              <button
-                type="button"
-                onClick={onRefresh}
-                disabled={refreshing}
-                className="text-xs px-3 py-1.5 rounded-full border border-white/20 text-[#cbd5e1] hover:bg-white/5 disabled:opacity-40 self-start sm:self-center"
-              >
-                {refreshing ? 'Refreshing…' : 'Refresh status'}
-              </button>
-            )}
-          </div>
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={refreshing}
+              className="text-xs px-3 py-1.5 rounded-full border border-white/20 text-[#cbd5e1] hover:bg-white/5 disabled:opacity-40 self-start lg:self-center shrink-0"
+            >
+              {refreshing ? 'Refreshing…' : 'Refresh status'}
+            </button>
+          )}
         </div>
         <div className="flex flex-wrap gap-1.5">
           {phases.map((phase) => (
-            <span
+            <button
               key={phase.id}
-              className={`text-[10px] px-2 py-0.5 rounded-full border ${phaseChipClass(phase)}`}
+              type="button"
+              onClick={() => scrollToSection(JOURNEY_PHASE_SECTION_IDS[phase.id])}
+              className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${phaseChipClass(phase)}`}
+              title={`Jump to ${phase.label}`}
             >
               {phase.status === 'complete' ? '✓ ' : ''}
               {phase.label}
-            </span>
+            </button>
           ))}
         </div>
       </div>

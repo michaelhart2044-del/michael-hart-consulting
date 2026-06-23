@@ -620,14 +620,11 @@ Best regards,`;
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-[-1px]">Engagement Hub</h1>
-          <p className="text-sm text-[#94a3b8] mt-1">
-            Intake → consult → proposal → portal → SigVai
-            {aiConfigured === false && (
-              <span className="block text-amber-300/90 mt-1">
-                Add XAI_API_KEY in Vercel to enable AI proposal generation.
-              </span>
-            )}
-          </p>
+          {aiConfigured === false && (
+            <p className="text-sm text-amber-300/90 mt-1">
+              Add XAI_API_KEY in Vercel to enable AI proposal generation.
+            </p>
+          )}
         </div>
         <button
           onClick={handleLogout}
@@ -715,7 +712,6 @@ Best regards,`;
                 {!item.comprehensiveBookedAt && item.comprehensiveCanceledAt && (
                   <span className="px-1.5 py-0.5 rounded bg-red-900/40 text-red-300 text-[10px]">1-HR CANCELED</span>
                 )}
-                {item.sentAt && <span className="px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400 text-[10px]">SENT</span>}
                 {item.journeyBadges?.map((badge) => (
                   <span
                     key={badge.id}

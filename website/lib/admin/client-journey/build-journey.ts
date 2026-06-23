@@ -150,10 +150,10 @@ function buildNextAction(ctx: {
   if (!hasProposal) {
     return { label: 'Generate and send proposal', sectionId: 'phase-proposal' };
   }
-  if (!hasRetainerSigned) {
-    return { label: 'Create activation retainer', sectionId: 'phase-agreement' };
-  }
   if (!hasAgreement) {
+    if (!hasRetainerSigned) {
+      return { label: 'Complete activation agreement', sectionId: 'phase-agreement' };
+    }
     return { label: 'Mark agreement signed & paid', sectionId: 'phase-portal' };
   }
   if (!hasPortal) {

@@ -22,6 +22,10 @@ export function buildClientListBadges(
     badges.push({ id: 'nda-pending', label: 'NDA PENDING', tone: 'warning' });
   }
 
+  if (isProposalComplete(sub)) {
+    badges.push({ id: 'proposal-sent', label: 'PROPOSAL SENT', tone: 'info' });
+  }
+
   if (isRetainerSigned(sub, backend)) {
     badges.push({ id: 'retainer-signed', label: 'RETAINER SIGNED', tone: 'success' });
   } else if (backend === 'owned' && sub.ownedDocuments?.retainer) {
@@ -32,10 +36,6 @@ export function buildClientListBadges(
 
   if (isAgreementComplete(sub, backend)) {
     badges.push({ id: 'agreement', label: 'AGREEMENT', tone: 'success' });
-  }
-
-  if (isProposalComplete(sub)) {
-    badges.push({ id: 'proposal-sent', label: 'PROPOSAL SENT', tone: 'info' });
   }
 
   return badges;

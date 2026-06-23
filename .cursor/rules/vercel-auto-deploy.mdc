@@ -3,9 +3,9 @@ description: Commit and push website changes to trigger Vercel deployment
 alwaysApply: true
 ---
 
-# Vercel auto-deploy (this project only)
+# Vercel auto-deploy — Michael Hart Consulting Website
 
-This rule applies **only** to **Michael Hart Consulting Website** (`MH_Consulting_Website`), which deploys to Vercel from `main`. **Do not** use this workflow for other repositories.
+This rule applies **only** to **Michael Hart Consulting Website** (`MH_Consulting_Website`), which deploys to Vercel from `main`. **Do not** auto-push any other repository.
 
 After completing any substantive change here (especially under `website/`), **commit and push to `main`** to trigger the Vercel deployment. Do not wait for the user to ask.
 
@@ -24,8 +24,8 @@ After completing any substantive change here (especially under `website/`), **co
 
 ## Other projects
 
-For any repo that is **not** this Vercel site, follow the default rule: **only commit or push when the user asks**. Do not assume Vercel or auto-deploy unless they say so for that project.
+For any repo that is **not** this Vercel site, follow the default rule: **only commit or push when the user asks**. Other projects are not on Vercel yet.
 
 ## Scope
 
-This preference overrides “only commit when asked” **for this repository only**. Question-only or review-only tasks with no file changes do not require a commit or push.
+This overrides “only commit when asked” **for this repository only**. Question-only or review-only tasks with no file changes do not require a commit or push.
