@@ -55,6 +55,12 @@ export function getSignWellNdaConfigStatus(): SignWellConfigStatus {
   return base;
 }
 
+/** When true, send template_fields on create — only if matching TextFields exist in SignWell templates. */
+export function signWellPrefillTemplateFieldsEnabled(): boolean {
+  const raw = process.env.SIGNWELL_PREFILL_TEMPLATE_FIELDS?.trim().toLowerCase();
+  return raw === 'true' || raw === '1';
+}
+
 export function getSignWellRetainerConfigStatus(): SignWellConfigStatus {
   const base = getSignWellConfigStatus();
   if (!base.configured || !base.config) return base;

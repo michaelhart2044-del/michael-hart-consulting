@@ -3,6 +3,7 @@ import type { PandaDocClientDetails } from '@/lib/pandadoc/client-details';
 import { contractorProfile } from '@/lib/pandadoc/contractor';
 import { buildDocumentMergeFields, mergeFieldsToTokenMap } from '@/lib/documents/merge-fields';
 import type { SignWellConfig } from '@/lib/signwell/config';
+import { signWellPrefillTemplateFieldsEnabled } from '@/lib/signwell/config';
 import {
   createDocumentFromTemplate,
   type SignWellCreateFromTemplateRequest,
@@ -22,10 +23,37 @@ function templateIdForKind(config: SignWellConfig, kind: OwnedDocKind): string {
   return id;
 }
 
-/** Map merge tokens to SignWell template_fields — api_id must match template field IDs in SignWell. */
-function buildTemplateFields(tokenMap: Record<string, string>): SignWellTemplateField[] {
+const NDA_PREFILL_KEYS = new Set([
+  'Owner.FirstName',
+  'Owner.LastName',
+  'Owner.Company',
+  'Owner.State',
+  'Owner.Email',
+  'Recipient.FirstName',
+  'Recipient.LastName',
+  'Recipient.Company',
+  'Recipient.Email',
+  'Date',
+  'Company website',
+  'Recipient.StreetAddress',
+  'Recipient.City',
+  'Recipient.State',
+  'Recipient.PostalCode',
+]);
+
+const RETAINER_EXTRA_KEYS = new Set(['RETAINER AMOUNT', 'TOTAL PHASE 1 FEE', 'BALANCE DUE']);
+
+/** Map merge tokens to SignWell template_fields — api_id must match TextField IDs in SignWell. */
+function buildTemplateFields(
+  kind: OwnedDocKind,
+  tokenMap: Record<string, string>,
+): SignWellTemplateField[] {
+  const allowed =
+    kind === 'nda'
+      ? NDA_PREFILL_KEYS
+      : new Set([...NDA_PREFILL_KEYS, ...RETAINER_EXTRA_KEYS]);
   return Object.entries(tokenMap)
-    .filter(([, value]) => value.trim().length > 0)
+    .filter(([api_id, value]) => allowed.has(api_id) && value.trim().length > 0)
     .map(([api_id, value]) => ({ api_id, value }));
 }
 
@@ -39,7 +67,7 @@ export async function buildSignWellDocumentRequest(
   const tokenMap = mergeFieldsToTokenMap(fields);
   const company = clientDetails.company.trim();
 
-  return {
+  const request: SignWellCreateFromTemplateRequest = {
     template_id: templateIdForKind(config, kind),
     name: documentName(kind, sub, company),
     draft: true,
@@ -57,12 +85,19 @@ export async function buildSignWellDocumentRequest(
         email: sub.email,
       },
     ],
-    template_fields: buildTemplateFields(tokenMap),
     metadata: {
       submissionId: sub.id,
       docKind: kind,
     },
   };
+
+  // Default off — templates only have signature fields until TextFields are added in SignWell.
+  if (signWellPrefillTemplateFieldsEnabled()) {
+    const templateFields = buildTemplateFields(kind, tokenMap);
+    if (templateFields.length > 0) request.template_fields = templateFields;
+  }
+
+  return request;
 }
 
 export async function createOwnedSignWellDocument(

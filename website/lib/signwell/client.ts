@@ -85,14 +85,18 @@ export async function createDocumentFromTemplate(
   config: SignWellConfig,
   body: SignWellCreateFromTemplateRequest,
 ): Promise<SignWellDocumentResponse> {
+  const payload: Record<string, unknown> = {
+    test_mode: config.testMode,
+    draft: true,
+    apply_signing_order: true,
+    ...body,
+  };
+  if (!body.template_fields?.length) {
+    delete payload.template_fields;
+  }
   return signWellFetch<SignWellDocumentResponse>(config, '/document_templates/documents/', {
     method: 'POST',
-    body: JSON.stringify({
-      test_mode: config.testMode,
-      draft: true,
-      apply_signing_order: true,
-      ...body,
-    }),
+    body: JSON.stringify(payload),
   });
 }
 

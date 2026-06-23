@@ -7,7 +7,9 @@ Export your NDA and Activation Retainer from PandaDoc (or Word) and upload them 
 1. Create a SignWell account (Light or API plan).
 2. Upload PDFs for **Mutual NDA** and **Phase 1 Activation Retainer**.
 3. Add placeholder roles named **Owner** (Michael Hart) and **Recipient** (client).
-4. Add template fields whose **API IDs** match merge tokens (see `lib/documents/merge-fields.ts`):
+4. *(Optional later)* Add **TextField** elements whose **API IDs** match merge tokens (see `lib/documents/merge-fields.ts`), then set `SIGNWELL_PREFILL_TEMPLATE_FIELDS=true` in Vercel. Until then, only **Signature** fields are required — merge names in the PDF stay as bracket text until you prefill in SignWell or add TextFields.
+
+   Example API IDs if you add TextFields:
    - `Owner.Company`, `Owner.State`, `Recipient.Company`, `Recipient.FirstName`, `Recipient.LastName`, `Date`, etc.
    - Retainer: `RETAINER AMOUNT`, `TOTAL PHASE 1 FEE`
 5. Copy template IDs from the SignWell URL into Vercel env vars.
