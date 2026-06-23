@@ -43,6 +43,7 @@ import {
   type EngagementPricingInput,
 } from '@/lib/engagement-pricing';
 import { getLatestCalendlyWebhookLog } from '@/lib/calendly-webhook-log';
+import { getLatestSignWellWebhookLog } from '@/lib/signwell/webhook-log';
 import { createAdminSession, verifyAdminSession, setAdminCookie, clearAdminCookie, getAdminSessionToken } from '@/lib/admin-auth';
 import type { GeneratorInput } from '@/lib/proposal-generator';
 import { generateProposalWithXai, isXaiProposalConfigured } from '@/lib/xai-proposal-generator';
@@ -444,6 +445,11 @@ function getCalendlyWebhookPublicUrl(): string {
   return `${base.replace(/\/$/, '')}/api/webhooks/calendly`;
 }
 
+function getSignWellWebhookPublicUrl(): string {
+  const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.michaelhartconsulting.com';
+  return `${base.replace(/\/$/, '')}/api/webhooks/signwell`;
+}
+
 export async function getCalendlyIntegrationStatusForAdmin() {
   if (!(await requireAdmin())) {
     return { success: false, error: 'Unauthorized' };
@@ -461,6 +467,26 @@ export async function getCalendlyIntegrationStatusForAdmin() {
     lastEvent: latest?.event ?? null,
     lastOutcome: latest?.outcome ?? null,
     lastEmail: latest?.email ?? null,
+    lastDetail: latest?.detail ?? null,
+  };
+}
+
+export async function getSignWellIntegrationStatusForAdmin() {
+  if (!(await requireAdmin())) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const latest = await getLatestSignWellWebhookLog();
+  const hasSuccess = latest?.outcome === 'updated';
+
+  return {
+    success: true,
+    webhookUrl: getSignWellWebhookPublicUrl(),
+    webhookIdConfigured: !!process.env.SIGNWELL_WEBHOOK_ID?.trim(),
+    connected: hasSuccess,
+    lastReceived: latest?.receivedAt ?? null,
+    lastEvent: latest?.eventType ?? null,
+    lastOutcome: latest?.outcome ?? null,
     lastDetail: latest?.detail ?? null,
   };
 }

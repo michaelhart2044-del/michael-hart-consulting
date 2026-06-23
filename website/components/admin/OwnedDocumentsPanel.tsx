@@ -12,6 +12,7 @@ import {
 } from '@/app/actions';
 import { PAYMENT_POLICY_SHORT } from '@/lib/documents/payment-policy';
 import { PORTAL_ACCESS_SLA } from '@/lib/portal-client-copy';
+import { ownedSignWellStatusLabel, ownedSignWellStatusTone } from '@/lib/signwell/owned-doc-status';
 
 interface Props {
   submission: PrepSubmission;
@@ -28,6 +29,23 @@ function downloadBase64Pdf(base64: string, filename: string) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function signWellStatusClass(tone: ReturnType<typeof ownedSignWellStatusTone>): string {
+  if (tone === 'success') return 'text-emerald-300';
+  if (tone === 'warning') return 'text-amber-200';
+  if (tone === 'error') return 'text-red-300';
+  return 'text-[#94a3b8]';
+}
+
+function OwnedDocSignWellStatus({
+  doc,
+}: {
+  doc: NonNullable<NonNullable<PrepSubmission['ownedDocuments']>['nda']>;
+}) {
+  const label = ownedSignWellStatusLabel(doc);
+  if (!label) return null;
+  return <div className={signWellStatusClass(ownedSignWellStatusTone(doc))}>{label}</div>;
 }
 
 export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }: Props) {
@@ -377,8 +395,11 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
             <p className="text-xs text-[#94a3b8] mt-1">SignWell — sign only, no payment</p>
           </div>
           {owned?.nda ? (
-            <div className="text-xs text-emerald-300/90 space-y-1">
-              <div>✓ Draft linked · {new Date(owned.nda.createdAt).toLocaleDateString()}</div>
+            <div className="text-xs space-y-1">
+              <div className="text-emerald-300/90">
+                ✓ Draft linked · {new Date(owned.nda.createdAt).toLocaleDateString()}
+              </div>
+              <OwnedDocSignWellStatus doc={owned.nda} />
               <div className="text-[#94a3b8]">Use Open in SignWell — Regenerate uses a new daily slot.</div>
             </div>
           ) : (
@@ -415,8 +436,9 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
             </p>
           </div>
           {owned?.retainer ? (
-            <div className="text-xs text-emerald-300/90 space-y-1">
-              <div>✓ Draft linked · {formatUsd(owned.retainer.activationFee)}</div>
+            <div className="text-xs space-y-1">
+              <div className="text-emerald-300/90">✓ Draft linked · {formatUsd(owned.retainer.activationFee)}</div>
+              <OwnedDocSignWellStatus doc={owned.retainer} />
               <div className="text-[#94a3b8]">Use Open in SignWell — Regenerate uses a new daily slot.</div>
             </div>
           ) : (

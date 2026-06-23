@@ -23,6 +23,7 @@ import LoadedClientHeader from '@/components/admin/LoadedClientHeader';
 import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
 import EngagementDocumentsPanel from '@/components/admin/EngagementDocumentsPanel';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
+import SignWellIntegrationPanel from '@/components/admin/SignWellIntegrationPanel';
 import { ADMIN_PORTAL_DISABLED_UNTIL_STEP8, ADMIN_STEP89_INSTRUCTION } from '@/lib/portal-client-copy';
 import { site } from '@/lib/site';
 import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
@@ -1018,6 +1019,13 @@ Best regards,`;
       )}
 
       <CalendlyIntegrationPanel
+        onMessage={(message) => {
+          setStatus(message);
+          window.setTimeout(() => setStatus(''), 5000);
+        }}
+      />
+
+      <SignWellIntegrationPanel
         onMessage={(message) => {
           setStatus(message);
           window.setTimeout(() => setStatus(''), 5000);

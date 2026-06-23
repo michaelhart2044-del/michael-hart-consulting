@@ -18,6 +18,7 @@ Export your NDA and Activation Retainer from PandaDoc (or Word) and upload them 
    - `Owner.Company`, `Owner.State`, `Recipient.Company`, `Recipient.FirstName`, `Recipient.LastName`, `Date`, etc.
    - Retainer: `RETAINER AMOUNT`, `TOTAL PHASE 1 FEE`
 6. Copy template IDs from the SignWell URL into Vercel env vars.
+7. **Webhooks (auto-detect signing):** In SignWell → Settings → Webhooks, register `https://www.michaelhartconsulting.com/api/webhooks/signwell`. Copy the Webhook ID into Vercel as `SIGNWELL_WEBHOOK_ID`, redeploy. Admin → SignWell webhooks panel shows connection status.
 
 ## Vercel environment variables
 
@@ -31,6 +32,7 @@ Export your NDA and Activation Retainer from PandaDoc (or Word) and upload them 
 | `SIGNWELL_PDF_PREFILL` | `false` to disable server-side PDF merge (default: on) |
 | `SIGNWELL_SOURCE_PDF_NDA` | Optional override path to NDA source PDF |
 | `SIGNWELL_SOURCE_PDF_RETAINER` | Optional override path to retainer source PDF |
+| `SIGNWELL_WEBHOOK_ID` | Webhook ID from SignWell (Settings → Webhooks) for signature event verification |
 | `MH_PAYMENT_BANK_NAME` | Bank name on remittance PDF |
 | `MH_PAYMENT_ROUTING_NUMBER` | ACH/wire routing |
 | `MH_PAYMENT_ACCOUNT_NUMBER` | Account number |

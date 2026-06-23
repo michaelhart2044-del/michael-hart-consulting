@@ -116,6 +116,11 @@ export interface PrepSubmission {
       status: string;
       createdAt: string;
       editUrl: string;
+      completedAt?: string;
+      ownerSignedAt?: string;
+      recipientSignedAt?: string;
+      lastSignWellEvent?: string;
+      lastSignWellEventAt?: string;
     };
     retainer?: {
       signwellId: string;
@@ -124,6 +129,11 @@ export interface PrepSubmission {
       createdAt: string;
       editUrl: string;
       activationFee: number;
+      completedAt?: string;
+      ownerSignedAt?: string;
+      recipientSignedAt?: string;
+      lastSignWellEvent?: string;
+      lastSignWellEventAt?: string;
     };
     activationPayment?: {
       generatedAt: string;
@@ -839,4 +849,160 @@ export async function mergeOwnedDocuments(
   );
   await persist(all);
   return all[idx];
+}
+
+export type OwnedDocKind = 'nda' | 'retainer';
+
+function normalizeSignWellDocStatus(raw?: string): string {
+  return (raw || 'unknown').trim().toLowerCase();
+}
+
+function resolveOwnedDocKindFromSubmission(
+  sub: PrepSubmission,
+  documentId: string,
+): OwnedDocKind | undefined {
+  if (sub.ownedDocuments?.nda?.signwellId === documentId) return 'nda';
+  if (sub.ownedDocuments?.retainer?.signwellId === documentId) return 'retainer';
+  return undefined;
+}
+
+type OwnedSignWellDocBase = {
+  signwellId: string;
+  documentName: string;
+  status: string;
+  createdAt: string;
+  editUrl: string;
+  completedAt?: string;
+  ownerSignedAt?: string;
+  recipientSignedAt?: string;
+  lastSignWellEvent?: string;
+  lastSignWellEventAt?: string;
+};
+
+function applySignWellPatch<T extends OwnedSignWellDocBase>(
+  existing: T,
+  params: {
+    eventType: string;
+    status?: string;
+    signerRole?: 'owner' | 'recipient';
+  },
+  eventAt: string,
+): T {
+  const patch = {
+    ...existing,
+    lastSignWellEvent: params.eventType,
+    lastSignWellEventAt: eventAt,
+  };
+
+  if (params.status && params.status !== 'unknown') {
+    patch.status = normalizeSignWellDocStatus(params.status);
+  }
+
+  switch (params.eventType) {
+    case 'document_sent':
+      if (patch.status === 'draft' || !patch.status) patch.status = 'sent';
+      break;
+    case 'document_in_progress':
+    case 'document_viewed':
+      if (patch.status === 'draft' || patch.status === 'sent') patch.status = 'pending';
+      break;
+    case 'document_signed':
+      if (params.signerRole === 'owner') patch.ownerSignedAt = patch.ownerSignedAt || eventAt;
+      if (params.signerRole === 'recipient') patch.recipientSignedAt = patch.recipientSignedAt || eventAt;
+      if (patch.status === 'draft' || patch.status === 'sent') patch.status = 'pending';
+      break;
+    case 'document_completed':
+      patch.status = 'completed';
+      patch.completedAt = patch.completedAt || eventAt;
+      break;
+    case 'document_declined':
+      patch.status = 'declined';
+      break;
+    case 'document_canceled':
+      patch.status = 'canceled';
+      break;
+    case 'document_expired':
+      patch.status = 'expired';
+      break;
+    default:
+      break;
+  }
+
+  return patch;
+}
+
+/** SignWell webhook — update NDA/retainer signing status on the client dossier. */
+export async function applySignWellDocumentEvent(params: {
+  documentId: string;
+  eventType: string;
+  status?: string;
+  metadata?: Record<string, unknown> | null;
+  signerRole?: 'owner' | 'recipient';
+  eventTime?: number;
+}): Promise<{
+  updated: boolean;
+  submissionId?: string;
+  docKind?: OwnedDocKind;
+  detail?: string;
+}> {
+  const all = await loadAll();
+  const eventAt = params.eventTime
+    ? new Date(params.eventTime * 1000).toISOString()
+    : new Date().toISOString();
+
+  let submissionId =
+    typeof params.metadata?.submissionId === 'string' ? params.metadata.submissionId : undefined;
+  let docKind: OwnedDocKind | undefined =
+    params.metadata?.docKind === 'nda' || params.metadata?.docKind === 'retainer'
+      ? params.metadata.docKind
+      : undefined;
+
+  let idx = submissionId ? all.findIndex((s) => s.id === submissionId) : -1;
+
+  if (idx === -1) {
+    idx = all.findIndex(
+      (s) =>
+        s.ownedDocuments?.nda?.signwellId === params.documentId ||
+        s.ownedDocuments?.retainer?.signwellId === params.documentId,
+    );
+    if (idx !== -1) {
+      submissionId = all[idx].id;
+      docKind = resolveOwnedDocKindFromSubmission(all[idx], params.documentId);
+    }
+  } else if (!docKind) {
+    docKind = resolveOwnedDocKindFromSubmission(all[idx], params.documentId);
+  }
+
+  if (idx === -1 || !docKind) {
+    return { updated: false, detail: 'no-match' };
+  }
+
+  const owned = all[idx].ownedDocuments || {};
+
+  if (docKind === 'nda') {
+    const existing = owned.nda;
+    if (!existing) {
+      return { updated: false, submissionId, docKind, detail: 'no-owned-doc' };
+    }
+    const patch = applySignWellPatch(existing, params, eventAt);
+    all[idx] = {
+      ...all[idx],
+      ownedDocuments: { ...owned, nda: patch },
+    };
+    await persist(all);
+    return { updated: true, submissionId: all[idx].id, docKind, detail: patch.status };
+  }
+
+  const existing = owned.retainer;
+  if (!existing) {
+    return { updated: false, submissionId, docKind, detail: 'no-owned-doc' };
+  }
+  const patch = applySignWellPatch(existing, params, eventAt);
+  all[idx] = {
+    ...all[idx],
+    ownedDocuments: { ...owned, retainer: patch },
+  };
+
+  await persist(all);
+  return { updated: true, submissionId: all[idx].id, docKind, detail: patch.status };
 }
