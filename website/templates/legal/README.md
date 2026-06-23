@@ -7,12 +7,17 @@ Export your NDA and Activation Retainer from PandaDoc (or Word) and upload them 
 1. Create a SignWell account (Light or API plan).
 2. Upload PDFs for **Mutual NDA** and **Phase 1 Activation Retainer**.
 3. Add placeholder roles named **Owner** (Michael Hart) and **Recipient** (client).
-4. *(Optional later)* Add **TextField** elements whose **API IDs** match merge tokens (see `lib/documents/merge-fields.ts`), then set `SIGNWELL_PREFILL_TEMPLATE_FIELDS=true` in Vercel. Until then, only **Signature** fields are required — merge names in the PDF stay as bracket text until you prefill in SignWell or add TextFields.
+4. *(Optional)* Add **TextField** elements whose **API IDs** match merge tokens (see `lib/documents/merge-fields.ts`), then set `SIGNWELL_PREFILL_TEMPLATE_FIELDS=true` in Vercel. **Default auto-fill** uses source PDFs in this folder instead — no SignWell TextFields required.
 
-   Example API IDs if you add TextFields:
+5. **Required for auto-fill:** Save your PandaDoc exports here (same files uploaded to SignWell):
+   - `nda-mutual.pdf`
+   - `retainer-activation.pdf`
+   Or set `SIGNWELL_SOURCE_PDF_NDA` / `SIGNWELL_SOURCE_PDF_RETAINER` in Vercel to absolute paths.
+
+   Example API IDs if you add TextFields instead:
    - `Owner.Company`, `Owner.State`, `Recipient.Company`, `Recipient.FirstName`, `Recipient.LastName`, `Date`, etc.
    - Retainer: `RETAINER AMOUNT`, `TOTAL PHASE 1 FEE`
-5. Copy template IDs from the SignWell URL into Vercel env vars.
+6. Copy template IDs from the SignWell URL into Vercel env vars.
 
 ## Vercel environment variables
 
@@ -23,6 +28,9 @@ Export your NDA and Activation Retainer from PandaDoc (or Word) and upload them 
 | `SIGNWELL_TEST_MODE` | `true` in preview/dev |
 | `SIGNWELL_TEMPLATE_NDA_ID` | NDA template ID |
 | `SIGNWELL_TEMPLATE_RETAINER_ID` | Retainer template ID |
+| `SIGNWELL_PDF_PREFILL` | `false` to disable server-side PDF merge (default: on) |
+| `SIGNWELL_SOURCE_PDF_NDA` | Optional override path to NDA source PDF |
+| `SIGNWELL_SOURCE_PDF_RETAINER` | Optional override path to retainer source PDF |
 | `MH_PAYMENT_BANK_NAME` | Bank name on remittance PDF |
 | `MH_PAYMENT_ROUTING_NUMBER` | ACH/wire routing |
 | `MH_PAYMENT_ACCOUNT_NUMBER` | Account number |

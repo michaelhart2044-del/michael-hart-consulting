@@ -35,6 +35,35 @@ export interface SignWellCreateFromTemplateRequest {
   metadata?: Record<string, string>;
 }
 
+export interface SignWellDocumentFile {
+  name: string;
+  file_base64: string;
+}
+
+export interface SignWellCreateDocumentField {
+  api_id?: string;
+  type: string;
+  page: number;
+  x: number;
+  y: number;
+  width: string | number;
+  height: string | number;
+  required?: boolean;
+  recipient_id?: string;
+  label?: string;
+}
+
+export interface SignWellCreateDocumentRequest {
+  name?: string;
+  draft?: boolean;
+  test_mode?: boolean;
+  apply_signing_order?: boolean;
+  recipients: SignWellRecipient[];
+  files: SignWellDocumentFile[];
+  fields: SignWellCreateDocumentField[][];
+  metadata?: Record<string, string>;
+}
+
 export interface SignWellDocumentResponse {
   id: string;
   name?: string;
@@ -49,7 +78,7 @@ export interface SignWellDocumentResponse {
   }>;
 }
 
-async function signWellFetch<T>(
+export async function signWellFetch<T>(
   config: SignWellConfig,
   path: string,
   init: RequestInit,
@@ -80,6 +109,22 @@ async function signWellFetch<T>(
   }
 
   return body as T;
+}
+
+export async function createDocument(
+  config: SignWellConfig,
+  body: SignWellCreateDocumentRequest,
+): Promise<SignWellDocumentResponse> {
+  const payload: Record<string, unknown> = {
+    test_mode: config.testMode,
+    draft: true,
+    apply_signing_order: true,
+    ...body,
+  };
+  return signWellFetch<SignWellDocumentResponse>(config, '/documents/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function createDocumentFromTemplate(

@@ -26,7 +26,13 @@ export interface DocumentMergeFields {
   totalPhase1Formatted?: string;
   balanceDue?: number;
   balanceDueFormatted?: string;
+  activationCredited?: string;
+  proposalDate?: string;
   website: string;
+}
+
+function formatDollarPlain(amount: number): string {
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(amount);
 }
 
 function formatAgreementDate(date = new Date()): string {
@@ -74,6 +80,8 @@ export function buildDocumentMergeFields(
     fields.totalPhase1Formatted = formatUsd(fees.totalFee);
     fields.balanceDue = fees.balanceDue;
     fields.balanceDueFormatted = formatUsd(fees.balanceDue);
+    fields.activationCredited = `${fees.creditPercent}%`;
+    fields.proposalDate = formatAgreementDate();
   }
 
   return fields;
@@ -101,5 +109,42 @@ export function mergeFieldsToTokenMap(fields: DocumentMergeFields): Record<strin
   if (fields.activationFeeFormatted) map['RETAINER AMOUNT'] = fields.activationFeeFormatted;
   if (fields.totalPhase1Formatted) map['TOTAL PHASE 1 FEE'] = fields.totalPhase1Formatted;
   if (fields.balanceDueFormatted) map['BALANCE DUE'] = fields.balanceDueFormatted;
+  return map;
+}
+
+function addAliases(map: Record<string, string>, names: string[], value: string) {
+  const trimmed = value?.trim();
+  if (!trimmed) return;
+  for (const name of names) map[name] = trimmed;
+}
+
+/** All bracket / brace tokens to replace inside source PDFs before SignWell upload. */
+export function mergeFieldsToPdfTokenMap(fields: DocumentMergeFields): Record<string, string> {
+  const map = mergeFieldsToTokenMap(fields);
+
+  addAliases(map, ['Document.CreatedDate', 'Document.Created Date'], fields.agreementDate);
+  addAliases(map, ['Client.FirstName', 'Customer.FirstName'], fields.recipientFirstName);
+  addAliases(map, ['Client.LastName', 'Customer.LastName'], fields.recipientLastName);
+  addAliases(map, ['Client.Company', 'Customer.Company'], fields.recipientCompany);
+  addAliases(map, ['Client.Email', 'Customer.Email'], fields.recipientEmail);
+  addAliases(map, ['Contractor.FirstName'], fields.ownerFirstName);
+  addAliases(map, ['Contractor.LastName'], fields.ownerLastName);
+
+  if (fields.recipientStreetAddress) {
+    addAliases(map, ['Client.StreetAddress'], fields.recipientStreetAddress);
+  }
+  if (fields.recipientCity) addAliases(map, ['Client.City'], fields.recipientCity);
+  if (fields.recipientState) addAliases(map, ['Client.State'], fields.recipientState);
+  if (fields.recipientPostalCode) addAliases(map, ['Client.PostalCode'], fields.recipientPostalCode);
+
+  if (fields.activationFee != null && fields.totalPhase1Fee != null && fields.balanceDue != null) {
+    map['RETAINER AMOUNT'] = formatDollarPlain(fields.activationFee);
+    map['TOTAL PHASE 1 FEE'] = formatDollarPlain(fields.totalPhase1Fee);
+    map['BALANCE DUE AT DELIVERY'] = formatDollarPlain(fields.balanceDue);
+    map['BALANCE DUE'] = formatDollarPlain(fields.balanceDue);
+    if (fields.activationCredited) map['ACTIVATION CREDITED'] = fields.activationCredited;
+    if (fields.proposalDate) map['PROPOSAL DATE'] = fields.proposalDate;
+  }
+
   return map;
 }

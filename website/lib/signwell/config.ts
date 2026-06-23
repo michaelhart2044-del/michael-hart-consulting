@@ -61,6 +61,13 @@ export function signWellPrefillTemplateFieldsEnabled(): boolean {
   return raw === 'true' || raw === '1';
 }
 
+/** When true (default), merge client data into the source PDF before uploading to SignWell. */
+export function signWellPdfPrefillEnabled(): boolean {
+  const raw = process.env.SIGNWELL_PDF_PREFILL?.trim().toLowerCase();
+  if (raw === 'false' || raw === '0') return false;
+  return true;
+}
+
 export function getSignWellRetainerConfigStatus(): SignWellConfigStatus {
   const base = getSignWellConfigStatus();
   if (!base.configured || !base.config) return base;
