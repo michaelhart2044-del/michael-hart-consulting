@@ -21,7 +21,7 @@ import type { PrepSubmission } from '@/lib/submissions-store';
 import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
 import LoadedClientHeader from '@/components/admin/LoadedClientHeader';
 import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
-import PandaDocRetainerPanel from '@/components/admin/PandaDocRetainerPanel';
+import EngagementDocumentsPanel from '@/components/admin/EngagementDocumentsPanel';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
 import { ADMIN_PORTAL_DISABLED_UNTIL_STEP8, ADMIN_STEP89_INSTRUCTION } from '@/lib/portal-client-copy';
 import { site } from '@/lib/site';
@@ -735,7 +735,7 @@ Best regards,`;
       )}
 
       {loadedSub && (
-        <PandaDocRetainerPanel
+        <EngagementDocumentsPanel
           key={loadedSub.id}
           submission={loadedSub}
           onUpdated={(sub) => setLoadedSub(sub)}

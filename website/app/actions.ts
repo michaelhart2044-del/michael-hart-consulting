@@ -26,6 +26,7 @@ import {
   savePandaDocRetainer,
   savePandaDocFinalBalance,
   savePandaDocNda,
+  mergeOwnedDocuments,
   type PrepSubmission,
   setClientPasswordHash,
   updatePreMeetingDiscovery,
@@ -1280,6 +1281,300 @@ export async function createPandaDocFinalBalanceForAdmin(
   } catch (err) {
     return { success: false as const, error: formatPandaDocError(err) };
   }
+}
+
+/** Which document backend the admin hub should use (owned vs PandaDoc). */
+export async function getDocumentsBackendForAdmin() {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+  const { getDocumentsBackend } = await import('@/lib/documents/config');
+  return { success: true as const, backend: getDocumentsBackend() };
+}
+
+export async function getOwnedDocumentsIntegrationStatusForAdmin() {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+  const { getSignWellNdaConfigStatus, getSignWellRetainerConfigStatus } = await import(
+    '@/lib/signwell/config'
+  );
+  const { getPaymentInstructionsConfig } = await import('@/lib/documents/payment-policy');
+  const { getQuickBooksConfigStatus } = await import('@/lib/quickbooks/invoice-draft');
+
+  const nda = getSignWellNdaConfigStatus();
+  const retainer = getSignWellRetainerConfigStatus();
+  const payment = getPaymentInstructionsConfig();
+  const qbo = getQuickBooksConfigStatus();
+
+  return {
+    success: true as const,
+    ndaConfigured: nda.configured,
+    retainerConfigured: retainer.configured,
+    paymentConfigured: payment.configured,
+    qboApiConfigured: qbo.configured,
+    ndaMissing: nda.configured ? [] : nda.missing,
+    retainerMissing: retainer.configured ? [] : retainer.missing,
+    paymentMissing: payment.configured ? [] : payment.missing,
+    qboMissing: qbo.configured ? [] : qbo.missing,
+  };
+}
+
+async function ownedClientDetailsInput(clientDetailsInput: {
+  company: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+}) {
+  return {
+    company: clientDetailsInput?.company ?? '',
+    streetAddress: clientDetailsInput?.streetAddress,
+    city: clientDetailsInput?.city,
+    state: clientDetailsInput?.state,
+    postalCode: clientDetailsInput?.postalCode,
+  };
+}
+
+/** Phase C — SignWell mutual NDA draft (sign only, no payment). */
+export async function createOwnedNdaForAdmin(
+  submissionId: string,
+  clientDetailsInput: {
+    company: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const clientDetails = await ownedClientDetailsInput(clientDetailsInput);
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) return { success: false as const, error: 'Submission not found.' };
+
+  const { getSignWellNdaConfigStatus, signWellDocumentUrl } = await import('@/lib/signwell/config');
+  const ndaConfig = getSignWellNdaConfigStatus();
+  if (!ndaConfig.configured || !ndaConfig.config) {
+    return {
+      success: false as const,
+      error: `SignWell NDA not configured. Add ${ndaConfig.missing.join(', ')} in Vercel, then redeploy.`,
+    };
+  }
+
+  const { createOwnedSignWellDocument } = await import('@/lib/signwell/create-owned-document');
+  const { formatSignWellError } = await import('@/lib/signwell/client');
+
+  try {
+    const created = await createOwnedSignWellDocument('nda', sub, ndaConfig.config, clientDetails);
+    const nda = {
+      signwellId: created.id,
+      documentName: created.name || `Mutual NDA — ${clientDetails.company || sub.name}`,
+      status: created.status || 'draft',
+      createdAt: new Date().toISOString(),
+      editUrl: signWellDocumentUrl(created.id),
+    };
+
+    const updated = await mergeOwnedDocuments(submissionId, { nda }, clientDetails);
+    if (!updated) {
+      return { success: false as const, error: 'NDA created in SignWell but failed to save on client record.' };
+    }
+
+    return {
+      success: true as const,
+      submission: updated,
+      editUrl: nda.editUrl,
+      message: `NDA draft ready in SignWell for ${sub.name}. Pre-sign as Owner, then send to client — no card payments.`,
+    };
+  } catch (err) {
+    return { success: false as const, error: formatSignWellError(err) };
+  }
+}
+
+/** Phase C — SignWell activation retainer draft + remittance instructions (ACH/wire/check only). */
+export async function createOwnedRetainerForAdmin(
+  submissionId: string,
+  clientDetailsInput: {
+    company: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const clientDetails = await ownedClientDetailsInput(clientDetailsInput);
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) return { success: false as const, error: 'Submission not found.' };
+  if (!sub.engagementQuote?.savedAt) {
+    return { success: false as const, error: 'Save engagement pricing quote first.' };
+  }
+
+  const { effectiveQuoteFees } = await import('@/lib/engagement-pricing');
+  const fees = effectiveQuoteFees(sub.engagementQuote);
+  if (fees.activationFee <= 0) {
+    return { success: false as const, error: 'Activation fee must be greater than zero.' };
+  }
+
+  const { getSignWellRetainerConfigStatus, signWellDocumentUrl } = await import('@/lib/signwell/config');
+  const retainerConfig = getSignWellRetainerConfigStatus();
+  if (!retainerConfig.configured || !retainerConfig.config) {
+    return {
+      success: false as const,
+      error: `SignWell retainer not configured. Add ${retainerConfig.missing.join(', ')} in Vercel, then redeploy.`,
+    };
+  }
+
+  const { createOwnedSignWellDocument } = await import('@/lib/signwell/create-owned-document');
+  const { formatSignWellError } = await import('@/lib/signwell/client');
+
+  try {
+    const created = await createOwnedSignWellDocument(
+      'retainer',
+      sub,
+      retainerConfig.config,
+      clientDetails,
+    );
+    const retainer = {
+      signwellId: created.id,
+      documentName: created.name || `Activation Retainer — ${clientDetails.company || sub.name}`,
+      status: created.status || 'draft',
+      createdAt: new Date().toISOString(),
+      editUrl: signWellDocumentUrl(created.id),
+      activationFee: fees.activationFee,
+    };
+
+    const updated = await mergeOwnedDocuments(submissionId, { retainer }, clientDetails);
+    if (!updated) {
+      return {
+        success: false as const,
+        error: 'Retainer created in SignWell but failed to save on client record.',
+      };
+    }
+
+    return {
+      success: true as const,
+      submission: updated,
+      editUrl: retainer.editUrl,
+      message: `Retainer draft ready in SignWell. After signing, send remittance PDF + QuickBooks invoice (ACH/wire/check only).`,
+    };
+  } catch (err) {
+    return { success: false as const, error: formatSignWellError(err) };
+  }
+}
+
+/** Phase C — branded remittance instruction PDF (no card links). */
+export async function generateOwnedPaymentInstructionForAdmin(
+  submissionId: string,
+  kind: 'activation' | 'balance',
+  clientDetailsInput: {
+    company: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const clientDetails = await ownedClientDetailsInput(clientDetailsInput);
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) return { success: false as const, error: 'Submission not found.' };
+  if (!sub.engagementQuote?.savedAt) {
+    return { success: false as const, error: 'Save engagement pricing quote first.' };
+  }
+
+  if (kind === 'balance' && !sub.engagementCommittedAt) {
+    return { success: false as const, error: 'Mark agreement signed & paid before generating balance instructions.' };
+  }
+
+  const { effectiveQuoteFees } = await import('@/lib/engagement-pricing');
+  const { buildDocumentMergeFields } = await import('@/lib/documents/merge-fields');
+  const { generatePaymentInstructionPdfBuffer } = await import('@/lib/documents/payment-instruction-pdf');
+
+  const fees = effectiveQuoteFees(sub.engagementQuote);
+  const amount = kind === 'activation' ? fees.activationFee : fees.balanceDue;
+  if (amount <= 0) {
+    return { success: false as const, error: 'Invoice amount must be greater than zero.' };
+  }
+
+  const fields = buildDocumentMergeFields(sub, clientDetails);
+  const reference = `${kind.toUpperCase()}-${submissionId.slice(0, 8).toUpperCase()}`;
+
+  try {
+    const pdfBuffer = await generatePaymentInstructionPdfBuffer({
+      kind,
+      fields,
+      amount,
+      invoiceReference: reference,
+    });
+
+    const paymentRecord = {
+      generatedAt: new Date().toISOString(),
+      amount,
+      reference,
+    };
+
+    const patch =
+      kind === 'activation'
+        ? { activationPayment: paymentRecord }
+        : { balancePayment: paymentRecord };
+
+    const updated = await mergeOwnedDocuments(submissionId, patch, clientDetails);
+    if (!updated) {
+      return { success: false as const, error: 'PDF generated but failed to save on client record.' };
+    }
+
+    const label = kind === 'activation' ? 'activation-retainer' : 'final-balance';
+    const companySlug = (clientDetails.company || sub.name).replace(/[^\w.-]+/g, '-').slice(0, 40);
+
+    return {
+      success: true as const,
+      submission: updated,
+      filename: `MH-${label}-${companySlug}.pdf`,
+      pdfBase64: pdfBuffer.toString('base64'),
+      message: `Remittance PDF ready — send with QuickBooks invoice. ${kind === 'activation' ? 'Activation' : 'Balance'}: ${reference}`,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'PDF generation failed.';
+    return { success: false as const, error: msg };
+  }
+}
+
+/** Phase C — copy-paste QuickBooks invoice draft (disable card payments in QBO). */
+export async function getQuickBooksInvoiceDraftForAdmin(
+  submissionId: string,
+  kind: 'activation' | 'balance',
+  clientDetailsInput: {
+    company: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  },
+) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const clientDetails = await ownedClientDetailsInput(clientDetailsInput);
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) return { success: false as const, error: 'Submission not found.' };
+
+  const { buildQuickBooksInvoiceDraft } = await import('@/lib/quickbooks/invoice-draft');
+  const draft = buildQuickBooksInvoiceDraft(sub, kind, clientDetails);
+  if (!draft) {
+    return { success: false as const, error: 'Could not build invoice draft — save pricing quote first.' };
+  }
+
+  return { success: true as const, draft };
 }
 
 /** Client password sign-in — requires admin-granted portal access. */

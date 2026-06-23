@@ -108,6 +108,34 @@ export interface PrepSubmission {
     createdAt: string;
     editUrl: string;
   };
+  /** Phase C — owned documents (SignWell + remittance PDFs). */
+  ownedDocuments?: {
+    nda?: {
+      signwellId: string;
+      documentName: string;
+      status: string;
+      createdAt: string;
+      editUrl: string;
+    };
+    retainer?: {
+      signwellId: string;
+      documentName: string;
+      status: string;
+      createdAt: string;
+      editUrl: string;
+      activationFee: number;
+    };
+    activationPayment?: {
+      generatedAt: string;
+      amount: number;
+      reference: string;
+    };
+    balancePayment?: {
+      generatedAt: string;
+      amount: number;
+      reference: string;
+    };
+  };
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -757,6 +785,58 @@ export async function savePandaDocFinalBalance(
       ? { clientPostalCode: trim(clientDetails.postalCode) }
       : {}),
   };
+  await persist(all);
+  return all[idx];
+}
+
+type ClientDetailsPatch = {
+  company?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+};
+
+function applyClientDetailsPatch(
+  row: PrepSubmission,
+  clientDetails?: ClientDetailsPatch,
+): PrepSubmission {
+  if (!clientDetails) return row;
+  const trim = (v?: string) => v?.trim() || undefined;
+  return {
+    ...row,
+    ...(clientDetails.company !== undefined ? { clientCompany: trim(clientDetails.company) } : {}),
+    ...(clientDetails.streetAddress !== undefined
+      ? { clientStreetAddress: trim(clientDetails.streetAddress) }
+      : {}),
+    ...(clientDetails.city !== undefined ? { clientCity: trim(clientDetails.city) } : {}),
+    ...(clientDetails.state !== undefined ? { clientState: trim(clientDetails.state) } : {}),
+    ...(clientDetails.postalCode !== undefined
+      ? { clientPostalCode: trim(clientDetails.postalCode) }
+      : {}),
+  };
+}
+
+/** Admin — merge owned document records (SignWell + payment instructions). */
+export async function mergeOwnedDocuments(
+  id: string,
+  patch: Partial<NonNullable<PrepSubmission['ownedDocuments']>>,
+  clientDetails?: ClientDetailsPatch,
+): Promise<PrepSubmission | null> {
+  const all = await loadAll();
+  const idx = all.findIndex((s) => s.id === id);
+  if (idx === -1) return null;
+
+  all[idx] = applyClientDetailsPatch(
+    {
+      ...all[idx],
+      ownedDocuments: {
+        ...(all[idx].ownedDocuments || {}),
+        ...patch,
+      },
+    },
+    clientDetails,
+  );
   await persist(all);
   return all[idx];
 }

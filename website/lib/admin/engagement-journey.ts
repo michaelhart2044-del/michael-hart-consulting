@@ -35,8 +35,9 @@ export function buildEngagementJourney(
   const hasConsult = hasConsultProgress(sub, consult30TranscriptLen);
   const hasPricing = !!sub.engagementQuote?.savedAt;
   const hasProposal = !!(sub.sentAt || (sub.proposalDraft && sub.proposalDraft.trim().length > 20));
-  const hasNda = !!sub.pandadocNda;
-  const hasAgreement = !!sub.engagementCommittedAt || !!sub.pandadocRetainer;
+  const hasNda = !!sub.pandadocNda || !!sub.ownedDocuments?.nda;
+  const hasRetainer = !!sub.pandadocRetainer || !!sub.ownedDocuments?.retainer;
+  const hasAgreement = !!sub.engagementCommittedAt || hasRetainer;
   const hasPortal = !!sub.portalAccessGrantedAt && !sub.portalRevokedAt;
   const hasDeepDive = !!sub.comprehensiveBookedAt;
 
@@ -83,8 +84,8 @@ export function buildEngagementJourney(
     nextAction = { label: 'Generate mutual NDA', sectionId: 'phase-documents' };
   } else if (!hasProposal) {
     nextAction = { label: 'Generate and send proposal', sectionId: 'phase-proposal' };
-  } else if (!sub.pandadocRetainer) {
-    nextAction = { label: 'Create activation retainer in PandaDoc', sectionId: 'phase-documents' };
+  } else if (!hasRetainer) {
+    nextAction = { label: 'Create activation retainer', sectionId: 'phase-documents' };
   } else if (!sub.engagementCommittedAt) {
     nextAction = { label: 'Mark agreement signed & paid', sectionId: 'phase-portal' };
   } else if (!hasPortal) {
