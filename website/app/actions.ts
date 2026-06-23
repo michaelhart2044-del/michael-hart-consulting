@@ -1391,7 +1391,11 @@ export async function createOwnedNdaForAdmin(
   }
 
   const { createOwnedSignWellDocument } = await import('@/lib/signwell/create-owned-document');
-  const { formatSignWellError, resolveSignWellDocumentEditUrl } = await import('@/lib/signwell/client');
+  const {
+    formatSignWellError,
+    persistSignWellDocumentEditUrl,
+    resolveSignWellDocumentEditUrl,
+  } = await import('@/lib/signwell/client');
 
   try {
     const created = await createOwnedSignWellDocument('nda', sub, ndaConfig.config, clientDetails);
@@ -1400,7 +1404,7 @@ export async function createOwnedNdaForAdmin(
       documentName: created.name || `Mutual NDA — ${clientDetails.company || sub.name}`,
       status: created.status || 'draft',
       createdAt: new Date().toISOString(),
-      editUrl: resolveSignWellDocumentEditUrl(created),
+      editUrl: persistSignWellDocumentEditUrl(created.id),
     };
 
     const updated = await mergeOwnedDocuments(submissionId, { nda }, clientDetails);
@@ -1411,10 +1415,95 @@ export async function createOwnedNdaForAdmin(
     return {
       success: true as const,
       submission: updated,
-      editUrl: nda.editUrl,
+      editUrl: resolveSignWellDocumentEditUrl(created),
       message: `NDA draft ready in SignWell for ${sub.name}. Pre-sign as Owner, then send to client — no card payments.`,
     };
   } catch (err) {
+    return { success: false as const, error: formatSignWellError(err) };
+  }
+}
+
+/** Refresh SignWell edit link before opening — embedded URLs expire after first use. */
+export async function openOwnedSignWellDocumentForAdmin(
+  submissionId: string,
+  kind: 'nda' | 'retainer',
+) {
+  if (!(await requireAdmin())) {
+    return { success: false as const, error: 'Unauthorized' };
+  }
+
+  const sub = await getSubmissionById(submissionId);
+  if (!sub) return { success: false as const, error: 'Submission not found.' };
+
+  const signwellId =
+    kind === 'nda'
+      ? sub.ownedDocuments?.nda?.signwellId
+      : sub.ownedDocuments?.retainer?.signwellId;
+  if (!signwellId) {
+    return { success: false as const, error: `No SignWell ${kind} draft linked yet.` };
+  }
+
+  const { getSignWellConfigStatus } = await import('@/lib/signwell/config');
+  const signWellConfig = getSignWellConfigStatus();
+  if (!signWellConfig.configured || !signWellConfig.config) {
+    return {
+      success: false as const,
+      error: `SignWell not configured. Add ${signWellConfig.missing.join(', ')} in Vercel, then redeploy.`,
+    };
+  }
+
+  const {
+    formatSignWellError,
+    getDocument,
+    persistSignWellDocumentEditUrl,
+    resolveSignWellDocumentEditUrl,
+    SignWellApiError,
+  } = await import('@/lib/signwell/client');
+
+  try {
+    const doc = await getDocument(signWellConfig.config, signwellId);
+    const editUrl = resolveSignWellDocumentEditUrl(doc);
+    const stableEditUrl = persistSignWellDocumentEditUrl(signwellId);
+    const status = doc.status || (kind === 'nda'
+      ? sub.ownedDocuments?.nda?.status
+      : sub.ownedDocuments?.retainer?.status) || 'draft';
+
+    const updated =
+      kind === 'nda' && sub.ownedDocuments?.nda
+        ? await mergeOwnedDocuments(submissionId, {
+            nda: {
+              ...sub.ownedDocuments.nda,
+              editUrl: stableEditUrl,
+              status,
+            },
+          })
+        : kind === 'retainer' && sub.ownedDocuments?.retainer
+          ? await mergeOwnedDocuments(submissionId, {
+              retainer: {
+                ...sub.ownedDocuments.retainer,
+                editUrl: stableEditUrl,
+                status,
+              },
+            })
+          : null;
+    if (!updated) {
+      return { success: false as const, error: 'Could not save refreshed SignWell link.' };
+    }
+
+    return {
+      success: true as const,
+      submission: updated,
+      editUrl,
+      message: 'Opened SignWell with a fresh edit link.',
+    };
+  } catch (err) {
+    if (err instanceof SignWellApiError && err.status === 404) {
+      return {
+        success: false as const,
+        error:
+          'SignWell document not found — it may have been deleted. Regenerate uses one daily trial slot.',
+      };
+    }
     return { success: false as const, error: formatSignWellError(err) };
   }
 }
@@ -1457,7 +1546,11 @@ export async function createOwnedRetainerForAdmin(
   }
 
   const { createOwnedSignWellDocument } = await import('@/lib/signwell/create-owned-document');
-  const { formatSignWellError, resolveSignWellDocumentEditUrl } = await import('@/lib/signwell/client');
+  const {
+    formatSignWellError,
+    persistSignWellDocumentEditUrl,
+    resolveSignWellDocumentEditUrl,
+  } = await import('@/lib/signwell/client');
 
   try {
     const created = await createOwnedSignWellDocument(
@@ -1471,7 +1564,7 @@ export async function createOwnedRetainerForAdmin(
       documentName: created.name || `Activation Retainer — ${clientDetails.company || sub.name}`,
       status: created.status || 'draft',
       createdAt: new Date().toISOString(),
-      editUrl: resolveSignWellDocumentEditUrl(created),
+      editUrl: persistSignWellDocumentEditUrl(created.id),
       activationFee: fees.activationFee,
     };
 
@@ -1486,7 +1579,7 @@ export async function createOwnedRetainerForAdmin(
     return {
       success: true as const,
       submission: updated,
-      editUrl: retainer.editUrl,
+      editUrl: resolveSignWellDocumentEditUrl(created),
       message: `Retainer draft ready in SignWell. After signing, send remittance PDF + QuickBooks invoice (ACH/wire/check only).`,
     };
   } catch (err) {

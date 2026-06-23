@@ -9,6 +9,7 @@ import {
   generateOwnedPaymentInstructionForAdmin,
   getOwnedDocumentsIntegrationStatusForAdmin,
   getQuickBooksInvoiceDraftForAdmin,
+  openOwnedSignWellDocumentForAdmin,
 } from '@/app/actions';
 import { PAYMENT_POLICY_SHORT } from '@/lib/documents/payment-policy';
 import { PORTAL_ACCESS_SLA } from '@/lib/portal-client-copy';
@@ -60,6 +61,8 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
   const [postalCode, setPostalCode] = useState(() => submission.clientPostalCode || '');
   const [creatingNda, setCreatingNda] = useState(false);
   const [creatingRetainer, setCreatingRetainer] = useState(false);
+  const [openingNda, setOpeningNda] = useState(false);
+  const [openingRetainer, setOpeningRetainer] = useState(false);
   const [generatingActivationPdf, setGeneratingActivationPdf] = useState(false);
   const [generatingBalancePdf, setGeneratingBalancePdf] = useState(false);
   const [ndaConfigured, setNdaConfigured] = useState<boolean | null>(null);
@@ -91,7 +94,12 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
   }, [submission.engagementQuote]);
 
   const busy =
-    creatingNda || creatingRetainer || generatingActivationPdf || generatingBalancePdf;
+    creatingNda ||
+    creatingRetainer ||
+    openingNda ||
+    openingRetainer ||
+    generatingActivationPdf ||
+    generatingBalancePdf;
 
   const canCreateNda =
     ndaConfigured === true && !busy && company.trim().length > 0;
@@ -130,6 +138,38 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
       return baseMessage + popupNote;
     }
     return baseMessage;
+  }
+
+  async function handleOpenSignWell(kind: 'nda' | 'retainer') {
+    const ownedDoc = kind === 'nda' ? submission.ownedDocuments?.nda : submission.ownedDocuments?.retainer;
+    if (!ownedDoc || busy) return;
+
+    if (kind === 'nda') setOpeningNda(true);
+    else setOpeningRetainer(true);
+    setPanelMessage('');
+    setPanelIsError(false);
+
+    try {
+      const res = await openOwnedSignWellDocumentForAdmin(submission.id, kind);
+      if (res.success) {
+        onUpdated(res.submission);
+        const message = openSignWellTab(res.editUrl, res.message);
+        setPanelMessage(message);
+        onStatus(message);
+      } else {
+        setPanelMessage(res.error);
+        setPanelIsError(true);
+        onStatus(res.error, true);
+      }
+    } catch {
+      const err = 'Could not open SignWell — check API key and redeploy if needed.';
+      setPanelMessage(err);
+      setPanelIsError(true);
+      onStatus(err, true);
+    } finally {
+      if (kind === 'nda') setOpeningNda(false);
+      else setOpeningRetainer(false);
+    }
   }
 
   async function handleCreateNda() {
@@ -415,14 +455,14 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
               {creatingNda ? 'Creating…' : owned?.nda ? 'Regenerate NDA' : 'Generate NDA'}
             </button>
             {owned?.nda && (
-              <a
-                href={owned.nda.editUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-center px-4 py-2 text-xs rounded-full border border-violet-400/40 text-violet-200 hover:bg-violet-900/20"
+              <button
+                type="button"
+                onClick={() => handleOpenSignWell('nda')}
+                disabled={openingNda || busy}
+                className="text-center px-4 py-2 text-xs rounded-full border border-violet-400/40 text-violet-200 hover:bg-violet-900/20 disabled:opacity-40"
               >
-                Open in SignWell
-              </a>
+                {openingNda ? 'Opening…' : 'Open in SignWell'}
+              </button>
             )}
           </div>
         </div>
@@ -454,14 +494,14 @@ export default function OwnedDocumentsPanel({ submission, onUpdated, onStatus }:
               {creatingRetainer ? 'Creating…' : owned?.retainer ? 'Regenerate Retainer' : 'Generate Retainer'}
             </button>
             {owned?.retainer && (
-              <a
-                href={owned.retainer.editUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-center px-4 py-2 text-xs rounded-full border border-emerald-400/40 text-emerald-200 hover:bg-emerald-900/20"
+              <button
+                type="button"
+                onClick={() => handleOpenSignWell('retainer')}
+                disabled={openingRetainer || busy}
+                className="text-center px-4 py-2 text-xs rounded-full border border-emerald-400/40 text-emerald-200 hover:bg-emerald-900/20 disabled:opacity-40"
               >
-                Open in SignWell
-              </a>
+                {openingRetainer ? 'Opening…' : 'Open in SignWell'}
+              </button>
             )}
           </div>
         </div>

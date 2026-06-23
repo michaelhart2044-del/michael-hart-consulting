@@ -146,9 +146,26 @@ export async function createDocumentFromTemplate(
   });
 }
 
+/** Stable browser URL — safe to persist (embedded links expire after first open). */
+export function persistSignWellDocumentEditUrl(documentId: string): string {
+  return signWellDocumentEditUrl(documentId);
+}
+
+/** Fresh link for immediate open — prefers one-time embedded_edit_url from API. */
 export function resolveSignWellDocumentEditUrl(doc: SignWellDocumentResponse): string {
   if (doc.embedded_edit_url?.trim()) return doc.embedded_edit_url.trim();
   return signWellDocumentEditUrl(doc.id);
+}
+
+export async function getDocument(
+  config: SignWellConfig,
+  documentId: string,
+): Promise<SignWellDocumentResponse> {
+  return signWellFetch<SignWellDocumentResponse>(
+    config,
+    `/documents/${encodeURIComponent(documentId)}/`,
+    { method: 'GET' },
+  );
 }
 
 function signWellBodyMessages(body: unknown): string[] {
