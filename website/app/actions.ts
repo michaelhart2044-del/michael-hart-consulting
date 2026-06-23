@@ -1355,7 +1355,7 @@ export async function createOwnedNdaForAdmin(
   const sub = await getSubmissionById(submissionId);
   if (!sub) return { success: false as const, error: 'Submission not found.' };
 
-  const { getSignWellNdaConfigStatus, signWellDocumentUrl } = await import('@/lib/signwell/config');
+  const { getSignWellNdaConfigStatus } = await import('@/lib/signwell/config');
   const ndaConfig = getSignWellNdaConfigStatus();
   if (!ndaConfig.configured || !ndaConfig.config) {
     return {
@@ -1365,7 +1365,7 @@ export async function createOwnedNdaForAdmin(
   }
 
   const { createOwnedSignWellDocument } = await import('@/lib/signwell/create-owned-document');
-  const { formatSignWellError } = await import('@/lib/signwell/client');
+  const { formatSignWellError, resolveSignWellDocumentEditUrl } = await import('@/lib/signwell/client');
 
   try {
     const created = await createOwnedSignWellDocument('nda', sub, ndaConfig.config, clientDetails);
@@ -1374,7 +1374,7 @@ export async function createOwnedNdaForAdmin(
       documentName: created.name || `Mutual NDA — ${clientDetails.company || sub.name}`,
       status: created.status || 'draft',
       createdAt: new Date().toISOString(),
-      editUrl: signWellDocumentUrl(created.id),
+      editUrl: resolveSignWellDocumentEditUrl(created),
     };
 
     const updated = await mergeOwnedDocuments(submissionId, { nda }, clientDetails);
@@ -1421,7 +1421,7 @@ export async function createOwnedRetainerForAdmin(
     return { success: false as const, error: 'Activation fee must be greater than zero.' };
   }
 
-  const { getSignWellRetainerConfigStatus, signWellDocumentUrl } = await import('@/lib/signwell/config');
+  const { getSignWellRetainerConfigStatus } = await import('@/lib/signwell/config');
   const retainerConfig = getSignWellRetainerConfigStatus();
   if (!retainerConfig.configured || !retainerConfig.config) {
     return {
@@ -1431,7 +1431,7 @@ export async function createOwnedRetainerForAdmin(
   }
 
   const { createOwnedSignWellDocument } = await import('@/lib/signwell/create-owned-document');
-  const { formatSignWellError } = await import('@/lib/signwell/client');
+  const { formatSignWellError, resolveSignWellDocumentEditUrl } = await import('@/lib/signwell/client');
 
   try {
     const created = await createOwnedSignWellDocument(
@@ -1445,7 +1445,7 @@ export async function createOwnedRetainerForAdmin(
       documentName: created.name || `Activation Retainer — ${clientDetails.company || sub.name}`,
       status: created.status || 'draft',
       createdAt: new Date().toISOString(),
-      editUrl: signWellDocumentUrl(created.id),
+      editUrl: resolveSignWellDocumentEditUrl(created),
       activationFee: fees.activationFee,
     };
 

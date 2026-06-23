@@ -70,8 +70,13 @@ export function getSignWellRetainerConfigStatus(): SignWellConfigStatus {
   return base;
 }
 
-export function signWellDocumentUrl(documentId: string): string {
-  return `https://www.signwell.com/documents/${documentId}`;
+/** Browser URL to edit a SignWell document draft (not the public /documents path). */
+export function signWellDocumentEditUrl(documentId: string): string {
+  return `https://www.signwell.com/edit/document/${documentId}/`;
+}
+
+export function signWellTemplateEditUrl(templateId: string): string {
+  return `https://www.signwell.com/app/template_builder/${templateId}`;
 }
 
 export { SIGNWELL_API_BASE };

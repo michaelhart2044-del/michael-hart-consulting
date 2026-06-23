@@ -1,4 +1,4 @@
-import { SIGNWELL_API_BASE, type SignWellConfig } from '@/lib/signwell/config';
+import { SIGNWELL_API_BASE, signWellDocumentEditUrl, type SignWellConfig } from '@/lib/signwell/config';
 
 export class SignWellApiError extends Error {
   readonly status: number;
@@ -39,6 +39,7 @@ export interface SignWellDocumentResponse {
   id: string;
   name?: string;
   status?: string;
+  embedded_edit_url?: string;
   recipients?: Array<{
     id: string;
     email?: string;
@@ -98,6 +99,11 @@ export async function createDocumentFromTemplate(
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export function resolveSignWellDocumentEditUrl(doc: SignWellDocumentResponse): string {
+  if (doc.embedded_edit_url?.trim()) return doc.embedded_edit_url.trim();
+  return signWellDocumentEditUrl(doc.id);
 }
 
 export function formatSignWellError(err: unknown): string {
