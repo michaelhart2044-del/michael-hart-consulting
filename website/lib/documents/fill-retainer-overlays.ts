@@ -34,6 +34,10 @@ const FONT_COMPACT = 9.5;
 /** Cover page right column — matches fill-pdf-tokens.ts */
 const COVER_COL = { x: 483, w: 118 };
 
+/** Signature columns — matches fill-pdf-tokens.ts */
+const SIG_LEFT = { x: 35, w: 248 };
+const SIG_RIGHT = { x: 312, w: 248 };
+
 export function overlaySpec(
   partial: Omit<OverlaySpec, 'align' | 'padX'> & { align?: TextAlign; padX?: number },
 ): OverlaySpec {
@@ -42,20 +46,6 @@ export function overlaySpec(
 
 function findKey(items: PdfTextItem[], key: string): PdfTextItem | undefined {
   return items.find((item) => item.key === key);
-}
-
-function findKeys(items: PdfTextItem[], key: string): PdfTextItem[] {
-  return items.filter((item) => item.key === key);
-}
-
-/** Upper block on page 11 (To Customer notices). */
-function findNoticesToken(items: PdfTextItem[], key: string): PdfTextItem | undefined {
-  return findKeys(items, key).find((item) => item.y >= 350);
-}
-
-/** Lower block on page 11 (signature execution). */
-function findSignatureToken(items: PdfTextItem[], key: string): PdfTextItem | undefined {
-  return findKeys(items, key).find((item) => item.y < 250);
 }
 
 function fullAddress(tokenMap: Record<string, string>): string | null {
@@ -180,12 +170,12 @@ export function tryBuildRetainerNoticesAddressOverlay(
 ): { overlays: OverlaySpec[]; consumed: Set<PdfTextItem> } | null {
   if (pageNum !== 11) return null;
 
-  const company = findNoticesToken(items, 'Client.Company');
-  const street = findNoticesToken(items, 'Client.StreetAddress');
-  const city = findNoticesToken(items, 'Client.City');
-  const state = findNoticesToken(items, 'Client.State');
-  const zip = findNoticesToken(items, 'Client.PostalCode');
-  const email = findNoticesToken(items, 'Client.Email');
+  const company = findKey(items, 'Client.Company');
+  const street = findKey(items, 'Client.StreetAddress');
+  const city = findKey(items, 'Client.City');
+  const state = findKey(items, 'Client.State');
+  const zip = findKey(items, 'Client.PostalCode');
+  const email = findKey(items, 'Client.Email');
   if (!company || !street) return null;
 
   const address = fullAddress(tokenMap);
@@ -225,20 +215,21 @@ export function tryBuildRetainerNoticesAddressOverlay(
   };
 }
 
-/** Page 11 — Signature execution block (below General Terms). */
+/** Page 12 — Customer block + signature name row (uniform Helvetica). */
 export function tryBuildRetainerSignatureOverlays(
   pageNum: number,
   items: PdfTextItem[],
   tokenMap: Record<string, string>,
 ): { overlays: OverlaySpec[]; consumed: Set<PdfTextItem> } | null {
-  if (pageNum !== 11) return null;
+  if (pageNum !== 12) return null;
 
   const overlays: OverlaySpec[] = [];
   const consumed = new Set<PdfTextItem>();
   const fullName = tokenMap['Recipient.FullName']?.trim();
+  const ownerFullName = tokenMap['Owner.FullName']?.trim();
   const companyName = tokenMap['Recipient.Company']?.trim();
 
-  const custCompany = findSignatureToken(items, 'Client.Company');
+  const custCompany = findKey(items, 'Client.Company');
   if (custCompany && companyName) {
     overlays.push(
       overlaySpec({
@@ -256,9 +247,9 @@ export function tryBuildRetainerSignatureOverlays(
     consumed.add(custCompany);
   }
 
-  const nameFirst = findSignatureToken(items, 'Client.FirstName') ?? findKey(items, 'Client.FirstName');
-  const nameLast = findSignatureToken(items, 'Client.LastName') ?? findKey(items, 'Client.LastName');
-  if (nameFirst && nameLast && fullName && nameFirst.y < 250) {
+  const nameFirst = findKey(items, 'Client.FirstName');
+  const nameLast = findKey(items, 'Client.LastName');
+  if (nameFirst && nameLast && fullName) {
     overlays.push(
       overlaySpec({
         eraseX: nameFirst.x - 2,
@@ -276,17 +267,57 @@ export function tryBuildRetainerSignatureOverlays(
     consumed.add(nameLast);
   }
 
+  const contractorFirst = findKey(items, 'Contractor.FirstName');
+  const contractorLast = findKey(items, 'Contractor.LastName');
+  if (contractorFirst && contractorLast && ownerFullName) {
+    overlays.push(
+      overlaySpec({
+        eraseX: SIG_LEFT.x,
+        eraseY: contractorFirst.y - 2,
+        eraseW: SIG_LEFT.w,
+        eraseH: contractorFirst.height + 4,
+        text: ownerFullName,
+        textY: contractorFirst.y,
+        fontSize: FONT_BODY,
+        bgColor: ERASE_WHITE,
+        textColor: TEXT_COLOR,
+      }),
+    );
+    consumed.add(contractorFirst);
+    consumed.add(contractorLast);
+  }
+
+  const signFirst = findKey(items, 'Customer.FirstName');
+  const signLast = findKey(items, 'Customer.LastName');
+  if (signFirst && signLast && fullName) {
+    overlays.push(
+      overlaySpec({
+        eraseX: SIG_RIGHT.x,
+        eraseY: signFirst.y - 2,
+        eraseW: SIG_RIGHT.w,
+        eraseH: signFirst.height + 4,
+        text: fullName,
+        textY: signFirst.y,
+        fontSize: FONT_BODY,
+        bgColor: ERASE_WHITE,
+        textColor: TEXT_COLOR,
+      }),
+    );
+    consumed.add(signFirst);
+    consumed.add(signLast);
+  }
+
   if (!overlays.length) return null;
   return { overlays, consumed };
 }
 
-/** Page 13 — Invoicing address. */
+/** Page 14 — Invoicing address. */
 export function tryBuildRetainerInvoicingAddressOverlay(
   pageNum: number,
   items: PdfTextItem[],
   tokenMap: Record<string, string>,
 ): { overlays: OverlaySpec[]; consumed: Set<PdfTextItem> } | null {
-  if (pageNum !== 13 && pageNum !== 14) return null;
+  if (pageNum !== 14) return null;
 
   const street = findKey(items, 'Client.StreetAddress');
   const city = findKey(items, 'Client.City');
@@ -320,13 +351,13 @@ export function tryBuildRetainerInvoicingAddressOverlay(
   };
 }
 
-/** Page 13 — Activation retainer fee block (no wide token gaps). */
+/** Page 14 — Activation retainer fee block (no wide token gaps). */
 export function tryBuildRetainerActivationFeeOverlay(
   pageNum: number,
   items: PdfTextItem[],
   tokenMap: Record<string, string>,
 ): { overlays: OverlaySpec[]; consumed: Set<PdfTextItem> } | null {
-  if (pageNum !== 13 && pageNum !== 14) return null;
+  if (pageNum !== 14) return null;
 
   const total = findKey(items, 'TOTAL PHASE 1 FEE');
   const retainer = findKey(items, 'RETAINER AMOUNT');
