@@ -140,11 +140,13 @@ export function mergeFieldsToPdfTokenMap(fields: DocumentMergeFields): Record<st
   map['Owner.StateLabel'] = `State: ${fields.ownerState}`;
 
   if (fields.recipientStreetAddress) {
-    addAliases(map, ['Client.StreetAddress'], fields.recipientStreetAddress);
+    addAliases(map, ['Client.StreetAddress', 'Customer.StreetAddress'], fields.recipientStreetAddress);
   }
-  if (fields.recipientCity) addAliases(map, ['Client.City'], fields.recipientCity);
-  if (fields.recipientState) addAliases(map, ['Client.State'], fields.recipientState);
-  if (fields.recipientPostalCode) addAliases(map, ['Client.PostalCode'], fields.recipientPostalCode);
+  if (fields.recipientCity) addAliases(map, ['Client.City', 'Customer.City'], fields.recipientCity);
+  if (fields.recipientState) addAliases(map, ['Client.State', 'Customer.State'], fields.recipientState);
+  if (fields.recipientPostalCode) {
+    addAliases(map, ['Client.PostalCode', 'Customer.PostalCode'], fields.recipientPostalCode);
+  }
 
   if (fields.activationFee != null && fields.totalPhase1Fee != null && fields.balanceDue != null) {
     map['RETAINER AMOUNT'] = formatDollarPlain(fields.activationFee);

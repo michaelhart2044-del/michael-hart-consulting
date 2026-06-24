@@ -264,7 +264,7 @@ async function createOwnedSignWellDocumentWithFilledPdf(
 
 
 
-  const filledPdf = await fillPdfTokenBuffer(sourcePdf, tokenMap);
+  const filledPdf = await fillPdfTokenBuffer(sourcePdf, tokenMap, kind);
 
   const signatureFields = mapTemplateSignatureFields(template.fields, recipients);
 

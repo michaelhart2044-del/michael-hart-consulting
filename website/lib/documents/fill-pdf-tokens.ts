@@ -1,4 +1,6 @@
 import { ensurePdfJsNodeEnvironment } from '@/lib/documents/pdfjs-node-setup';
+import type { LegalPdfKind } from '@/lib/documents/legal-pdf-source';
+import { buildRetainerGroupedOverlays } from '@/lib/documents/fill-retainer-overlays';
 import { PDFDocument, rgb, StandardFonts, type PDFFont } from 'pdf-lib';
 
 /** Universal overlay typography — Helvetica at fixed sizes for every filled field. */
@@ -300,18 +302,30 @@ function tryBuildPage5JurisdictionOverlay(
   return { overlays, consumed };
 }
 
-function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: Record<string, string>): OverlaySpec[] {
+function buildOverlaysForPage(
+  pageNum: number,
+  items: PdfTextItem[],
+  tokenMap: Record<string, string>,
+  docKind?: LegalPdfKind,
+): OverlaySpec[] {
   const overlays: OverlaySpec[] = [];
   const consumed = new Set<PdfTextItem>();
   const coverBg = ERASE_COVER;
 
-  const intro = tryBuildPage2IntroOverlays(pageNum, items, tokenMap);
+  if (docKind === 'retainer') {
+    const retainer = buildRetainerGroupedOverlays(pageNum, items, tokenMap);
+    overlays.push(...retainer.overlays);
+    for (const item of retainer.consumed) consumed.add(item);
+  }
+
+  const intro = docKind === 'nda' ? tryBuildPage2IntroOverlays(pageNum, items, tokenMap) : null;
   if (intro) {
     overlays.push(...intro.overlays);
     for (const item of intro.consumed) consumed.add(item);
   }
 
-  const jurisdiction = tryBuildPage5JurisdictionOverlay(pageNum, items, tokenMap);
+  const jurisdiction =
+    docKind === 'nda' ? tryBuildPage5JurisdictionOverlay(pageNum, items, tokenMap) : null;
   if (jurisdiction) {
     overlays.push(...jurisdiction.overlays);
     for (const item of jurisdiction.consumed) consumed.add(item);
@@ -374,6 +388,20 @@ function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: R
 
   for (const item of items) {
     if (consumed.has(item) || !item.key) continue;
+
+    // Retainer grouped overlays replace wide PandaDoc token rows — skip per-token boxes.
+    if (docKind === 'retainer') {
+      const grouped =
+        (pageNum === 1 && item.key.startsWith('Customer.')) ||
+        (pageNum === 11 &&
+          (item.key.startsWith('Client.') || item.key.startsWith('Customer.'))) ||
+        (pageNum === 12 &&
+          (item.key.startsWith('Client.') ||
+            item.key.startsWith('Customer.') ||
+            item.key.startsWith('Contractor.'))) ||
+        (pageNum === 14 && item.key.startsWith('Client.'));
+      if (grouped) continue;
+    }
 
     const rawValue = tokenMap[item.key]?.trim();
     if (!rawValue) continue;
@@ -474,6 +502,7 @@ function buildOverlaysForPage(pageNum: number, items: PdfTextItem[], tokenMap: R
 export async function fillPdfTokenBuffer(
   pdf: Buffer,
   tokenMap: Record<string, string>,
+  docKind?: LegalPdfKind,
 ): Promise<Buffer> {
   await ensurePdfJsNodeEnvironment();
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
@@ -487,7 +516,7 @@ export async function fillPdfTokenBuffer(
     const pdfjsPage = await pdfjsDoc.getPage(pageNum);
     const pdfLibPage = pages[pageNum - 1];
     const items = parseItems(await pdfjsPage.getTextContent());
-    const overlays = buildOverlaysForPage(pageNum, items, tokenMap);
+    const overlays = buildOverlaysForPage(pageNum, items, tokenMap, docKind);
 
     for (const overlay of overlays) {
       pdfLibPage.drawRectangle({
@@ -499,24 +528,41 @@ export async function fillPdfTokenBuffer(
         borderWidth: 0,
       });
 
-      const fontSize = fitFontSize(font, overlay.text, overlay.eraseW - overlay.padX * 2, overlay.fontSize, FONT_MIN);
-      const textX = textXForAlign(
-        font,
-        overlay.text,
-        fontSize,
-        overlay.eraseX,
-        overlay.eraseW,
-        overlay.align,
-        overlay.padX,
-      );
+      const lines = overlay.text.split('\n');
+      let lineY = overlay.textY;
+      const lineStep = overlay.fontSize + 2;
 
-      pdfLibPage.drawText(overlay.text, {
-        x: textX,
-        y: overlay.textY,
-        size: fontSize,
-        font,
-        color: overlay.textColor,
-      });
+      for (const line of lines) {
+        if (!line.trim()) {
+          lineY -= lineStep;
+          continue;
+        }
+        const fontSize = fitFontSize(
+          font,
+          line,
+          overlay.eraseW - overlay.padX * 2,
+          overlay.fontSize,
+          FONT_MIN,
+        );
+        const textX = textXForAlign(
+          font,
+          line,
+          fontSize,
+          overlay.eraseX,
+          overlay.eraseW,
+          overlay.align,
+          overlay.padX,
+        );
+
+        pdfLibPage.drawText(line, {
+          x: textX,
+          y: lineY,
+          size: fontSize,
+          font,
+          color: overlay.textColor,
+        });
+        lineY -= lineStep;
+      }
     }
   }
 
