@@ -550,12 +550,13 @@ export async function fillPdfTokenBuffer(
           lineY -= lineStep;
           continue;
         }
+        const minFit = docKind === 'retainer' ? 9.5 : FONT_MIN;
         const fontSize = fitFontSize(
           font,
           line,
           overlay.eraseW - overlay.padX * 2,
           overlay.fontSize,
-          FONT_MIN,
+          minFit,
         );
         const textX = textXForAlign(
           font,

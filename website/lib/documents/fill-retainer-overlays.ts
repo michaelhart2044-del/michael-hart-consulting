@@ -30,6 +30,8 @@ const ERASE_COVER = rgb(0.945, 0.945, 0.965);
 const TEXT_COLOR = rgb(0.05, 0.05, 0.05);
 const FONT_BODY = 10;
 const FONT_COMPACT = 9.5;
+/** Match PandaDoc body text in General Terms notices column. */
+const NOTICES_COL_X = 71;
 
 /** Cover page right column — matches fill-pdf-tokens.ts */
 const COVER_COL = { x: 483, w: 118 };
@@ -136,9 +138,9 @@ export function tryBuildRetainerPage2CustomerOverlay(
   for (const item of [company, street, city, state, zip]) {
     if (item) consumed.add(item);
   }
-  // Cover the full Customer/Contractor intro block (static text + wide token boxes).
+  // Cover Customer/Contractor party lines only — stop below "by and between:" (y≈682).
   for (const item of items) {
-    if (item.y >= 598 && item.y <= 686 && item.x >= 35 && item.x <= 560) {
+    if (item.y >= 600 && item.y <= 664 && item.x >= 35 && item.x <= 560) {
       consumed.add(item);
     }
   }
@@ -154,9 +156,9 @@ export function tryBuildRetainerPage2CustomerOverlay(
         eraseX: 35,
         eraseY: 598,
         eraseW: 542,
-        eraseH: 90,
+        eraseH: 64,
         text: `${line1}\n${line2}`,
-        textY: 676,
+        textY: 654,
         fontSize: FONT_BODY,
         bgColor: ERASE_WHITE,
         textColor: TEXT_COLOR,
@@ -205,15 +207,16 @@ export function tryBuildRetainerNoticesAddressOverlay(
     consumed,
     overlays: [
       overlaySpec({
-        eraseX: 35,
+        eraseX: NOTICES_COL_X - 2,
         eraseY,
-        eraseW: 520,
+        eraseW: 480,
         eraseH,
         text: `${companyName}\n${address}\nEmail: ${clientEmail}`,
         textY: topY,
         fontSize: FONT_BODY,
         bgColor: ERASE_WHITE,
         textColor: TEXT_COLOR,
+        padX: 0,
       }),
     ],
   };
@@ -276,9 +279,9 @@ export function tryBuildRetainerSignatureOverlays(
   if (contractorFirst && contractorLast && ownerFullName) {
     overlays.push(
       overlaySpec({
-        eraseX: SIG_LEFT.x,
+        eraseX: contractorFirst.x - 2,
         eraseY: contractorFirst.y - 2,
-        eraseW: SIG_LEFT.w,
+        eraseW: contractorLast.x + contractorLast.width - contractorFirst.x + 4,
         eraseH: contractorFirst.height + 4,
         text: ownerFullName,
         textY: contractorFirst.y,
@@ -296,9 +299,9 @@ export function tryBuildRetainerSignatureOverlays(
   if (signFirst && signLast && fullName) {
     overlays.push(
       overlaySpec({
-        eraseX: SIG_RIGHT.x,
+        eraseX: signFirst.x - 2,
         eraseY: signFirst.y - 2,
-        eraseW: SIG_RIGHT.w,
+        eraseW: signLast.x + signLast.width - signFirst.x + 4,
         eraseH: signFirst.height + 4,
         text: fullName,
         textY: signFirst.y,
