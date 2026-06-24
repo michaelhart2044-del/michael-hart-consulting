@@ -1,5 +1,4 @@
 import type { PrepSubmission } from '@/lib/submissions-store';
-import { formatUsd } from '@/lib/engagement-pricing';
 import { PAYMENT_POLICY_SHORT } from '@/lib/documents/payment-policy';
 import { site } from '@/lib/site';
 import {
@@ -19,6 +18,17 @@ function invoiceLabel(kind: QuickBooksInvoiceKind): string {
   return kind === 'activation' ? 'Phase 1 Activation Retainer' : 'Phase 1 Final Balance';
 }
 
+function openingLine(
+  label: string,
+  amount: string,
+  invoiceRef?: string,
+): string {
+  if (invoiceRef) {
+    return `Attached are Invoice #${invoiceRef} and remittance instructions for the ${label} (${amount}).`;
+  }
+  return `Attached are your invoice and remittance instructions for the ${label} (${amount}).`;
+}
+
 /** Plain-text body + subject for Outlook mailto (attach QBO invoice PDF + remittance PDF manually). */
 export function buildPaymentPackageEmailDraft(
   sub: PrepSubmission,
@@ -31,43 +41,32 @@ export function buildPaymentPackageEmailDraft(
 
   const greeting = sub.name.split(' ')[0] || 'there';
   const label = invoiceLabel(kind);
-  const company = draft.company;
   const amount = draft.amountFormatted;
-  const invoiceRef = qboInvoiceNumber?.trim();
-  const invoicePhrase = invoiceRef ? `Invoice #${invoiceRef}` : 'the attached invoice';
+  const invoiceRef = qboInvoiceNumber?.trim() || undefined;
+  const memoRef = invoiceRef || draft.company;
 
   const subject = invoiceRef
     ? `${site.name} — Invoice #${invoiceRef} & Payment Instructions`
     : `${site.name} — ${label} & Payment Instructions`;
 
-  const memoRef = invoiceRef || company;
-
   const body = [
     `Hi ${greeting},`,
     '',
-    `Please find attached ${invoicePhrase} for the ${label} (${amount}).`,
+    openingLine(label, amount, invoiceRef),
     '',
-    `${PAYMENT_POLICY_SHORT} Bank details are on the attached remittance instruction PDF.`,
+    `${PAYMENT_POLICY_SHORT} Bank details are on the remittance instruction PDF.`,
     '',
     `Please include reference "${memoRef}" with your payment so we can match it promptly.`,
     '',
-    'Attachments to include before sending:',
-    `1. QuickBooks invoice PDF${invoiceRef ? ` (#${invoiceRef})` : ''}`,
-    '2. MH remittance instruction PDF',
+    'Thank you for moving forward with us — we appreciate your trust and look forward to working together.',
     '',
-    'Let me know when payment is sent or if you have any questions.',
-    '',
-    'Best,',
-    'Michael Hart',
-    site.name,
-    site.phone,
-    site.email,
+    'When payment is sent, a quick reply to this email is helpful. If anything is unclear, just ask.',
   ].join('\n');
 
   return {
     to: sub.email,
     subject,
     body,
-    attachmentHint: 'Attach QBO invoice PDF + remittance PDF, then send.',
+    attachmentHint: 'Attach QBO invoice PDF + remittance instruction PDF, then send.',
   };
 }

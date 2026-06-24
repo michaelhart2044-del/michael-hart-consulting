@@ -1577,13 +1577,16 @@ export async function generateOwnedPaymentInstructionForAdmin(
       return { success: false as const, error: 'PDF generated but failed to save on client record.' };
     }
 
-    const label = kind === 'activation' ? 'activation-retainer' : 'final-balance';
     const companySlug = (clientDetails.company || sub.name).replace(/[^\w.-]+/g, '-').slice(0, 40);
+    const filename =
+      kind === 'activation'
+        ? `MH-Remittance-Instructions-${companySlug}.pdf`
+        : `MH-Remittance-Instructions-Balance-${companySlug}.pdf`;
 
     return {
       success: true as const,
       submission: updated,
-      filename: `MH-${label}-${companySlug}.pdf`,
+      filename,
       pdfBase64: pdfBuffer.toString('base64'),
       message: `Remittance PDF ready — send with QuickBooks invoice. ${kind === 'activation' ? 'Activation' : 'Balance'}: ${reference}`,
     };
