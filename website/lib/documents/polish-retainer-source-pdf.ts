@@ -12,8 +12,18 @@ const FONT_SIZE = 10;
 
 export async function polishRetainerSourcePdf(buffer: Buffer): Promise<Buffer> {
   const pdfDoc = await PDFDocument.load(buffer);
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const pageCount = pdfDoc.getPageCount();
+
+  // Already-clean exports (14 pages, no pricing spill page) — skip destructive polish.
+  if (pageCount === 14) {
+    // Heuristic: new PandaDoc exports use "Customer Responsibilities" on page 14 instead of a pricing table.
+    const bytes = buffer.toString('latin1');
+    if (bytes.includes('Customer Responsibilities') && !bytes.includes('Section total')) {
+      return buffer;
+    }
+  }
+
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
   // Only strip the trailing PandaDoc pricing spill page (page 15 in the original export).
   if (pageCount >= 15) {

@@ -125,35 +125,36 @@ export function tryBuildRetainerPage2CustomerOverlay(
   const city = findKey(items, 'Client.City');
   const state = findKey(items, 'Client.State');
   const zip = findKey(items, 'Client.PostalCode');
-  if (!company || !street) return null;
+  if (!company || (!street && !city)) return null;
 
   const address = fullAddress(tokenMap);
   const companyName = tokenMap['Recipient.Company'] || tokenMap['Client.Company'] || '';
   if (!address || !companyName) return null;
 
-  const consumed = new Set<PdfTextItem>([company, street]);
-  if (city) consumed.add(city);
-  if (state) consumed.add(state);
-  if (zip) consumed.add(zip);
+  const consumed = new Set<PdfTextItem>();
+  for (const item of [company, street, city, state, zip]) {
+    if (item) consumed.add(item);
+  }
 
   const line1 = `Customer: ${companyName}, with its principal place of business at ${address} ("Customer"); and`;
   const line2 =
     'Contractor: Michael Hart Consulting Group LLC, a Georgia limited liability company, with its principal place of business at 246 Round Pond Drive, Lilburn, GA 30047 ("Contractor").';
 
-  const eraseY = (city?.y ?? street.y) - 4;
-  const top = company.y + company.height + 2;
+  const anchorItems = [company, street, city, state, zip].filter(Boolean) as PdfTextItem[];
+  const minY = Math.min(...anchorItems.map((item) => item.y));
+  const maxY = Math.max(...anchorItems.map((item) => item.y + item.height));
 
   return {
     consumed,
     overlays: [
       overlaySpec({
         eraseX: 35,
-        eraseY,
+        eraseY: minY - 6,
         eraseW: 542,
-        eraseH: top - eraseY + 2,
+        eraseH: maxY - minY + 20,
         text: `${line1}\n${line2}`,
-        textY: top - 12,
-        fontSize: 10,
+        textY: maxY - 4,
+        fontSize: FONT_BODY,
         bgColor: ERASE_WHITE,
         textColor: TEXT_COLOR,
       }),
