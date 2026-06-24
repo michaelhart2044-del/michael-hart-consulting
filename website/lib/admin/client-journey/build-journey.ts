@@ -4,6 +4,7 @@ import {
   isNdaComplete,
   isNdaInProgress,
   isProposalComplete,
+  isRetainerInProgress,
   isRetainerSigned,
   resolveDocumentsBackend,
 } from '@/lib/admin/client-journey/checkpoints';
@@ -152,7 +153,13 @@ function buildNextAction(ctx: {
   }
   if (!hasAgreement) {
     if (!hasRetainerSigned) {
-      return { label: 'Complete activation agreement', sectionId: 'phase-agreement' };
+      const inProgress = isRetainerInProgress(sub, documentsBackend);
+      return inProgress
+        ? {
+            label: 'Finish retainer signing in SignWell',
+            sectionId: 'phase-agreement',
+          }
+        : { label: 'Generate activation retainer', sectionId: 'phase-agreement' };
     }
     return { label: 'Mark agreement signed & paid', sectionId: 'phase-portal' };
   }

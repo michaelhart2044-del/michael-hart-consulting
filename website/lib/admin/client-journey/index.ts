@@ -16,6 +16,7 @@ export {
   isNdaComplete,
   isNdaInProgress,
   isProposalComplete,
+  isRetainerInProgress,
   isRetainerSigned,
   resolveDocumentsBackend,
 } from '@/lib/admin/client-journey/checkpoints';

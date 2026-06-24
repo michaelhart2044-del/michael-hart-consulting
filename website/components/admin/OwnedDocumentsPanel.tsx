@@ -12,7 +12,12 @@ import {
 } from '@/app/actions';
 import { PAYMENT_POLICY_SHORT } from '@/lib/documents/payment-policy';
 import { PORTAL_ACCESS_SLA } from '@/lib/portal-client-copy';
-import { ownedSignWellStatusLabel, ownedSignWellStatusTone } from '@/lib/signwell/owned-doc-status';
+import {
+  isOwnedSignWellDocComplete,
+  ownedSignWellStatusLabel,
+  ownedSignWellStatusTone,
+  type OwnedSignWellDocRecord,
+} from '@/lib/signwell/owned-doc-status';
 import {
   useOwnedClientDetails,
   type OwnedClientDetailsState,
@@ -49,11 +54,30 @@ function signWellStatusClass(tone: ReturnType<typeof ownedSignWellStatusTone>): 
   return 'text-[#94a3b8]';
 }
 
-function OwnedDocSignWellStatus({
-  doc,
-}: {
-  doc: NonNullable<NonNullable<PrepSubmission['ownedDocuments']>['nda']>;
-}) {
+function OpenSignWellLink({ editUrl }: { editUrl: string }) {
+  return (
+    <a
+      href={editUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex text-xs font-medium text-violet-200 hover:text-violet-100 underline underline-offset-2"
+    >
+      Open in SignWell →
+    </a>
+  );
+}
+
+function SignWellRetainerSteps() {
+  return (
+    <ol className="text-[11px] text-[#64748b] list-decimal list-inside space-y-0.5 mt-1">
+      <li>Open SignWell → sign as Owner</li>
+      <li>Send to client (retainer only — no payment)</li>
+      <li>Use Refresh status when signing is complete</li>
+    </ol>
+  );
+}
+
+function OwnedDocSignWellStatus({ doc }: { doc: OwnedSignWellDocRecord }) {
   const label = ownedSignWellStatusLabel(doc);
   if (!label) return null;
   return <div className={signWellStatusClass(ownedSignWellStatusTone(doc))}>{label}</div>;
@@ -127,9 +151,14 @@ export default function OwnedDocumentsPanel({
     !busy &&
     company.trim().length > 0;
 
+  const retainerSignedForPayment =
+    !!submission.engagementCommittedAt ||
+    isOwnedSignWellDocComplete(submission.ownedDocuments?.retainer);
+
   const canGenerateActivationPdf =
     !!fees &&
     fees.activationFee > 0 &&
+    retainerSignedForPayment &&
     !busy &&
     company.trim().length > 0;
 
@@ -552,11 +581,13 @@ export default function OwnedDocumentsPanel({
               <div className="text-[#94a3b8]">
                 Regenerate creates a new SignWell draft and opens it (uses 1 daily slot).
               </div>
+              {!isOwnedSignWellDocComplete(owned.retainer) && <SignWellRetainerSteps />}
             </div>
           ) : (
             <div className="text-xs text-[#64748b]">No draft yet</div>
           )}
           <div className="mt-auto flex flex-col gap-2">
+            {owned?.retainer?.editUrl && <OpenSignWellLink editUrl={owned.retainer.editUrl} />}
             <button
               type="button"
               onClick={handleCreateRetainer}
@@ -574,6 +605,11 @@ export default function OwnedDocumentsPanel({
             <div className="font-semibold text-[#f1f5f9] mt-1">Activation invoice</div>
             <p className="text-xs text-[#94a3b8] mt-1">QBO invoice + remittance PDF</p>
           </div>
+          {!retainerSignedForPayment && (
+            <div className="text-xs text-amber-200/90">
+              Fully sign the activation retainer in SignWell first.
+            </div>
+          )}
           {owned?.activationPayment ? (
             <div className="text-xs text-amber-200/90">
               ✓ PDF generated · ref {owned.activationPayment.reference}

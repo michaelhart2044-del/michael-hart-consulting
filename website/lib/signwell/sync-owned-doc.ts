@@ -1,23 +1,32 @@
 import { contractorProfile } from '@/lib/pandadoc/contractor';
 import { getSignWellConfigStatus } from '@/lib/signwell/config';
 import { getDocument, type SignWellDocumentResponse } from '@/lib/signwell/client';
-import { normalizeSignWellStatus } from '@/lib/signwell/owned-doc-status';
+import {
+  normalizeSignWellStatus,
+  type OwnedSignWellDocRecord,
+} from '@/lib/signwell/owned-doc-status';
 import {
   mergeOwnedDocuments,
   type OwnedDocKind,
   type PrepSubmission,
 } from '@/lib/submissions-store';
 
-type OwnedSignWellDoc = NonNullable<
-  NonNullable<PrepSubmission['ownedDocuments']>['nda']
->;
+type StoredOwnedSignWellDoc = OwnedSignWellDocRecord & {
+  signwellId: string;
+  documentName: string;
+  editUrl: string;
+  activationFee?: number;
+};
 
 function recipientSigned(recipient: { status?: string; email?: string }): boolean {
   const status = normalizeSignWellStatus(recipient.status);
   return status === 'completed' || status === 'signed';
 }
 
-function syncDocFromApi(existing: OwnedSignWellDoc, doc: SignWellDocumentResponse): OwnedSignWellDoc {
+function syncDocFromApi(
+  existing: StoredOwnedSignWellDoc,
+  doc: SignWellDocumentResponse,
+): StoredOwnedSignWellDoc {
   const status = normalizeSignWellStatus(doc.status);
   const ownerEmail = contractorProfile.email.trim().toLowerCase();
   let ownerSignedAt = existing.ownerSignedAt;
@@ -76,8 +85,10 @@ export async function syncOwnedSignWellDocsForSubmission(
       if (!unchanged) {
         if (kind === 'nda') {
           patch.nda = synced;
-        } else if (owned.retainer) {
-          patch.retainer = { ...owned.retainer, ...synced };
+        } else {
+          patch.retainer = synced as NonNullable<
+            NonNullable<PrepSubmission['ownedDocuments']>['retainer']
+          >;
         }
       }
     } catch {

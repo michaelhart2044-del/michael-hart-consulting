@@ -50,6 +50,13 @@ export function isRetainerSigned(sub: PrepSubmission, backend: DocumentsBackendM
   return !!sub.pandadocRetainer;
 }
 
+export function isRetainerInProgress(sub: PrepSubmission, backend: DocumentsBackendMode): boolean {
+  if (backend === 'owned') {
+    return !!sub.ownedDocuments?.retainer && !isRetainerSigned(sub, backend);
+  }
+  return !!sub.pandadocRetainer && !isRetainerSigned(sub, backend);
+}
+
 /**
  * Agreement = signed + paid.
  * Owned path: manual Step 8 mark only (engagementCommittedAt) — not retainer draft alone.
