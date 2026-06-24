@@ -17,6 +17,9 @@ import {
   useOwnedClientDetails,
   type OwnedClientDetailsState,
 } from '@/components/admin/owned-docs/use-owned-client-details';
+import ActivationFlowChecklist from '@/components/admin/owned-docs/ActivationFlowChecklist';
+import { buildPaymentPackageEmailDraft } from '@/lib/quickbooks/payment-email-draft';
+import { openMailtoDraft } from '@/lib/open-mailto-draft';
 
 export type OwnedDocumentsPanelPart = 'nda' | 'agreement' | 'full';
 
@@ -90,6 +93,8 @@ export default function OwnedDocumentsPanel({
   const [panelMessage, setPanelMessage] = useState('');
   const [panelIsError, setPanelIsError] = useState(false);
   const [qboDraft, setQboDraft] = useState<string | null>(null);
+  const [activationQboInvoiceNumber, setActivationQboInvoiceNumber] = useState('');
+  const [balanceQboInvoiceNumber, setBalanceQboInvoiceNumber] = useState('');
 
   useEffect(() => {
     queueMicrotask(async () => {
@@ -242,6 +247,55 @@ export default function OwnedDocumentsPanel({
     }
   }
 
+  function openPaymentEmailDraft(kind: 'activation' | 'balance') {
+    const can = kind === 'activation' ? canGenerateActivationPdf : canGenerateBalancePdf;
+    if (!can) return;
+
+    if (!submission.email?.trim()) {
+      const err = 'Client email is missing on this submission.';
+      setPanelMessage(err);
+      setPanelIsError(true);
+      onStatus(err, true);
+      return;
+    }
+
+    const qboInvoiceNumber =
+      kind === 'activation' ? activationQboInvoiceNumber : balanceQboInvoiceNumber;
+
+    const draft = buildPaymentPackageEmailDraft(
+      submission,
+      kind,
+      clientDetailsPayload(),
+      qboInvoiceNumber,
+    );
+
+    if (!draft) {
+      const err = 'Save engagement pricing and company name first.';
+      setPanelMessage(err);
+      setPanelIsError(true);
+      onStatus(err, true);
+      return;
+    }
+
+    const opened = openMailtoDraft({
+      to: draft.to,
+      subject: draft.subject,
+      body: draft.body,
+    });
+
+    if (!opened) {
+      const err = 'Could not open email client — copy subject and body manually if needed.';
+      setPanelMessage(err);
+      setPanelIsError(true);
+      onStatus(err, true);
+      return;
+    }
+
+    setPanelMessage(draft.attachmentHint);
+    setPanelIsError(false);
+    onStatus('Outlook opened — attach QBO invoice PDF + remittance PDF, then send.');
+  }
+
   async function handleCopyQboDraft(kind: 'activation' | 'balance') {
     setPanelMessage('');
     setPanelIsError(false);
@@ -384,6 +438,7 @@ export default function OwnedDocumentsPanel({
               After the proposal is sent — SignWell retainer, QuickBooks invoice, and remittance PDF.{' '}
               <span className="text-[#c5a46e]">{PAYMENT_POLICY_SHORT.toLowerCase()}</span>
             </p>
+            <ActivationFlowChecklist submission={submission} />
           </>
         )}
         {part === 'full' && (
@@ -526,6 +581,17 @@ export default function OwnedDocumentsPanel({
           ) : (
             <div className="text-xs text-[#64748b]">Not generated yet</div>
           )}
+          <label className="text-xs text-[#94a3b8] block">
+            QBO invoice #
+            <input
+              type="text"
+              inputMode="numeric"
+              value={activationQboInvoiceNumber}
+              onChange={(e) => setActivationQboInvoiceNumber(e.target.value)}
+              placeholder="1002"
+              className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-sm text-[#f1f5f9] placeholder:text-[#64748b]"
+            />
+          </label>
           <div className="mt-auto flex flex-col gap-2">
             <button
               type="button"
@@ -534,6 +600,14 @@ export default function OwnedDocumentsPanel({
               className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
             >
               {generatingActivationPdf ? 'Generating…' : 'Download remittance PDF'}
+            </button>
+            <button
+              type="button"
+              onClick={() => openPaymentEmailDraft('activation')}
+              disabled={!canGenerateActivationPdf}
+              className="w-full px-4 py-2 text-sm font-medium rounded-full border border-amber-400/50 text-amber-100 hover:bg-amber-900/25 disabled:opacity-40"
+            >
+              Open email draft (Outlook)
             </button>
             <button
               type="button"
@@ -563,6 +637,17 @@ export default function OwnedDocumentsPanel({
               {!submission.engagementCommittedAt ? 'Requires agreement & payment' : 'Not generated yet'}
             </div>
           )}
+          <label className="text-xs text-[#94a3b8] block">
+            QBO invoice #
+            <input
+              type="text"
+              inputMode="numeric"
+              value={balanceQboInvoiceNumber}
+              onChange={(e) => setBalanceQboInvoiceNumber(e.target.value)}
+              placeholder="1003"
+              className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-sm text-[#f1f5f9] placeholder:text-[#64748b]"
+            />
+          </label>
           <div className="mt-auto flex flex-col gap-2">
             <button
               type="button"
@@ -571,6 +656,14 @@ export default function OwnedDocumentsPanel({
               className="w-full px-4 py-2.5 text-sm font-semibold rounded-full bg-[#8f6f3d] hover:bg-[#b89a6e] text-black disabled:opacity-40"
             >
               {generatingBalancePdf ? 'Generating…' : 'Download remittance PDF'}
+            </button>
+            <button
+              type="button"
+              onClick={() => openPaymentEmailDraft('balance')}
+              disabled={!canGenerateBalancePdf}
+              className="w-full px-4 py-2 text-sm font-medium rounded-full border border-sky-400/50 text-sky-100 hover:bg-sky-900/25 disabled:opacity-40"
+            >
+              Open email draft (Outlook)
             </button>
             <button
               type="button"
