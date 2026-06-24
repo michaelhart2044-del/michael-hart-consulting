@@ -395,10 +395,8 @@ function buildOverlaysForPage(
         (pageNum === 1 && item.key.startsWith('Customer.')) ||
         (pageNum === 11 &&
           (item.key.startsWith('Client.') || item.key.startsWith('Customer.'))) ||
-        (pageNum === 12 &&
-          (item.key.startsWith('Client.') ||
-            item.key.startsWith('Customer.') ||
-            item.key.startsWith('Contractor.'))) ||
+        (pageNum === 12 && item.key.startsWith('Client.')) ||
+        (pageNum === 13 && item.key.startsWith('Client.')) ||
         (pageNum === 14 && item.key.startsWith('Client.'));
       if (grouped) continue;
     }
