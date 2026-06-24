@@ -91,15 +91,16 @@ export function tryBuildRetainerCoverPreparedForOverlay(
   const consumed = new Set<PdfTextItem>([first, last]);
   const top = first.y >= last.y ? first : last;
   const bottom = first.y >= last.y ? last : first;
+  const eraseX = Math.min(first.x, last.x) - 10;
 
   return {
     consumed,
     overlays: [
       overlaySpec({
-        eraseX: COVER_COL.x - 6,
-        eraseY: bottom.y - 4,
-        eraseW: COVER_COL.w + 12,
-        eraseH: top.y - bottom.y + top.height + 8,
+        eraseX,
+        eraseY: bottom.y - 6,
+        eraseW: COVER_COL.x + COVER_COL.w - eraseX + 8,
+        eraseH: top.y - bottom.y + top.height + 12,
         text: fullName,
         textY: top.y,
         fontSize: FONT_COMPACT,
@@ -135,25 +136,27 @@ export function tryBuildRetainerPage2CustomerOverlay(
   for (const item of [company, street, city, state, zip]) {
     if (item) consumed.add(item);
   }
+  // Cover the full Customer/Contractor intro block (static text + wide token boxes).
+  for (const item of items) {
+    if (item.y >= 598 && item.y <= 686 && item.x >= 35 && item.x <= 560) {
+      consumed.add(item);
+    }
+  }
 
   const line1 = `Customer: ${companyName}, with its principal place of business at ${address} ("Customer"); and`;
   const line2 =
     'Contractor: Michael Hart Consulting Group LLC, a Georgia limited liability company, with its principal place of business at 246 Round Pond Drive, Lilburn, GA 30047 ("Contractor").';
-
-  const anchorItems = [company, street, city, state, zip].filter(Boolean) as PdfTextItem[];
-  const minY = Math.min(...anchorItems.map((item) => item.y));
-  const maxY = Math.max(...anchorItems.map((item) => item.y + item.height));
 
   return {
     consumed,
     overlays: [
       overlaySpec({
         eraseX: 35,
-        eraseY: minY - 6,
+        eraseY: 598,
         eraseW: 542,
-        eraseH: maxY - minY + 20,
+        eraseH: 90,
         text: `${line1}\n${line2}`,
-        textY: maxY - 4,
+        textY: 676,
         fontSize: FONT_BODY,
         bgColor: ERASE_WHITE,
         textColor: TEXT_COLOR,
@@ -190,20 +193,21 @@ export function tryBuildRetainerNoticesAddressOverlay(
   if (email) consumed.add(email);
   for (const item of items) {
     if (item.str === ',' && item.y === street.y) consumed.add(item);
+    if (item.str === 'Email:' && Math.abs(item.y - (email?.y ?? 398)) < 4) consumed.add(item);
   }
 
   const topY = company.y;
   const bottomY = email?.y ?? street.y;
-  const eraseY = bottomY - 4;
-  const eraseH = topY - bottomY + company.height + 8;
+  const eraseY = bottomY - 6;
+  const eraseH = topY - bottomY + company.height + 14;
 
   return {
     consumed,
     overlays: [
       overlaySpec({
-        eraseX: 68,
+        eraseX: 35,
         eraseY,
-        eraseW: 480,
+        eraseW: 520,
         eraseH,
         text: `${companyName}\n${address}\nEmail: ${clientEmail}`,
         textY: topY,
@@ -307,6 +311,23 @@ export function tryBuildRetainerSignatureOverlays(
     consumed.add(signLast);
   }
 
+  // Cover stray bracket/pipe artifacts between sign-name columns.
+  if (contractorFirst && signFirst) {
+    overlays.push(
+      overlaySpec({
+        eraseX: SIG_LEFT.x + SIG_LEFT.w,
+        eraseY: contractorFirst.y - 4,
+        eraseW: SIG_RIGHT.x - (SIG_LEFT.x + SIG_LEFT.w),
+        eraseH: contractorFirst.height + 8,
+        text: '',
+        textY: contractorFirst.y,
+        fontSize: FONT_BODY,
+        bgColor: ERASE_WHITE,
+        textColor: TEXT_COLOR,
+      }),
+    );
+  }
+
   if (!overlays.length) return null;
   return { overlays, consumed };
 }
@@ -376,9 +397,9 @@ export function tryBuildRetainerActivationFeeOverlay(
   }
   for (const item of items) {
     if (item.key === 'ACTIVATION CREDITED' || item.key === 'PROPOSAL DATE') consumed.add(item);
+    if (item.y >= 310 && item.y <= 430 && item.x >= 35 && item.x <= 420) consumed.add(item);
   }
 
-  const anchor = total ?? retainer!;
   const lines = [
     `Total Phase 1 engagement fee: $${totalFee}`,
     `Activation due at signing: $${retainerAmt} (${credited} credited toward total)`,
@@ -387,25 +408,84 @@ export function tryBuildRetainerActivationFeeOverlay(
     'Additional services beyond this SOW require prior written approval and separate fees.',
   ];
 
-  const bottom = Math.min(...[total, retainer, balance].filter(Boolean).map((i) => i!.y));
-  const top = anchor.y + anchor.height + 2;
-
   return {
     consumed,
     overlays: [
       overlaySpec({
         eraseX: 35,
-        eraseY: bottom - 6,
+        eraseY: 308,
         eraseW: 542,
-        eraseH: top - bottom + 88,
+        eraseH: 128,
         text: lines.join('\n'),
-        textY: top - 10,
-        fontSize: 10,
+        textY: 418,
+        fontSize: FONT_BODY,
         bgColor: ERASE_WHITE,
         textColor: TEXT_COLOR,
       }),
     ],
   };
+}
+
+/** Page 13 — Attachment A party line + proposal date (no token gaps). */
+export function tryBuildRetainerAttachmentOverlays(
+  pageNum: number,
+  items: PdfTextItem[],
+  tokenMap: Record<string, string>,
+): { overlays: OverlaySpec[]; consumed: Set<PdfTextItem> } | null {
+  if (pageNum !== 13) return null;
+
+  const overlays: OverlaySpec[] = [];
+  const consumed = new Set<PdfTextItem>();
+  const companyName = tokenMap['Recipient.Company'] || tokenMap['Client.Company'] || '';
+  const proposalDate = tokenMap['PROPOSAL DATE']?.trim() || tokenMap['Date']?.trim();
+  if (!companyName) return null;
+
+  const sowCompany = findKey(items, 'Client.Company');
+  if (sowCompany) {
+    for (const item of items) {
+      if (item.y >= 566 && item.y <= 616 && item.x >= 35 && item.x <= 560) consumed.add(item);
+    }
+    overlays.push(
+      overlaySpec({
+        eraseX: 35,
+        eraseY: 566,
+        eraseW: 542,
+        eraseH: 52,
+        text:
+          'This Statement of Work ("SOW") is entered into by and between Michael Hart Consulting Group LLC ("Contractor") and ' +
+          `${companyName} ("Customer") under the Engagement Activation Retainer between the parties (the "Agreement"), effective as of the Agreement Effective Date.`,
+        textY: 608,
+        fontSize: FONT_BODY,
+        bgColor: ERASE_WHITE,
+        textColor: TEXT_COLOR,
+      }),
+    );
+    consumed.add(sowCompany);
+  }
+
+  const proposalToken = findKey(items, 'PROPOSAL DATE');
+  if (proposalToken && proposalDate) {
+    for (const item of items) {
+      if (item.y >= 500 && item.y <= 552 && item.x >= 35 && item.x <= 560) consumed.add(item);
+    }
+    overlays.push(
+      overlaySpec({
+        eraseX: 35,
+        eraseY: 500,
+        eraseW: 542,
+        eraseH: 54,
+        text: `Customer received a proposal from Contractor dated ${proposalDate} (the "Proposal"). This SOW incorporates the Proposal by reference.`,
+        textY: 546,
+        fontSize: FONT_BODY,
+        bgColor: ERASE_WHITE,
+        textColor: TEXT_COLOR,
+      }),
+    );
+    consumed.add(proposalToken);
+  }
+
+  if (!overlays.length) return null;
+  return { overlays, consumed };
 }
 
 /** Retainer-only grouped overlays — NDA path unchanged. */
@@ -421,6 +501,7 @@ export function buildRetainerGroupedOverlays(
   applyGrouped(overlays, consumed, tryBuildRetainerPage2CustomerOverlay(pageNum, items, tokenMap));
   applyGrouped(overlays, consumed, tryBuildRetainerNoticesAddressOverlay(pageNum, items, tokenMap));
   applyGrouped(overlays, consumed, tryBuildRetainerSignatureOverlays(pageNum, items, tokenMap));
+  applyGrouped(overlays, consumed, tryBuildRetainerAttachmentOverlays(pageNum, items, tokenMap));
   applyGrouped(overlays, consumed, tryBuildRetainerInvoicingAddressOverlay(pageNum, items, tokenMap));
   applyGrouped(overlays, consumed, tryBuildRetainerActivationFeeOverlay(pageNum, items, tokenMap));
 

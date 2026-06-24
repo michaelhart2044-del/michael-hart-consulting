@@ -393,13 +393,26 @@ function buildOverlaysForPage(
     if (docKind === 'retainer') {
       const grouped =
         (pageNum === 1 && item.key.startsWith('Customer.')) ||
+        (pageNum === 2 && item.key.startsWith('Client.')) ||
         (pageNum === 11 &&
           (item.key.startsWith('Client.') || item.key.startsWith('Customer.'))) ||
         (pageNum === 12 &&
           (item.key.startsWith('Client.') ||
             item.key.startsWith('Customer.') ||
             item.key.startsWith('Contractor.'))) ||
-        (pageNum === 14 && item.key.startsWith('Client.'));
+        (pageNum === 13 &&
+          (item.key.startsWith('Client.') ||
+            item.key === 'PROPOSAL DATE' ||
+            item.key.startsWith('TOTAL') ||
+            item.key.startsWith('RETAINER') ||
+            item.key.startsWith('BALANCE') ||
+            item.key === 'ACTIVATION CREDITED')) ||
+        (pageNum === 14 &&
+          (item.key.startsWith('Client.') ||
+            item.key.startsWith('TOTAL') ||
+            item.key.startsWith('RETAINER') ||
+            item.key.startsWith('BALANCE') ||
+            item.key === 'ACTIVATION CREDITED'));
       if (grouped) continue;
     }
 
