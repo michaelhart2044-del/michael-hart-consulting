@@ -1,7 +1,6 @@
 import type { SignWellConfig } from '@/lib/signwell/config';
-import type { SignWellRecipient } from '@/lib/signwell/client';
+import type { SignWellRecipient, SignWellTemplateField } from '@/lib/signwell/client';
 import { signWellFetch } from '@/lib/signwell/client';
-
 export interface SignWellTemplatePlaceholder {
   id: string;
   name: string;
@@ -41,6 +40,28 @@ export async function getSignWellTemplate(
 }
 
 const SIGNATURE_TYPES = new Set(['signature', 'initials']);
+
+/** All Text Field api_ids defined on a SignWell template (for template_fields prefill). */
+export function collectTemplateTextFieldApiIds(template: SignWellTemplateResponse): Set<string> {
+  const ids = new Set<string>();
+  for (const fileFields of template.fields ?? []) {
+    for (const field of fileFields) {
+      if (SIGNATURE_TYPES.has(field.type)) continue;
+      const id = field.api_id?.trim();
+      if (id) ids.add(id);
+    }
+  }
+  return ids;
+}
+
+/** Keep only template_fields whose api_id exists on the uploaded SignWell template. */
+export function filterTemplateFieldsToTemplate(
+  fields: SignWellTemplateField[],
+  template: SignWellTemplateResponse,
+): SignWellTemplateField[] {
+  const allowed = collectTemplateTextFieldApiIds(template);
+  return fields.filter((f) => allowed.has(f.api_id));
+}
 
 /** Copy signature field placements from a SignWell template onto a new filled PDF upload. */
 export function mapTemplateSignatureFields(

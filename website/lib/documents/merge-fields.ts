@@ -100,15 +100,39 @@ export function mergeFieldsToTokenMap(fields: DocumentMergeFields): Record<strin
     'Recipient.Company': fields.recipientCompany,
     'Recipient.Email': fields.recipientEmail,
     Date: fields.agreementDate,
-    'Company website': fields.website,
+    'Company website': fields.website
+      .replace(/^https?:\/\/(www\.)?/i, '')
+      .replace(/\/$/, ''),
   };
-  if (fields.recipientStreetAddress) map['Recipient.StreetAddress'] = fields.recipientStreetAddress;
-  if (fields.recipientCity) map['Recipient.City'] = fields.recipientCity;
-  if (fields.recipientState) map['Recipient.State'] = fields.recipientState;
-  if (fields.recipientPostalCode) map['Recipient.PostalCode'] = fields.recipientPostalCode;
-  if (fields.activationFeeFormatted) map['RETAINER AMOUNT'] = fields.activationFeeFormatted;
-  if (fields.totalPhase1Formatted) map['TOTAL PHASE 1 FEE'] = fields.totalPhase1Formatted;
-  if (fields.balanceDueFormatted) map['BALANCE DUE'] = fields.balanceDueFormatted;
+  if (fields.recipientStreetAddress) {
+    addAliases(map, ['Recipient.StreetAddress', 'Client.StreetAddress', 'Customer.StreetAddress'], fields.recipientStreetAddress);
+  }
+  if (fields.recipientCity) addAliases(map, ['Recipient.City', 'Client.City', 'Customer.City'], fields.recipientCity);
+  if (fields.recipientState) addAliases(map, ['Recipient.State', 'Client.State', 'Customer.State'], fields.recipientState);
+  if (fields.recipientPostalCode) {
+    addAliases(map, ['Recipient.PostalCode', 'Client.PostalCode', 'Customer.PostalCode'], fields.recipientPostalCode);
+  }
+  addAliases(map, ['Client.FirstName', 'Customer.FirstName', 'Recipient.FirstName'], fields.recipientFirstName);
+  addAliases(map, ['Client.LastName', 'Customer.LastName', 'Recipient.LastName'], fields.recipientLastName);
+  addAliases(map, ['Client.Company', 'Customer.Company', 'Recipient.Company'], fields.recipientCompany);
+  addAliases(map, ['Client.Email', 'Customer.Email', 'Recipient.Email'], fields.recipientEmail);
+  addAliases(map, ['Contractor.FirstName', 'Owner.FirstName'], fields.ownerFirstName);
+  addAliases(map, ['Contractor.LastName', 'Owner.LastName'], fields.ownerLastName);
+  if (fields.activationFee != null) map['RETAINER AMOUNT'] = formatDollarPlain(fields.activationFee);
+  else if (fields.activationFeeFormatted) map['RETAINER AMOUNT'] = fields.activationFeeFormatted.replace(/^\$/, '');
+  if (fields.totalPhase1Fee != null) map['TOTAL PHASE 1 FEE'] = formatDollarPlain(fields.totalPhase1Fee);
+  else if (fields.totalPhase1Formatted) map['TOTAL PHASE 1 FEE'] = fields.totalPhase1Formatted.replace(/^\$/, '');
+  if (fields.balanceDue != null) {
+    const plain = formatDollarPlain(fields.balanceDue);
+    map['BALANCE DUE'] = plain;
+    map['BALANCE DUE AT DELIVERY'] = plain;
+  } else if (fields.balanceDueFormatted) {
+    const plain = fields.balanceDueFormatted.replace(/^\$/, '');
+    map['BALANCE DUE'] = plain;
+    map['BALANCE DUE AT DELIVERY'] = plain;
+  }
+  if (fields.proposalDate) map['PROPOSAL DATE'] = fields.proposalDate;
+  if (fields.activationCredited) map['ACTIVATION CREDITED'] = fields.activationCredited;
   return map;
 }
 
@@ -134,28 +158,9 @@ export function mergeFieldsToPdfTokenMap(fields: DocumentMergeFields): Record<st
     .replace(/^https?:\/\/(www\.)?/i, '')
     .replace(/\/$/, '');
 
-  // Combined display values for grouped PDF overlays
   map['Recipient.FullName'] = `${fields.recipientFirstName} ${fields.recipientLastName}`.trim();
   map['Owner.FullName'] = `${fields.ownerFirstName} ${fields.ownerLastName}`.trim();
   map['Owner.StateLabel'] = `State: ${fields.ownerState}`;
-
-  if (fields.recipientStreetAddress) {
-    addAliases(map, ['Client.StreetAddress', 'Customer.StreetAddress'], fields.recipientStreetAddress);
-  }
-  if (fields.recipientCity) addAliases(map, ['Client.City', 'Customer.City'], fields.recipientCity);
-  if (fields.recipientState) addAliases(map, ['Client.State', 'Customer.State'], fields.recipientState);
-  if (fields.recipientPostalCode) {
-    addAliases(map, ['Client.PostalCode', 'Customer.PostalCode'], fields.recipientPostalCode);
-  }
-
-  if (fields.activationFee != null && fields.totalPhase1Fee != null && fields.balanceDue != null) {
-    map['RETAINER AMOUNT'] = formatDollarPlain(fields.activationFee);
-    map['TOTAL PHASE 1 FEE'] = formatDollarPlain(fields.totalPhase1Fee);
-    map['BALANCE DUE AT DELIVERY'] = formatDollarPlain(fields.balanceDue);
-    map['BALANCE DUE'] = formatDollarPlain(fields.balanceDue);
-    if (fields.activationCredited) map['ACTIVATION CREDITED'] = fields.activationCredited;
-    if (fields.proposalDate) map['PROPOSAL DATE'] = fields.proposalDate;
-  }
 
   return map;
 }

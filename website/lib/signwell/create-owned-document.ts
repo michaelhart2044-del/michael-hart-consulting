@@ -42,7 +42,7 @@ import {
 
 } from '@/lib/signwell/client';
 
-import { getSignWellTemplate, mapTemplateSignatureFields } from '@/lib/signwell/template';
+import { getSignWellTemplate, mapTemplateSignatureFields, filterTemplateFieldsToTemplate } from '@/lib/signwell/template';
 
 
 
@@ -142,7 +142,32 @@ const NDA_PREFILL_KEYS = new Set([
 
 
 
-const RETAINER_EXTRA_KEYS = new Set(['RETAINER AMOUNT', 'TOTAL PHASE 1 FEE', 'BALANCE DUE']);
+const RETAINER_EXTRA_KEYS = new Set([
+  'RETAINER AMOUNT',
+  'TOTAL PHASE 1 FEE',
+  'BALANCE DUE',
+  'BALANCE DUE AT DELIVERY',
+  'PROPOSAL DATE',
+  'ACTIVATION CREDITED',
+  'Client.FirstName',
+  'Client.LastName',
+  'Client.Company',
+  'Client.Email',
+  'Client.StreetAddress',
+  'Client.City',
+  'Client.State',
+  'Client.PostalCode',
+  'Customer.FirstName',
+  'Customer.LastName',
+  'Customer.Company',
+  'Customer.Email',
+  'Customer.StreetAddress',
+  'Customer.City',
+  'Customer.State',
+  'Customer.PostalCode',
+  'Contractor.FirstName',
+  'Contractor.LastName',
+]);
 
 
 
@@ -186,7 +211,8 @@ export async function buildSignWellDocumentRequest(
 
   const fields = buildDocumentMergeFields(sub, clientDetails);
 
-  const tokenMap = mergeFieldsToTokenMap(fields);
+  const tokenMap =
+    kind === 'retainer' ? mergeFieldsToPdfTokenMap(fields) : mergeFieldsToTokenMap(fields);
 
   const company = clientDetails.company.trim();
 
@@ -338,7 +364,25 @@ export async function createOwnedSignWellDocument(
 
 
 
+  const templateId = templateIdForKind(config, kind);
+
   const body = await buildSignWellDocumentRequest(kind, sub, config, clientDetails);
+
+
+
+  if (signWellPrefillTemplateFieldsEnabled() && body.template_fields?.length) {
+
+    const template = await getSignWellTemplate(config, templateId);
+
+    const matched = filterTemplateFieldsToTemplate(body.template_fields, template);
+
+    if (matched.length > 0) body.template_fields = matched;
+
+    else delete body.template_fields;
+
+  }
+
+
 
   return createDocumentFromTemplate(config, body);
 

@@ -14,6 +14,10 @@ Export your NDA and Activation Retainer from PandaDoc (or Word) and upload them 
    - `retainer-activation.pdf`
    Or set `SIGNWELL_SOURCE_PDF_NDA` / `SIGNWELL_SOURCE_PDF_RETAINER` in Vercel to absolute paths.
 
+   **SignWell-ready retainer:** Upload `retainer-activation.pdf` to SignWell with Text Field API IDs matching bracket tokens (e.g. `Recipient.Company` or `Client.Company`) or `Recipient.*` / `Owner.*`. Set `SIGNWELL_PDF_PREFILL=false` and `SIGNWELL_PREFILL_TEMPLATE_FIELDS=true`. Do **not** run `build:clean-retainer` — it preserves tokens as-is.
+
+   Verify mapping: `npm run audit:retainer-signwell` · dry-run prefill: `npm run test:retainer-signwell`
+
    Example API IDs if you add TextFields instead:
    - `Owner.Company`, `Owner.State`, `Recipient.Company`, `Recipient.FirstName`, `Recipient.LastName`, `Date`, etc.
    - Retainer: `RETAINER AMOUNT`, `TOTAL PHASE 1 FEE`
