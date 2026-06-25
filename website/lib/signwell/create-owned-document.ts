@@ -345,46 +345,27 @@ async function createOwnedSignWellDocumentWithFilledPdf(
 
 
 export async function createOwnedSignWellDocument(
-
   kind: OwnedDocKind,
-
   sub: PrepSubmission,
-
   config: SignWellConfig,
-
   clientDetails: PandaDocClientDetails,
-
 ) {
-
-  if (signWellPdfPrefillEnabled()) {
-
+  // Retainer always uses server-side PDF fill. SignWell assigns generic TextField_N
+  // api_ids, so template_fields cannot match PandaDoc token names (Client.Company, etc.).
+  if (kind === 'retainer' || signWellPdfPrefillEnabled()) {
     return createOwnedSignWellDocumentWithFilledPdf(kind, sub, config, clientDetails);
-
   }
-
-
 
   const templateId = templateIdForKind(config, kind);
-
   const body = await buildSignWellDocumentRequest(kind, sub, config, clientDetails);
 
-
-
   if (signWellPrefillTemplateFieldsEnabled() && body.template_fields?.length) {
-
     const template = await getSignWellTemplate(config, templateId);
-
     const matched = filterTemplateFieldsToTemplate(body.template_fields, template);
-
     if (matched.length > 0) body.template_fields = matched;
-
     else delete body.template_fields;
-
   }
 
-
-
   return createDocumentFromTemplate(config, body);
-
 }
 

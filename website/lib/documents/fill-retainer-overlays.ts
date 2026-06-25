@@ -64,12 +64,14 @@ function bounds(items: PdfTextItem[], pad = 3) {
   const maxX = Math.max(...items.map((i) => i.x + i.width));
   const minY = Math.min(...items.map((i) => i.y));
   const maxY = Math.max(...items.map((i) => i.y + i.height));
+  // pdf.js y is the text baseline — do not use maxY (top of glyph box) for drawText.
+  const textY = Math.max(...items.map((i) => i.y));
   return {
     eraseX: minX - pad,
     eraseY: minY - pad,
     eraseW: maxX - minX + pad * 2,
     eraseH: maxY - minY + pad * 2,
-    textY: maxY - pad,
+    textY,
   };
 }
 
@@ -153,7 +155,7 @@ export function tryBuildRetainerCoverPreparedForOverlay(
         text: fullName,
         textY: top.y,
         fontSize: FONT_COMPACT,
-        bgColor: ERASE_COVER,
+        bgColor: ERASE_WHITE,
         textColor: TEXT_COLOR,
         align: 'right',
         padX: 3,
