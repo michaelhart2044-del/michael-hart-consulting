@@ -11,7 +11,8 @@
     "polish:retainer": "node scripts/polish-retainer-source-pdf.mjs",
     "build:clean-retainer": "npx tsx scripts/build-clean-retainer-source.mjs",
     "audit:retainer-signwell": "npx tsx scripts/audit-retainer-signwell-tokens.mjs",
-    "test:retainer-signwell": "npx tsx scripts/test-retainer-signwell-fields.mjs"
+    "test:retainer-signwell": "npx tsx scripts/test-retainer-signwell-fields.mjs",
+    "hq:sync": "node scripts/sync-hq-registry.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.0.0",

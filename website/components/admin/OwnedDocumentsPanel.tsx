@@ -54,19 +54,6 @@ function signWellStatusClass(tone: ReturnType<typeof ownedSignWellStatusTone>): 
   return 'text-[#94a3b8]';
 }
 
-function OpenSignWellLink({ editUrl }: { editUrl: string }) {
-  return (
-    <a
-      href={editUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex text-xs font-medium text-violet-200 hover:text-violet-100 underline underline-offset-2"
-    >
-      Open in SignWell →
-    </a>
-  );
-}
-
 function SignWellRetainerSteps() {
   return (
     <ol className="text-[11px] text-[#64748b] list-decimal list-inside space-y-0.5 mt-1">
@@ -587,7 +574,6 @@ export default function OwnedDocumentsPanel({
             <div className="text-xs text-[#64748b]">No draft yet</div>
           )}
           <div className="mt-auto flex flex-col gap-2">
-            {owned?.retainer?.editUrl && <OpenSignWellLink editUrl={owned.retainer.editUrl} />}
             <button
               type="button"
               onClick={handleCreateRetainer}

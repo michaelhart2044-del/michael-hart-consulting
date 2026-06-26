@@ -28,6 +28,7 @@ import type { ClientListBadge } from '@/lib/admin/client-journey';
 import { resolveDocumentsBackend } from '@/lib/admin/client-journey';
 import CalendlyIntegrationPanel from '@/components/admin/CalendlyIntegrationPanel';
 import SignWellIntegrationPanel from '@/components/admin/SignWellIntegrationPanel';
+import HqCommandCenter from '@/components/admin/HqCommandCenter';
 import { ADMIN_PORTAL_DISABLED_UNTIL_STEP8, ADMIN_STEP89_INSTRUCTION } from '@/lib/portal-client-copy';
 import { site } from '@/lib/site';
 import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
@@ -645,6 +646,17 @@ Best regards,`;
           {status}
         </div>
       )}
+
+      <HqCommandCenter
+        recent={{
+          total: recent.length,
+          withAgreement: recent.filter((r) => r.engagementCommittedAt).length,
+          withPortal: recent.filter((r) => r.portalAccessGrantedAt && !r.portalRevokedAt).length,
+        }}
+        loadedSub={loadedSub}
+        consult30TranscriptLen={consult30Transcript.trim().length}
+        configuredBackend={configuredBackend}
+      />
 
       {/* Recent Prep Submissions */}
       <section className="border border-white/10 rounded-2xl bg-[#0f172a] p-6">

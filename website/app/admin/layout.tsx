@@ -35,9 +35,12 @@ export default function AdminLayout({
               <div className="text-[10px] text-[#64748b] -mt-0.5">PRIVATE • INTERNAL USE ONLY</div>
             </div>
           </div>
-          <div className="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#94a3b8]">
-            Engagement Hub
-          </div>
+          <a
+            href="#hq-command-center"
+            className="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[#94a3b8] hover:border-[#c5a46e]/50 hover:text-[#c5a46e] transition-colors"
+          >
+            HQ Command Center
+          </a>
         </div>
       </header>
 

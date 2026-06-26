@@ -1,0 +1,102 @@
+{
+  "updated": "2026-06-26",
+  "businessRoot": "C:\\MICHAEL HART CONSULTING GROUP LLC",
+  "projects": [
+    {
+      "id": "business-hq",
+      "name": "Business HQ",
+      "emoji": "🏢",
+      "tier": "core",
+      "status": "active",
+      "path": "C:\\MICHAEL HART CONSULTING GROUP LLC",
+      "purpose": "Central filing — clients, finance, legal, integrations, operations."
+    },
+    {
+      "id": "website",
+      "name": "Website + Admin",
+      "emoji": "🌐",
+      "tier": "core",
+      "status": "active",
+      "path": "C:\\Projects\\MH_Consulting_Website\\website",
+      "repo": "github.com/michaelhart2044-del/michael-hart-consulting",
+      "purpose": "Public site and private /admin — intake, Calendly, SignWell, portal."
+    },
+    {
+      "id": "sigvai",
+      "name": "SigVai Engine",
+      "emoji": "🧠",
+      "tier": "core",
+      "status": "active",
+      "path": "C:\\Projects\\SIGVAI",
+      "purpose": "Private consulting AI — pitches, proposals, and DMAIC outputs."
+    },
+    {
+      "id": "aixsig",
+      "name": "AIXSIG Platform",
+      "emoji": "🏗️",
+      "tier": "venture",
+      "status": "active",
+      "path": "C:\\Projects\\AIXSIG",
+      "formerNames": ["KQX", "kqx-trading-dashboard"],
+      "purpose": "AI platform — evolved from KQX trading engine toward construction intelligence."
+    },
+    {
+      "id": "sedait",
+      "name": "SEDAit IEP Platform",
+      "emoji": "🎓",
+      "tier": "venture",
+      "status": "active",
+      "path": "C:\\Projects\\SEDAIT",
+      "purpose": "IEP intelligence platform for special education workflows."
+    }
+  ],
+  "preLaunchChecklist": [
+    {
+      "id": "retainer-flow",
+      "label": "SignWell retainer flow tested end-to-end",
+      "hint": "Generate → sign → remittance PDF"
+    },
+    {
+      "id": "qbo-coa",
+      "label": "QBO chart of accounts + expense categories",
+      "hint": "See 03_Finance/2026/QBO_Setup"
+    },
+    {
+      "id": "amex-expenses",
+      "label": "Record Amex business expenses + prepaid amortization",
+      "hint": "Owner Contribution JEs in QBO"
+    },
+    {
+      "id": "client-template",
+      "label": "Client folder template ready in 02_Clients",
+      "hint": "Copy _CLIENT_TEMPLATE per new client"
+    },
+    {
+      "id": "intake-webhooks",
+      "label": "Intake form + Calendly webhooks verified",
+      "hint": "Test submission appears in admin"
+    }
+  ],
+  "externalLinks": [
+    {
+      "id": "signwell",
+      "label": "SignWell",
+      "url": "https://www.signwell.com/app/documents/"
+    },
+    {
+      "id": "qbo",
+      "label": "QuickBooks",
+      "url": "https://qbo.intuit.com/"
+    },
+    {
+      "id": "calendly",
+      "label": "Calendly",
+      "url": "https://calendly.com/app/scheduled_events/user/me"
+    },
+    {
+      "id": "vercel",
+      "label": "Vercel",
+      "url": "https://vercel.com/dashboard"
+    }
+  ]
+}
