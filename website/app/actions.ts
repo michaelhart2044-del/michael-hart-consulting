@@ -35,6 +35,7 @@ import {
   labelForEntityCount,
   labelForFinanceTeamSize,
   labelForRevenueBand,
+  formatLeadSourceAttribution,
   financeTeamSizeToPeopleInvolved,
 } from '@/lib/intake-options';
 import {
@@ -236,6 +237,10 @@ export async function sendAnalysisPrep(formData: FormData) {
   const additionalChallengesList = formData.getAll('additional_challenge')
     .map((v) => String(v).trim())
     .filter(Boolean);
+  const leadSource = ((formData.get('lead_source') as string) || '').trim();
+  const leadSourceDetail = ((formData.get('lead_source_detail') as string) || '').trim();
+  const referrerName = ((formData.get('referrer_name') as string) || '').trim();
+  const referrerEmail = ((formData.get('referrer_email') as string) || '').trim();
 
   if (!rawName.trim() || rawName.trim().length < 2) {
     return { success: false, error: 'Please provide your full name.' };
@@ -243,6 +248,9 @@ export async function sendAnalysisPrep(formData: FormData) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!rawEmail.trim() || !emailRegex.test(rawEmail.trim())) {
     return { success: false, error: 'Please provide a valid email address.' };
+  }
+  if (referrerEmail && !emailRegex.test(referrerEmail)) {
+    return { success: false, error: 'Please provide a valid referrer email, or leave it blank.' };
   }
 
   // Rate limiting (IP + email) — protects the private intake as well
@@ -275,6 +283,12 @@ export async function sendAnalysisPrep(formData: FormData) {
   rawAttach += `People involved in month-end / reporting: ${peopleInvolved || 'Not specified'}\n`;
   rawAttach += `What success looks like (30–90 days): ${successLooksLike || 'Not specified'}\n`;
   rawAttach += `Additional context / deadlines: ${additionalContext || 'Not specified'}\n`;
+  rawAttach += `How they heard about us: ${formatLeadSourceAttribution({
+    leadSource: leadSource || undefined,
+    leadSourceDetail: leadSourceDetail || undefined,
+    referrerName: referrerName || undefined,
+    referrerEmail: referrerEmail || undefined,
+  })}\n`;
 
   try {
     const submission = await saveSubmission({
@@ -289,6 +303,10 @@ export async function sendAnalysisPrep(formData: FormData) {
       peopleInvolved: peopleInvolved || '',
       successLooksLike: successLooksLike || '',
       additionalContext: additionalContext || '',
+      leadSource: leadSource || undefined,
+      leadSourceDetail: leadSourceDetail || undefined,
+      referrerName: referrerName || undefined,
+      referrerEmail: referrerEmail || undefined,
       fullText: rawAttach,
     });
     return { success: true, submissionId: submission.id };

@@ -11,6 +11,7 @@ import {
   REVENUE_BAND_OPTIONS,
   ENTITY_COUNT_OPTIONS,
   FINANCE_TEAM_SIZE_OPTIONS,
+  LEAD_SOURCE_OPTIONS,
   labelForEntityCount,
   labelForFinanceTeamSize,
   labelForRevenueBand,
@@ -57,6 +58,10 @@ export default function AnalysisPrepForm() {
   const [showCalendly, setShowCalendly] = useState(false);
   const [bookingDone, setBookingDone] = useState(false);
   const [submissionId, setSubmissionId] = useState('');
+  const [leadSource, setLeadSource] = useState('');
+  const [leadSourceOther, setLeadSourceOther] = useState('');
+  const [referrerName, setReferrerName] = useState('');
+  const [referrerEmail, setReferrerEmail] = useState('');
 
   const getUsedNonOtherChallenges = (excludeIndex?: number): Set<string> => {
     const used = new Set<string>();
@@ -465,6 +470,71 @@ ${addChals.length > 0 ? `Additional challenges:\n${addChals.map((c: string) => `
           className="w-full bg-[#111827] border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder:text-subtle focus:outline-none focus:border-accent text-sm"
           placeholder="e.g. Audit in 6 weeks, new system go-live..."
         />
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-[#111827]/50 p-4 space-y-4">
+        <div>
+          <label htmlFor="lead_source" className="block text-sm text-muted mb-1.5">
+            How did you hear about Michael Hart Consulting?
+          </label>
+          <p className="text-xs text-subtle mb-2">Optional — helps us understand what is working.</p>
+          <select
+            id="lead_source"
+            name="lead_source"
+            value={leadSource}
+            onChange={(e) => setLeadSource(e.target.value)}
+            className="w-full bg-[#0f172a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-accent text-sm"
+          >
+            <option value="">Select (optional)...</option>
+            {LEAD_SOURCE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {leadSource === 'referral' && (
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="referrer_name" className="block text-sm text-muted mb-1.5">Referrer&apos;s name</label>
+              <input
+                id="referrer_name"
+                name="referrer_name"
+                type="text"
+                value={referrerName}
+                onChange={(e) => setReferrerName(e.target.value)}
+                className="w-full bg-[#0f172a] border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder:text-subtle focus:outline-none focus:border-accent text-sm"
+                placeholder="e.g. John Smith"
+              />
+            </div>
+            <div>
+              <label htmlFor="referrer_email" className="block text-sm text-muted mb-1.5">Referrer&apos;s email</label>
+              <input
+                id="referrer_email"
+                name="referrer_email"
+                type="email"
+                value={referrerEmail}
+                onChange={(e) => setReferrerEmail(e.target.value)}
+                className="w-full bg-[#0f172a] border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder:text-subtle focus:outline-none focus:border-accent text-sm"
+                placeholder="Optional — for thank-you if we engage"
+              />
+            </div>
+          </div>
+        )}
+
+        {leadSource === 'other' && (
+          <div>
+            <label htmlFor="lead_source_detail" className="block text-sm text-muted mb-1.5">Please tell us briefly</label>
+            <input
+              id="lead_source_detail"
+              name="lead_source_detail"
+              type="text"
+              value={leadSourceOther}
+              onChange={(e) => setLeadSourceOther(e.target.value)}
+              className="w-full bg-[#0f172a] border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder:text-subtle focus:outline-none focus:border-accent text-sm"
+              placeholder="e.g. Heard you on a podcast, met at an event..."
+            />
+          </div>
+        )}
       </div>
 
       {error && (

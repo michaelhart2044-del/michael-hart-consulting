@@ -6,6 +6,7 @@ import {
   labelForEntityCount,
   labelForFinanceTeamSize,
   labelForRevenueBand,
+  formatLeadSourceAttribution,
 } from '@/lib/intake-options';
 import { effectiveQuoteFees, formatUsd } from '@/lib/engagement-pricing';
 
@@ -61,6 +62,8 @@ function buildDmaicBundle(
     'PENDING — no proposal draft saved in admin',
   );
 
+  const leadAttribution = formatLeadSourceAttribution(submission);
+
   const lines = [
     '=== MH CONSULTING — ENGAGEMENT BUNDLE v1 ===',
     '',
@@ -79,6 +82,7 @@ function buildDmaicBundle(
     `People involved in month-end / reporting: ${submission.peopleInvolved}`,
     `What success looks like (30–90 days): ${submission.successLooksLike}`,
     `Additional context / deadlines: ${submission.additionalContext || 'None provided'}`,
+    ...(leadAttribution ? [`How they heard about us: ${leadAttribution}`] : []),
     '',
     '--- PHASE 2: 30-MIN CONSULT ---',
     `Booked: ${formatBundleTimestamp(submission.calendlyBookedAt)}`,
@@ -390,6 +394,13 @@ export default function ClientEvidenceTimeline({
               label="Organization snapshot"
               status="complete"
               detail={`${labelForRevenueBand(submission.revenueBand)} · ${labelForEntityCount(submission.entityCount)} · ${labelForFinanceTeamSize(submission.financeTeamSize) || submission.peopleInvolved}`}
+            />
+          )}
+          {hasIntake && formatLeadSourceAttribution(submission) && (
+            <SubStep
+              label="Lead source"
+              status="complete"
+              detail={formatLeadSourceAttribution(submission)!}
             />
           )}
         </LayerCard>

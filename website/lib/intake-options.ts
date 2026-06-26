@@ -43,3 +43,42 @@ export function labelForFinanceTeamSize(value: string | undefined): string {
 export function financeTeamSizeToPeopleInvolved(value: string | undefined): string {
   return labelForFinanceTeamSize(value);
 }
+
+/** How the lead heard about MH Consulting — optional intake attribution. */
+export const LEAD_SOURCE_OPTIONS = [
+  { value: 'google_search', label: 'Google / search' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'referral', label: 'Referral from someone I know' },
+  { value: 'past_client', label: 'Past client / worked together before' },
+  { value: 'conference', label: 'Conference or event' },
+  { value: 'other', label: 'Other' },
+  { value: 'prefer_not', label: 'Prefer not to say' },
+] as const;
+
+export type LeadSource = (typeof LEAD_SOURCE_OPTIONS)[number]['value'];
+
+export function labelForLeadSource(value: string | undefined): string {
+  if (!value?.trim()) return 'Not provided';
+  return LEAD_SOURCE_OPTIONS.find((o) => o.value === value)?.label ?? value;
+}
+
+/** Human-readable block for emails, bundles, and admin. */
+export function formatLeadSourceAttribution(input: {
+  leadSource?: string;
+  leadSourceDetail?: string;
+  referrerName?: string;
+  referrerEmail?: string;
+}): string {
+  const source = labelForLeadSource(input.leadSource);
+  if (!input.leadSource || input.leadSource === 'prefer_not') {
+    return input.leadSource === 'prefer_not' ? 'Prefer not to say' : 'Not provided';
+  }
+  const parts = [source];
+  if (input.leadSource === 'referral') {
+    if (input.referrerName?.trim()) parts.push(`Referrer: ${input.referrerName.trim()}`);
+    if (input.referrerEmail?.trim()) parts.push(`Referrer email: ${input.referrerEmail.trim()}`);
+  } else if (input.leadSource === 'other' && input.leadSourceDetail?.trim()) {
+    parts.push(input.leadSourceDetail.trim());
+  }
+  return parts.join(' · ');
+}

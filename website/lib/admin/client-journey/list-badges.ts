@@ -38,5 +38,9 @@ export function buildClientListBadges(
     badges.push({ id: 'agreement', label: 'AGREEMENT', tone: 'success' });
   }
 
+  if (sub.leadSource === 'referral') {
+    badges.push({ id: 'referral', label: 'REFERRAL', tone: 'info' });
+  }
+
   return badges;
 }

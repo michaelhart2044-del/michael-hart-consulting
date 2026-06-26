@@ -19,6 +19,7 @@ import {
   logoutAdmin,
 } from '@/app/actions';
 import type { PrepSubmission } from '@/lib/submissions-store';
+import { formatLeadSourceAttribution } from '@/lib/intake-options';
 import ClientEvidenceTimeline from '@/components/admin/ClientEvidenceTimeline';
 import LoadedClientHeader from '@/components/admin/LoadedClientHeader';
 import EngagementEconomicsPanel from '@/components/admin/EngagementEconomicsPanel';
@@ -601,8 +602,12 @@ Best regards,`;
       formatted += `Additional Challenges: ${additionalChallenges}\n`;
       formatted += `Team size & effort (people involved): ${peopleInvolved}\n`;
       formatted += `What success looks like (30-90 days): ${successLooksLike}\n`;
-      formatted += `Additional context / deadlines: ${additionalContext}\n\n`;
-      formatted += `Additional notes / transcript:\n${notes}\n\n`;
+      formatted += `Additional context / deadlines: ${additionalContext}\n`;
+      const leadAttribution = formatLeadSourceAttribution(loadedSub ?? {});
+      if (leadAttribution) {
+        formatted += `How they heard about us: ${leadAttribution}\n`;
+      }
+      formatted += `\nAdditional notes / transcript:\n${notes}\n\n`;
       formatted += `=== END SIGVAI INPUT ===`;
 
       await navigator.clipboard.writeText(formatted);

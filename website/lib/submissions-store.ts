@@ -39,6 +39,13 @@ export interface PrepSubmission {
   successLooksLike: string;
   additionalContext: string;
   fullText: string;
+  /** Optional — how the lead heard about MH Consulting (marketing attribution). */
+  leadSource?: string;
+  /** Free text when leadSource is `other`. */
+  leadSourceDetail?: string;
+  /** When leadSource is `referral`. */
+  referrerName?: string;
+  referrerEmail?: string;
   /** 30-min initial consult booked (Calendly webhook or browser callback) */
   calendlyBookedAt?: string;
   /** 1-hr comprehensive meeting booked (portal Calendly webhook) */
