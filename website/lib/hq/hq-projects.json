@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-26",
+  "updated": "2026-06-11",
   "businessRoot": "C:\\MICHAEL HART CONSULTING GROUP LLC",
   "projects": [
     {
@@ -37,7 +37,10 @@
       "tier": "venture",
       "status": "active",
       "path": "C:\\Projects\\AIXSIG",
-      "formerNames": ["KQX", "kqx-trading-dashboard"],
+      "formerNames": [
+        "KQX",
+        "kqx-trading-dashboard"
+      ],
       "purpose": "AI platform — evolved from KQX trading engine toward construction intelligence."
     },
     {
@@ -48,6 +51,15 @@
       "status": "active",
       "path": "C:\\Projects\\SEDAIT",
       "purpose": "IEP intelligence platform for special education workflows."
+    },
+    {
+      "id": "dosarki",
+      "name": "DOSARKI Platform",
+      "emoji": "📐",
+      "tier": "venture",
+      "status": "active",
+      "path": "C:\\Projects\\DOSARKI",
+      "purpose": "Outdoor property measurement & cost intelligence — AR yard scan, layout, DIY vs pro estimates (dosarki.com)."
     }
   ],
   "preLaunchChecklist": [

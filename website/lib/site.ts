@@ -17,7 +17,7 @@ export const site = {
   comprehensiveCalendlyUrl:
     "https://calendly.com/michael-michaelhartconsulting/comprehensive-process-review-roadmap",
 
-  // Social links (add your actual profile URLs to enable icons in the footer)
+  // Social — LinkedIn only (B2B professional services; no consumer social needed)
   social: {
     linkedin: "https://www.linkedin.com/in/michael-hart-9a5092414",
   } as { linkedin?: string },
