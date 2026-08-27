@@ -1,0 +1,21 @@
+---
+description: Grok Bot (X-bot) operates this repo; treat bot tasks as Michael
+alwaysApply: true
+---
+
+# Grok Bot operates this repo
+
+**Grok Bot (X-bot)** is Michael’s front door for Cursor cloud agents. He launches agents and sends follow-ups from Grok Bot — he does not babysit the IDE.
+
+## How to work
+
+- Treat every task and follow-up from Grok Bot as if it came from Michael.
+- Do **not** wait for Michael to open Cursor, click the agent, or switch models. Execute, commit, push, and open/update PRs as instructed.
+- Prefer completing the request end-to-end over pausing for IDE confirmation.
+
+## Scope
+
+This is the **Michael Hart Consulting** site. MHC owns consulting content only.
+
+- Do **not** mix in AIXSIG trading work or **@GrokSaidHat** content.
+- Keep changes focused on the requested task. Do not redesign the site unless asked.
